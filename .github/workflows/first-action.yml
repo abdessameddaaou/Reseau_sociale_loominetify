@@ -1,14 +1,26 @@
-name: First Workflow
-
-on: 
-  workflow_dispatch:
-
+name: CI
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
 jobs:
-  first-job:
+  check_ci:
     runs-on: ubuntu-latest
     steps:
-      - name: Run a one-line script
-        run: echo "Hello, world!"
-      
-      - name: Print goodbye
-        run: echo "Done, bye!"
+      - name: Checkout code
+        uses: actions/checkout@v5.0.0
+      - name: Print CI information
+        run: echo "CI déclenchée sur $GITHUB_REF ($GITHUB_EVENT_NAME)"
+      - name: installation du nodejs
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+      - name: Install dependencies
+        run: |
+          npm -v
+          ( cd Frontend && npm ci )
+          ( cd Backend && npm ci )
+          ( cd Tests/cypress && npm ci )
+        
