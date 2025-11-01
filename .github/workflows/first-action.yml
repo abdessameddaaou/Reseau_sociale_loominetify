@@ -1,0 +1,77 @@
+name: CI
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+  workflow_dispatch:
+jobs:
+  check_ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5.0.0
+      - name: Setup Node.js and install dependencies
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: |
+            Frontend/package-lock.json
+            Backend/package-lock.json
+            Tests/cypress/package-lock.json
+      - name: Install dependencies
+        run: |
+          npm -v
+          ( cd Frontend && npm ci )
+          ( cd Backend && npm ci )
+          ( cd Tests/cypress && npm ci )
+      - name: Backend health check
+        run: |
+          node Backend/server.js & SERVER_PID=$!
+          
+          for i in {1..30}; do
+            if curl -sf http://localhost:3500/ > /dev/null; then
+              echo "Backend tourne correctement :) !"
+              break
+            fi
+            echo "Je suis dans la boucle $i/30 et toujours pas de démarrage du backend :( )"
+            sleep 1
+          done
+          
+          # si toujours pas OK, échouer proprement
+          if ! curl -sf http://localhost:3500/ > /dev/null; then
+            echo "Le backend n'a pas démarré à temps"
+            kill $SERVER_PID || true
+            exit 1
+          fi
+          
+          # nettoyage
+          kill $SERVER_PID || true
+
+      - name : Frontend healt check
+        run: |
+          set -euo pipefail
+
+          # démarrer Angular en arrière-plan
+          ( cd Frontend && CI=true npm start ) & FRONT_PID=$!
+
+          # attendre que ça réponde (jusqu'à 120s, Angular peut compiler la 1re fois)
+          for i in {1..120}; do
+            if curl -sf http://localhost:4200/ > /dev/null; then
+              echo "Frontend OK"
+              break
+            fi
+            echo "En attente du frontend... ($i/120)"
+            sleep 1
+          done
+
+          # si KO, échouer proprement
+          if ! curl -sf http://localhost:4200/ > /dev/null; then
+            echo "Le frontend n'a pas démarré à temps"
+            kill $FRONT_PID || true
+            exit 1
+          fi
+
+          # nettoyage
+          kill $FRONT_PID || true
