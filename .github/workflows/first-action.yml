@@ -49,3 +49,29 @@ jobs:
           # nettoyage
           kill $SERVER_PID || true
 
+      - name : Frontend healt check
+        run: |
+          set -euo pipefail
+
+          # démarrer Angular en arrière-plan
+          ( cd Frontend && CI=true npm start ) & FRONT_PID=$!
+
+          # attendre que ça réponde (jusqu'à 120s, Angular peut compiler la 1re fois)
+          for i in {1..120}; do
+            if curl -sf http://localhost:4200/ > /dev/null; then
+              echo "Frontend OK"
+              break
+            fi
+            echo "En attente du frontend... ($i/120)"
+            sleep 1
+          done
+
+          # si KO, échouer proprement
+          if ! curl -sf http://localhost:4200/ > /dev/null; then
+            echo "Le frontend n'a pas démarré à temps"
+            kill $FRONT_PID || true
+            exit 1
+          fi
+
+          # nettoyage
+          kill $FRONT_PID || true
