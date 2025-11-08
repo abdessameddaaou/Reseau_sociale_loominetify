@@ -4,13 +4,15 @@
   "description": "Ceci est un test de jira",
   "main": "index.js",
   "scripts": {
-    "start":"node server.js"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "mysql2": "^3.15.3",
+    "sequelize": "^6.37.7"
   }
 }
