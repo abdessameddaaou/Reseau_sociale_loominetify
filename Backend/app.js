@@ -28,7 +28,9 @@ db.sync()
 // ----------------------- Routes ----------------------- // 
 
 const routeUser = require('./routes/User')
+const routeAuthentification = require('./routes/Authentification')
 
 app.use('/api/users/', routeUser);
+app.use('/auth/', routeAuthentification)
 
 module.exports = app
