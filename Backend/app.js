@@ -6,6 +6,9 @@ const db = require("./db/db")
 const app = express()
 
 
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
 /**
  * Test route
  */
@@ -26,6 +29,6 @@ db.sync()
 
 const routeUser = require('./routes/User')
 
-app.use('/api/users', routeUser);
+app.use('/api/users/', routeUser);
 
 module.exports = app

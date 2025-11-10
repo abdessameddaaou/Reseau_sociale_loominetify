@@ -20,11 +20,11 @@ const Users = db.define("Users", {
   email: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
+    unique: { msg: "Cet email est déjà utilisé" },
     validate: {
       isEmail: {
         msg: "Le format de l'email est invalide",
-      }
+      },
     },
   },
   password: {
@@ -39,6 +39,14 @@ const Users = db.define("Users", {
     type: DataTypes.DATEONLY,
     allowNull: false,
   },
+  ville : {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  pays : {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   isAdmin: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
@@ -50,7 +58,15 @@ const Users = db.define("Users", {
   photo : {
     type: DataTypes.STRING,
     allowNull: true,
-  }
+  },
+  question : {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  reponse : {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
 });
 
 module.exports = Users;
