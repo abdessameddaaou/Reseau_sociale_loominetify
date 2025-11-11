@@ -30,9 +30,4 @@ module.exports.loginUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Une erreur est survenue lors de la connexion." });
   }
-};
-
-
-// router.post("/logout", AuthentificationController.logoutUser);
-// router.post("/forgotpassword", AuthentificationController.forgotPasswordUser);
-// router.post("/resetpassword", AuthentificationController.resetPasswordUser);
+}
