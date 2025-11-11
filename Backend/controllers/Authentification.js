@@ -3,21 +3,21 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const createToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "2h" });
+  jwt.sign({ id }, "Teste", { expiresIn: "2h" });
 
 module.exports.loginUser = async (req, res) => {
   try {
     const user = await Users.findOne({
-      where: { email: req.body.email },
-      attributes: { exclude: ["password"] },
+      where: { email: req.body.email }
     });
     if (user) {
       const passwordValide = await bcrypt.compare( req.body.password, user.password );
       if (passwordValide) {
         try {
+         
           const token = createToken(user.id);
           res.cookie("jwt", token, { httpOnly: true });
-          res.status(200).json({ message: "Connexion réussie" }, user);
+          res.status(200).json({ token: token, message: "Connexion réussie"});
         } catch (error) {
           res.status(500).json({ error: "Une erreur est survenue lors de la création du token." });
         }
