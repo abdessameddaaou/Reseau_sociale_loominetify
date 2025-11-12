@@ -33,7 +33,7 @@ module.exports.createUser = async (req, res) => {
     const cryptPassword = await bcrypt.hash(password, 10);
 
     const newUser = await Users.create({ nom, prenom, email, password: cryptPassword, telephone, dateNaissance, question, reponse, ville, pays, isAdmin });
-    res.status(201).json(newUser);
+    res.status(201).json({message: "Compte créé avec succès", data: newUser});
   } catch (error) {
     console.error("Erreur lors de la création de l'utilisateur :", error);
     res.status(500).json({ error : error.message});
