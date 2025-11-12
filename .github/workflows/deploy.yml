@@ -35,7 +35,7 @@ jobs:
 
       # Déploiement via rsync du dossier Backend/ vers /var/www/backend/
       - name: Deploy with rsync
-        uses: burnett01/rsync-deployments@v7
+        uses: burnett01/rsync-deployments@7.1.0
         with:
           switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules" --exclude="Tests" --exclude="Frontend"
           path: Backend/
