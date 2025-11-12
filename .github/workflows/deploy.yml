@@ -8,13 +8,16 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node (LTS)
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: 'npm'
@@ -29,12 +32,31 @@ jobs:
             npm install --no-audit --no-fund
           fi
 
-      - name: Build (optional)
+      - name: Backend health check
+        working-directory: Backend
+        run: |
+          npx cross-env APP_ENV=development node server.js & echo $! > server.pid
+          for i in {1..60}; do
+            if curl -sf http://localhost:3500/health > /dev/null; then
+              echo "Backend OK"
+              break
+            fi
+            echo "En attente du backend... ($i/60)"
+            sleep 1
+          done
+          if ! curl -sf http://localhost:3500/health > /dev/null; then
+            echo "Le backend n'a pas démarré"
+            kill $(cat server.pid) || true
+            exit 1
+          fi
+          kill $(cat server.pid) || true
+
+      - name: Build
         working-directory: Backend
         run: npm run build --if-present
 
       - name: Rsync to server
-        uses: burnett01/rsync-deployments@7.1.0
+        uses: burnett01/rsync-deployments@v7
         with:
           switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules" --exclude="Tests" --exclude="Frontend"
           path: Backend/
@@ -45,7 +67,7 @@ jobs:
           remote_port: ${{ secrets.SSH_PORT }}
 
       - name: Install server deps & restart service
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
