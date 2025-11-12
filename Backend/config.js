@@ -4,11 +4,12 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 
 const APP_ENV = process.env.APP_ENV || process.env.NODE_ENV || 'development';
-const envFile = path.resolve(process.cwd(), `.env.${APP_ENV}`);
+const envFile = path.resolve(__dirname, `.env.${APP_ENV}`);
+
 if (fs.existsSync(envFile)) {
   dotenv.config({ path: envFile });
 } else {
-  // fallback: .env classique si présent
+
   dotenv.config();
 }
 
