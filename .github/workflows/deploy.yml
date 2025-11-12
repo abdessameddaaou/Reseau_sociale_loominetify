@@ -33,8 +33,7 @@ jobs:
         working-directory: Backend
         run: npm run build --if-present
 
-      # Déploiement via rsync du dossier Backend/ vers /var/www/backend/
-      - name: Deploy with rsync
+      - name: Rsync to server
         uses: burnett01/rsync-deployments@7.1.0
         with:
           switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules" --exclude="Tests" --exclude="Frontend"
