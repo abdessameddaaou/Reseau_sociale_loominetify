@@ -35,15 +35,15 @@ jobs:
 
       # Déploiement via rsync du dossier Backend/ vers /var/www/backend/
       - name: Deploy with rsync
-        uses: easingthemes/ssh-deploy@v5.1.0 
+        uses: burnett01/rsync-deployments@v7
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.SSH_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_USER }}
-          REMOTE_PORT: ${{ secrets.SSH_PORT }}
-          SOURCE: Backend/
-          TARGET: /var/www/backend/
-          ARGS: -avz --delete --exclude ".git" --exclude ".github" --exclude "node_modules" --exclude "Tests" --exclude "Frontend"
+          switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules" --exclude="Tests" --exclude="Frontend"
+          path: Backend/
+          remote_path: /var/www/backend/
+          remote_host: ${{ secrets.SSH_HOST }}
+          remote_user: ${{ secrets.SSH_USER }}
+          remote_key: ${{ secrets.SSH_KEY }}
+          remote_port: ${{ secrets.SSH_PORT }}
 
       - name: Install server deps & restart service
         uses: appleboy/ssh-action@v1
