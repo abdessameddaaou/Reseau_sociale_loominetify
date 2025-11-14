@@ -31,7 +31,6 @@ module.exports.createUser = async (req, res) => {
     // Hasher le mot de passe 
     
     const cryptPassword = await bcrypt.hash(password, 10);
-
     const newUser = await Users.create({ nom, prenom, email, password: cryptPassword, telephone, dateNaissance, question, reponse, ville, pays, isAdmin });
     res.status(201).json({message: "Compte créé avec succès", data: newUser});
   } catch (error) {
