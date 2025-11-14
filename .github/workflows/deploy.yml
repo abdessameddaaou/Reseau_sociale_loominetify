@@ -33,11 +33,7 @@ jobs:
       - name: Rsync Backend to server
         uses: burnett01/rsync-deployments@7.1.0
         with:
-          switches: -avz --delete \
-            --exclude=".git" \
-            --exclude=".github" \
-            --exclude="node_modules" \
-            --exclude=".env.production"
+          switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules" --exclude=".env.production"
           path: Backend/
           remote_path: /var/www/backend/
           remote_host: ${{ secrets.SSH_HOST }}
@@ -60,7 +56,6 @@ jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: deploy-backend   # pour lancer le front après le back (optionnel)
 
     steps:
       - name: Checkout
@@ -90,10 +85,7 @@ jobs:
       - name: Rsync Frontend (dist) to server
         uses: burnett01/rsync-deployments@7.1.0
         with:
-          switches: -avz --delete \
-            --exclude=".git" \
-            --exclude=".github" \
-            --exclude="node_modules"
+          switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules"
           path: Frontend/dist/frontend
           remote_path: /var/www/loominetify.fr/dist
           remote_host: ${{ secrets.SSH_HOST }}
