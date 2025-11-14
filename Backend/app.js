@@ -20,7 +20,7 @@ app.use('/api/auth', routeAuthentification);
 
 // Sync DB
 db.sync()
-  .then(() => console.log('[DB] Sync OK'))
-  .catch(err => console.error('[DB] Sync error:', err.message));
+  .then(() => console.log('[DB] [ Connexion à la base de données réussie ]'))
+  .catch(err => console.error('[DB] [ Erreur de connexion à la base de données ] [ Erreur : ', err.message + ' ]'));
 
 module.exports = app;
