@@ -7,7 +7,7 @@
   "start": "node server.js",
   "dev": "cross-env APP_ENV=development nodemon server.js",
   "start:dev": "cross-env APP_ENV=development node server.js",
-  "start:recette": "cross-env APP_ENV=recette node server.js",
+  "start:staging": "cross-env APP_ENV=staging node server.js",
   "start:prod": "cross-env APP_ENV=production node server.js"
 },
   "keywords": [],

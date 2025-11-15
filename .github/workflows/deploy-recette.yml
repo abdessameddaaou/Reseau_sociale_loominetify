@@ -1,8 +1,11 @@
-name: Deploy Backend & Frontend (Node + Apache)
+name: Deploiement recette backend et front 
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+    
   workflow_dispatch:
 
 jobs:
@@ -21,27 +24,23 @@ jobs:
           cache: 'npm'
           cache-dependency-path: Backend/package-lock.json
 
-      - name: Install deps (Backend)
+      - name: Installer dependances (Backend)
         working-directory: Backend
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+          npm ci || npm install --no-audit --no-fund
 
-      - name: Rsync Backend to server
+      - name: synchronisation du Backend vers le serveur 
         uses: burnett01/rsync-deployments@7.1.0
         with:
-          switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules" --exclude=".env.production"
+          switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules" --exclude=".env.recette"
           path: Backend/
-          remote_path: /var/www/backend/
+          remote_path: /var/www/backend-recette/
           remote_host: ${{ secrets.SSH_HOST }}
           remote_user: ${{ secrets.SSH_USER }}
           remote_key: ${{ secrets.SSH_KEY }}
           remote_port: ${{ secrets.SSH_PORT }}
 
-      - name: Install server deps & restart backend service
+      - name: Installer les dépendances dans le serveur et redémarrer le backend
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -49,9 +48,9 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd /var/www/backend
+            cd /var/www/backend-recette
             npm ci || npm install --no-audit --no-fund
-            sudo systemctl restart backend
+            pm2 restart npm --name backend-recette -- run start:recette
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -68,32 +67,28 @@ jobs:
           cache: 'npm'
           cache-dependency-path: Frontend/package-lock.json
 
-      - name: Install deps (Frontend)
+      - name: Installer dependances (Frontend)
         working-directory: Frontend
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+            npm ci || npm install
 
       - name: Build Angular (production)
         working-directory: Frontend
         run: |
           npm run build -- --configuration production
 
-      - name: Rsync Frontend (dist) to server
+      - name: Synchronisation du front
         uses: burnett01/rsync-deployments@7.1.0
         with:
           switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules"
           path: Frontend/dist/frontend
-          remote_path: /var/www/loominetify.fr/dist
+          remote_path: /var/www/loominetify-recette/dist
           remote_host: ${{ secrets.SSH_HOST }}
           remote_user: ${{ secrets.SSH_USER }}
           remote_key: ${{ secrets.SSH_KEY }}
           remote_port: ${{ secrets.SSH_PORT }}
 
-      - name: Reload Apache
+      - name: redémarrage de apache
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -101,4 +96,4 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            sudo systemctl reload apache2 || sudo systemctl restart apache2
+            sudo systemctl restart apache2
