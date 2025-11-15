@@ -1,4 +1,4 @@
-name: Deploiement prod backend et front 
+name: Deploiement prod backend et front
 
 on:
   push:
@@ -27,11 +27,7 @@ jobs:
       - name: Installer dependances (Backend)
         working-directory: Backend
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+          npm ci || npm install
 
       - name: synchronisation du Backend vers le serveur 
         uses: burnett01/rsync-deployments@7.1.0
@@ -53,8 +49,8 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /var/www/backend
-            npm ci || npm install --no-audit --no-fund
-            pm2 restart npm --name backend-prod -- run start:prod
+            npm ci || npm install
+            pm2 restart backend-prod
 
   deploy-frontend:
     runs-on: ubuntu-latest
