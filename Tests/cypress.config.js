@@ -11,7 +11,7 @@ module.exports = defineConfig({
       return config;
     },
     specPattern: "cypress/e2e/Features/**/*.feature",
-    baseUrl: "/api/users/newUser",
+    baseUrl: "http://localhost:3500/api",
     screenshotOnRunFailure: true,
     video: false,
     retries: {

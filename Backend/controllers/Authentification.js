@@ -2,9 +2,12 @@ const Users = require("../models/users");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+// Création du token 
 const createToken = (id) =>
   jwt.sign({ id }, "Teste", { expiresIn: "2h" });
 
+
+// Connexion de l'utilisateur 
 module.exports.loginUser = async (req, res) => {
   try {
     const user = await Users.findOne({

@@ -1,0 +1,13 @@
+    {
+        "nom": "DAAOU", 
+        "prenom": "Abdessamed", 
+        "email": "daaouabdessam@gmail.com",
+        "password": "Abdelcso2017!",
+        "telephone": "051848237", 
+        "dateNaissance": "11-03-2000", 
+        "question": "le nom de votre mere ", 
+        "reponse": "mama", 
+        "ville": "Oran", 
+        "pays": "Algérie",
+        "isAdmin": "False"
+    }
