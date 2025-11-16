@@ -20,17 +20,17 @@ module.exports.loginUser = async (req, res) => {
          
           const token = createToken(user.id);
           res.cookie("jwt", token, { httpOnly: true });
-          res.status(200).json({ token: token, message: "Connexion réussie"});
+          return res.status(200).json({ token: token, message: "Connexion réussie"});
         } catch (error) {
-          res.status(500).json({ error: "Une erreur est survenue lors de la création du token." });
+          return res.status(500).json({ message: "Une erreur est survenue lors de la création du token.", error: error.message });
         }
       } else {
-        res.status(401).json({ error: "Le mot de passe ou l'adresse email est incorrect." });
+        return res.status(401).json({ message: "Le mot de passe ou l'adresse email est incorrect.", error: error.message });
       }
     } else {
-      res.status(401).json({ error: "Le mot de passe ou l'adresse email est incorrect." });
+      return res.status(401).json({ message: "Le mot de passe ou l'adresse email est incorrect.", error: error.message });
     }
   } catch (error) {
-    res.status(500).json({ error: "Une erreur est survenue lors de la connexion." });
+    return res.status(500).json({ message: "Une erreur est survenue lors de la connexion." , error: error.message});
   }
 }
