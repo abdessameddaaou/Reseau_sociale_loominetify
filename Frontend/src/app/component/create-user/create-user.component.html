@@ -1,0 +1,153 @@
+<div class="max-w-2xl mx-auto p-6 bg-white shadow rounded-xl">
+<!-- Tabs -->
+<div class="flex gap-2 mb-6">
+<button (click)="activeTab = 0" [class]="activeTab===0 ? 'bg-blue-600 text-white' : 'bg-gray-200'" class="px-4 py-2 rounded-lg">Information personelle</button>
+<button (click)="activeTab = 1" [class]="activeTab===1 ? 'bg-blue-600 text-white' : 'bg-gray-200'" class="px-4 py-2 rounded-lg">Adresse et contact</button>
+<button (click)="activeTab = 2" [class]="activeTab===2 ? 'bg-blue-600 text-white' : 'bg-gray-200'" class="px-4 py-2 rounded-lg">Mot de passe</button>
+</div>
+
+
+<form (ngSubmit)="submit()" [formGroup]="addUserForm" class="space-y-6">
+
+
+<!-- PERSONAL -->
+<div *ngIf="activeTab === 0" class="space-y-4">
+<div>
+<label class="block text-sm font-medium">Nom</label>
+<input type="text" formControlName="nom" class="w-full border rounded px-3 py-2" />
+<p *ngIf="addUserForm.controls['nom'].errors?.['required']">
+      <small id="emailHelp" class="addUserForm-text text-red-600 text-sm mt-1">Ce champ est obligatoire</small>
+  </p>
+</div>
+
+
+<div>
+<label class="block text-sm font-medium">Prénom</label>
+<input type="text" formControlName="prenom" class="w-full border rounded px-3 py-2" />
+<p *ngIf="addUserForm.controls['prenom'].errors?.['required']">
+      <small id="emailHelp" class="addUserForm-text text-red-600 text-sm mt-1">Ce champ est obligatoire</small>
+  </p>
+</div>
+
+<div>
+<label class="block text-sm font-medium">Date de naissance</label>
+<input type="date" formControlName="dateDeNaissance" class="w-full border rounded px-3 py-2" />
+<p *ngIf="addUserForm.controls['dateDeNaissance'].errors?.['required']">
+      <small id="emailHelp" class="addUserForm-text text-red-600 text-sm mt-1">Ce champ est obligatoire</small>
+  </p>
+</div>
+
+<div>
+<label class="block text-sm font-medium">Email</label>
+<input type="email" formControlName="email" class="w-full border rounded px-3 py-2" />
+<div *ngIf="addUserForm.controls['email'].invalid && (addUserForm.controls['email'].dirty || addUserForm.controls['email'].touched)" class="mt-2">
+  <p *ngIf="addUserForm.controls['email'].errors?.['required']">
+      <small id="emailHelp" class="addUserForm-text text-red-600 text-sm mt-1">Ce champ est obligatoire</small>
+  </p>
+    <div *ngIf="addUserForm.controls['email'].errors?.['email']">
+      <small id="emailHelp" class="addUserForm-text text-red-600 text-sm mt-1">Ce champ doit etre un email</small>
+    </div>
+    </div>
+</div>
+
+
+<div class="flex justify-end">
+<button type="button" (click)="next()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Suivant</button>
+</div>
+</div>
+
+
+<!-- ACCOUNT -->
+<div *ngIf="activeTab === 1" class="space-y-4">
+
+<div>
+<label class="block text-sm font-medium">Téléphone</label>
+<input type="tel" formControlName="telephone" class="w-full border rounded px-3 py-2" />
+</div>
+
+<div>
+<label class="block text-sm font-medium">Pays</label>
+<ng-country-select
+  [lang]="'fr'"
+  formControlName="pays"
+  class="w-full border rounded px-3 py-2"
+></ng-country-select>
+<!-- <input type="text" formControlName="pays" class="w-full border rounded px-3 py-2" /> -->
+</div>
+
+<div>
+<label class="block text-sm font-medium">Ville</label>
+<input type="text" formControlName="ville" class="w-full border rounded px-3 py-2" />
+</div>
+
+
+
+
+<div class="flex justify-between">
+<button type="button" (click)="prev()" class="px-4 py-2 border rounded-lg">Retour</button>
+<button type="button" (click)="next()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Suivant</button>
+</div>
+</div>
+
+
+<!-- REVIEW -->
+<div *ngIf="activeTab === 2" class="space-y-4">
+<div>
+<label class="block text-sm font-medium">Mot de passe</label>
+<input type="password" formControlName="password" class="w-full border rounded px-3 py-2" />
+  <p
+    *ngIf="
+      addUserForm.get('password')?.touched &&
+      addUserForm.get('password')?.invalid
+    "
+    class="text-red-600 text-sm mt-1"
+  >
+    8 caractères minimum, au moins une lettre, un chiffre et un caractère spécial.
+  </p></div>
+
+<div>
+<label class="block text-sm font-medium">Confirmer le mot de passe</label>
+<input type="password" formControlName="confirmPassword" class="w-full border rounded px-3 py-2" />
+<p
+    *ngIf="
+      addUserForm.get('confirmPassword')?.touched &&
+      addUserForm.hasError('passwordMismatch')
+    "
+    class="text-red-600 text-sm mt-1"
+  >
+    Les deux mots de passe ne correspondent pas.
+  </p>
+</div>
+
+<div>
+<label class="block text-sm font-medium">Question Secrète</label>
+<select formControlName="questionSecrete" name="questionSecrete" id="questionSecrete" class="w-full border rounded px-3 py-2">
+  <option value="pet">Quel est le nom de votre premier animal de compagnie ?</option>
+  <option value="school">Quel est le nom de votre école primaire ?</option>
+  <option value="city">Dans quelle ville êtes-vous né(e) ?</option>
+</select>
+<p *ngIf="addUserForm.controls['questionSecrete'].errors?.['required']">
+      <small id="emailHelp" class="addUserForm-text text-red-600 text-sm mt-1">Ce champ est obligatoire</small>
+  </p>
+</div>
+
+<div>
+<label class="block text-sm font-medium">Réponse Secrète</label>
+<input type="text" formControlName="reponseSecrete" class="w-full border rounded px-3 py-2" />
+ <p *ngIf="addUserForm.controls['reponseSecrete'].errors?.['required']">
+      <small id="emailHelp" class="addUserForm-text text-red-600 text-sm mt-1">Ce champ est obligatoire</small>
+  </p>
+</div>
+<!-- <h3 class="text-lg font-semibold">Review Information</h3>
+<p><strong>Name:</strong> {{ addUserForm.value.nom }} {{ addUserForm.value.prenom }}</p>
+<p><strong>Email:</strong> {{ addUserForm.value.email }}</p>
+<p><strong>Username:</strong> {{ addUserForm.value.password }}</p> -->
+
+
+<div class="flex justify-between">
+<button type="button" (click)="prev()" class="px-4 py-2 border rounded-lg">Retour</button>
+<button type="submit"(click)="submit()" class="px-4 py-2 bg-green-600 text-white rounded-lg">Valider</button>
+</div>
+</div>
+</form>
+</div>
