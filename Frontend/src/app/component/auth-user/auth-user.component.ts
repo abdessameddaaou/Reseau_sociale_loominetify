@@ -3,16 +3,16 @@ import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/fo
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 // import { CountrySelectComponent } from '@wlucha/ng-country-select';
+import { Router, RouterModule } from '@angular/router';
 
 
 @Component({
-selector: 'app-create-user',
+selector: 'app-auth-user',
 standalone: true,
-imports: [CommonModule, ReactiveFormsModule],
-templateUrl: './create-user.component.html',
-styleUrl: './create-user.component.scss'
+imports: [CommonModule, ReactiveFormsModule, RouterModule],
+templateUrl: './auth-user.component.html'
 })
-export class CreateUserComponent {
+export class AuthUserComponent {
  mode: 'login' | 'signup' = 'login';
   signupStep = 1;
 
@@ -21,7 +21,7 @@ export class CreateUserComponent {
 
   signupErrors: { [key: string]: string } = {};
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private router: Router) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
@@ -68,15 +68,15 @@ export class CreateUserComponent {
     let ok = true;
 
     if (!fullName) {
-      //this.signupErrors.fullName = 'Le champ "Nom complet" est obligatoire';
+      this.signupErrors['fullName'] = 'Le champ "Nom complet" est obligatoire';
       ok = false;
     }
 
     if (!email) {
-      //this.signupErrors.email = 'Le champ "Adresse email" est obligatoire';
+      this.signupErrors['email'] = 'Le champ "Adresse email" est obligatoire';
       ok = false;
     } else if (this.signupForm.get('email')?.invalid) {
-      //this.signupErrors.email = 'Veuillez entrer une adresse email valide';
+      this.signupErrors['email'] = 'Veuillez entrer une adresse email valide';
       ok = false;
     }
 
@@ -89,10 +89,10 @@ export class CreateUserComponent {
     let ok = true;
 
     if (!password) {
-      //this.signupErrors.password = 'Le champ "Mot de passe" est obligatoire';
+      this.signupErrors['password'] = 'Le champ "Mot de passe" est obligatoire';
       ok = false;
     } else if (!this.validatePassword(password)) {
-      //this.signupErrors.password = 'Le mot de passe ne respecte pas les critères de sécurité';
+      this.signupErrors['password'] = 'Le mot de passe ne respecte pas les critères de sécurité';
       ok = false;
     }
 
@@ -105,7 +105,7 @@ export class CreateUserComponent {
     let ok = true;
 
     if (!birthdate) {
-      //this.signupErrors.birthdate = 'Le champ "Date de naissance" est obligatoire';
+      this.signupErrors['birthdate'] = 'Le champ "Date de naissance" est obligatoire';
       ok = false;
     }
 
@@ -118,8 +118,8 @@ export class CreateUserComponent {
       this.loginForm.markAllAsTouched();
       return;
     }
-    console.log('Connexion...', this.loginForm.value);
-    // appel API ici
+    console.log('Connexion...', this.loginForm.value); // appel API ici
+    
   }
 
   onSignup() {
@@ -131,11 +131,11 @@ export class CreateUserComponent {
     let ok = true;
 
     if (!sq) {
-      //this.signupErrors.secretQuestion = 'Le champ "Question secrète" est obligatoire';
+      this.signupErrors['secretQuestion'] = 'Le champ "Question secrète" est obligatoire';
       ok = false;
     }
     if (!sa) {
-      //this.signupErrors.secretAnswer = 'Le champ "Réponse secrète" est obligatoire';
+      this.signupErrors['secretAnswer'] = 'Le champ "Réponse secrète" est obligatoire';
       ok = false;
     }
 
@@ -149,6 +149,6 @@ export class CreateUserComponent {
 
     console.log('Inscription complétée', this.signupForm.value);
     alert('Inscription réussie ! Un email de confirmation vous a été envoyé.');
-    // redirection éventuelle ici (router.navigate(...))
+    this.router.navigate(['/fil-actualite'])
   }
 }

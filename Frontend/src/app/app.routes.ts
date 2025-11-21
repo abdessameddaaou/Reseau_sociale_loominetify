@@ -1,8 +1,28 @@
 import { Routes } from '@angular/router';
-import { CreateUserComponent } from './component/create-user/create-user.component';
+import { AuthUserComponent } from './component/auth-user/auth-user.component';
+import { ResetPasswordComponent } from './component/reset-password/reset-password.component';
+import { FilActualiteComponent } from './component/fil-actualite.component/fil-actualite.component';
 export const routes: Routes = [
   {
-    path: 'create-user',
-    component: CreateUserComponent
+    path: 'auth',
+    component: AuthUserComponent
+  },
+  { 
+    path: 'reset-password', 
+    component: ResetPasswordComponent 
+  },
+  { 
+    path: 'fil-actualite', 
+    component: FilActualiteComponent 
+},
+  {
+    path: '',
+    redirectTo: 'auth',
+    pathMatch: 'full',
+  },
+  {
+    path: '**',
+    redirectTo: 'auth',
   }
 ];
+
