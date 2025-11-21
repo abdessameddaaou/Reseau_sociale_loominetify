@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { AuthUserComponent } from './component/auth-user/auth-user.component';
 import { ResetPasswordComponent } from './component/reset-password/reset-password.component';
-import { FilActualiteComponent } from './component/fil-actualite.component/fil-actualite.component';
+import { FilActualiteComponent } from './component/fil-actualite/fil-actualite.component';
 export const routes: Routes = [
   {
     path: 'auth',

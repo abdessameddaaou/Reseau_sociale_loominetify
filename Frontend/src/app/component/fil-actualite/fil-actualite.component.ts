@@ -1,6 +1,10 @@
 import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule , Validators, FormsModule  } from '@angular/forms';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { HeaderComponent } from '../header/header.component'
+import { PostCreatorComponent } from '../post-creator/post-creator.component';
+
 
 interface PostComment {
   id: number;
@@ -27,12 +31,12 @@ interface Post {
 @Component({
   selector: 'app-fil-actualite',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule ],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FontAwesomeModule, HeaderComponent, PostCreatorComponent   ],
   templateUrl: './fil-actualite.component.html'
 })
 export class FilActualiteComponent {
   // Navigation du header
-  activeTab: 'home' | 'notifications' | 'messages' | 'profile' | 'groups' | 'settings' = 'home';
+  activeTab: 'home' | 'notifications' | 'messages' | 'profile' | 'settings' = 'home';
 
   // Formulaire de création de post
   postForm: FormGroup;
@@ -50,11 +54,11 @@ export class FilActualiteComponent {
   // Commentaires
   newCommentText: { [postId: number]: string } = {};
 
-  constructor(private fb: FormBuilder) {
-    this.postForm = this.fb.group({
-      text: ['', [Validators.maxLength(1000)]],
-      image: [null]
-    });
+constructor(private fb: FormBuilder) {
+  this.postForm = this.fb.group({
+    text: ['', [Validators.maxLength(1000)]],
+    image: [null]
+  });
 
     // Génération de quelques posts mock
     this.seedPosts();
@@ -86,22 +90,7 @@ export class FilActualiteComponent {
           { id: 1, author: 'Marie', text: 'Magnifique photo 😍', mine: false },
           { id: 2, author: 'Toi', text: 'Ça donne envie de partir en rando !', mine: true }
         ]
-      },
-      {
-        id: 2,
-        authorName: 'Club Dev Loominetfy',
-        authorHandle: '@dev.club',
-        authorAvatar: 'https://i.pravatar.cc/150?img=12',
-        timeAgo: 'Il y a 5 heures',
-        text: 'On prépare une nouvelle fonctionnalité pour le fil d’actualité. Des idées à proposer ?',
-        imageUrl: undefined,
-        likes: 56,
-        commentsCount: 8,
-        shares: 4,
-        likedByMe: true,
-        comments: []
-      },
-      // tu peux en rajouter autant que tu veux...
+      }
     ];
   }
 
@@ -176,45 +165,53 @@ export class FilActualiteComponent {
     reader.readAsDataURL(file);
   }
 
-  publishPost() {
-    this.formErrors = {};
+publishPost() {
+  this.formErrors = {};
 
-    const text = this.postForm.get('text')?.value?.trim();
-    const image: File | null = this.postForm.get('image')?.value;
+  const textControl = this.postForm.get('text');
+  const imageControl = this.postForm.get('image');
 
-    if ((!text || text.length === 0) && !image) {
-      this.formErrors['text'] = 'Vous devez entrer un texte ou ajouter une image.';
-      return;
-    }
+  const rawText = (textControl?.value || '') as string;
+  const text = rawText.trim();
+  const image: File | null = (imageControl?.value as File | null) ?? null;
 
-    if (text && text.length > 1000) {
-      this.formErrors['text'] = 'Le texte ne doit pas dépasser 1 000 caractères.';
-      return;
-    }
 
-    const newPost: Post = {
-      id: Date.now(),
-      authorName: 'Toi',
-      authorHandle: '@toi',
-      authorAvatar: 'https://i.pravatar.cc/150?img=5',
-      timeAgo: 'À l’instant',
-      text: text || '',
-      imageUrl: this.imagePreview || undefined,
-      likes: 0,
-      commentsCount: 0,
-      shares: 0,
-      likedByMe: false,
-      comments: []
-    };
-
-    // Ajout en tête du du fil d'actualite
-    this.allPosts.unshift(newPost);
-    this.visiblePosts.unshift(newPost);
-
-    // Reset formulaire
-    this.postForm.reset({ text: '', image: null });
-    this.imagePreview = null;
+  if (!text && !image) {
+    const msg = 'Vous devez entrer un texte ou ajouter une image.';
+    this.formErrors['text'] = msg;
+    this.formErrors['image'] = msg;
+    return;
   }
+
+  if (text && text.length > 1000) {
+    this.formErrors['text'] = 'Le texte ne doit pas dépasser 1 000 caractères.';
+    return;
+  }
+
+  const newPost: Post = {
+    id: Date.now(),
+    authorName: 'Toi',
+    authorHandle: '@toi',
+    authorAvatar: 'https://i.pravatar.cc/150?img=5',
+    timeAgo: 'À l’instant',
+    text: text || '',                  
+    imageUrl: this.imagePreview || undefined, 
+    likes: 0,
+    commentsCount: 0,
+    shares: 0,
+    likedByMe: false,
+    comments: []
+  };
+
+  this.allPosts.unshift(newPost);
+  this.visiblePosts.unshift(newPost);
+
+  this.postForm.reset({ text: '', image: null });
+  this.imagePreview = null;
+}
+
+
+
 
   // ----------------- Like / Comment / Share -----------------
   toggleLike(post: Post) {

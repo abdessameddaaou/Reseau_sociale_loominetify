@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
     "prod": "concurrently \"ng serve --configuration=production\" \"ng build --configuration=production\"",
     "dev": "ng serve",
     "build": "ng build --configuration=production",
@@ -33,6 +32,10 @@
     "@angular/material": "^20.2.13",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
+    "@fortawesome/angular-fontawesome": "^3.0.0",
+    "@fortawesome/free-brands-svg-icons": "^7.1.0",
+    "@fortawesome/free-regular-svg-icons": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@tailwindcss/postcss": "^4.1.17",
     "@wlucha/ng-country-select": "^3.0.1",
     "flag-icons": "^7.5.0",

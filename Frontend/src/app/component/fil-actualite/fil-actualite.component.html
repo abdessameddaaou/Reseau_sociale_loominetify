@@ -1,0 +1,219 @@
+<div class="min-h-screen bg-[#f5f7fa] flex flex-col">
+    <!---------------------------------------------------------------- Header --------------------------------------------------------------------->
+    <app-header [activeTab]="activeTab" (tabChange)="setActiveTab($event)"></app-header>
+
+    <!--------------------------------------------------------------------- Body ------------------------------------------------------------------>
+    <main class="flex-1">
+        <div class="max-w-6xl mx-auto flex gap-6 px-4 py-6">
+            <section class="flex-1 space-y-4">
+                <!---------------------------------------------------------- Bloc de publication -------------------------------------------------------->
+
+                <div class="mb-6">
+                    <app-post-creator [postForm]="postForm" [imagePreview]="imagePreview" [formErrors]="formErrors"
+                        (fileSelected)="onFileSelected($event)" (submitPost)="publishPost()"></app-post-creator>
+                </div>
+
+                <!----------------------------------------------------------- Chargement des postes ---------------------------------------------------------->
+                <ng-container *ngIf="isInitialLoading">
+                    <div *ngFor="let s of [1,2,3]" class="bg-white rounded-2xl shadow-sm p-4 animate-pulse">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 bg-slate-200 rounded-full"></div>
+                            <div class="flex-1 space-y-2">
+                                <div class="w-32 h-3 bg-slate-200 rounded"></div>
+                                <div class="w-20 h-3 bg-slate-100 rounded"></div>
+                            </div>
+                        </div>
+                        <div class="w-full h-3 bg-slate-200 rounded mb-2"></div>
+                        <div class="w-2/3 h-3 bg-slate-100 rounded mb-3"></div>
+                        <div class="w-full h-40 bg-slate-200 rounded-2xl"></div>
+                    </div>
+                </ng-container>
+
+                <!-- Etat aucun contenu -->
+                <div *ngIf="!isInitialLoading && visiblePosts.length === 0"
+                    class="bg-white rounded-2xl shadow-sm p-8 text-center text-sm text-slate-500">
+                    Aucun contenu pour le moment. Ajoutez une publication pour commencer 🚀
+                </div>
+
+                <!-- Liste des posts -->
+                <article *ngFor="let post of visiblePosts" class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
+                    <header class="flex items-start gap-3">
+                        <img [src]="post.authorAvatar" alt="avatar" class="w-10 h-10 rounded-full object-cover" />
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-800">
+                                        {{ post.authorName }}
+                                    </p>
+                                    <p class="text-xs text-slate-400">
+                                        {{ post.authorHandle }} · {{ post.timeAgo }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <p class="text-sm text-slate-700 whitespace-pre-line">
+                        {{ post.text }}
+                    </p>
+
+                    <div *ngIf="post.imageUrl" class="rounded-2xl overflow-hidden border border-slate-100">
+                        <img [src]="post.imageUrl" alt="post image" class="w-full object-cover" />
+                    </div>
+
+                    <!-- Interactions -->
+                    <div class="flex items-center justify-between text-xs text-slate-500 mt-1">
+                        <div class="flex items-center gap-4">
+                            <button class="flex items-center gap-1"
+                                [ngClass]="post.likedByMe ? 'text-[#9C2C2C]' : 'text-slate-500'"
+                                (click)="toggleLike(post)">
+                                <span class="material-icons text-base"><i
+                                        class="fa-notdog fa-solid fa-heart fa-lg"></i></span>
+                                <span class="font-semibold">{{ post.likes }}</span>
+                            </button>
+
+                            <div class="flex items-center gap-1 text-slate-500">
+                                <span class="material-icons text-base"><i class="fa-solid fa-comment fa-lg"></i></span>
+                                <span class="font-semibold">{{ post.commentsCount }}</span>
+                            </div>
+
+                            <button class="flex items-center gap-1 text-slate-500" (click)="sharePost(post)">
+                                <span class="material-icons text-base"><i class="fa-solid fa-retweet fa-lg"></i></span>
+                                <span class="font-semibold">{{ post.shares }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Commentaires -->
+                    <div class="pt-2 border-t border-slate-100 space-y-2">
+                        <div *ngFor="let comment of post.comments" class="flex items-start gap-2">
+                            <div
+                                class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] text-slate-500">
+                                {{ comment.author[0] | uppercase }}
+                            </div>
+                            <div class="bg-slate-50 rounded-2xl px-3 py-2 text-xs flex-1">
+                                <div class="flex justify-between gap-2">
+                                    <span class="font-semibold text-slate-700">{{ comment.author }}</span>
+                                    <button *ngIf="comment.mine" class="text-[10px] text-slate-400 hover:text-red-500"
+                                        (click)="deleteComment(post, comment)">
+                                        Supprimer
+                                    </button>
+                                </div>
+                                <p class="text-slate-700 mt-0.5">
+                                    {{ comment.text }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Ajouter un commentaire -->
+                        <div class="flex items-start gap-2 mt-1">
+                            <div
+                                class="w-7 h-7 rounded-full bg-slate-300 flex items-center justify-center text-[10px] text-white">
+                                T
+                            </div>
+                            <div class="flex-1 flex items-center gap-2">
+                                <input type="text" [(ngModel)]="newCommentText[post.id]"
+                                    placeholder="Écrire un commentaire..."
+                                    class="flex-1 text-xs border border-slate-200 rounded-full px-3 py-2 outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
+                                <button type="button" class="text-xs text-[#5b7cff] font-semibold"
+                                    (click)="addComment(post)">
+                                    Publier
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Loader infinite scroll -->
+                <div *ngIf="isLoadingMore" class="text-center text-xs text-slate-400 py-4">
+                    Chargement de nouvelles publications...
+                </div>
+
+                <div *ngIf="!hasMore && visiblePosts.length > 0" class="text-center text-[11px] text-slate-400 py-4">
+                    Vous avez vu toutes les publications récentes.
+                </div>
+            </section>
+
+            <!-- Colonne droite -->
+            <aside class="hidden lg:block w-72 space-y-4">
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div class="h-16 bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6]"></div>
+                    <div class="p-4 -mt-8 flex flex-col items-center">
+                        <img src="https://i.pravatar.cc/150?img=5"
+                            class="w-16 h-16 rounded-full border-4 border-white object-cover" alt="user" />
+                        <p class="mt-2 text-sm font-semibold text-slate-800">Marie Dubois</p>
+                        <p class="text-xs text-slate-400">@marie.dubois</p>
+
+                        <div class="flex justify-between w-full mt-4 text-xs text-slate-600">
+                            <div class="text-center flex-1">
+                                <div class="font-semibold">256</div>
+                                <div class="text-slate-400 text-[11px]">Abonnés</div>
+                            </div>
+                            <div class="text-center flex-1">
+                                <div class="font-semibold">189</div>
+                                <div class="text-slate-400 text-[11px]">Abonnements</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
+                    <h3 class="font-semibold text-slate-800 mb-3">Raccourcis</h3>
+                    <ul class="space-y-2 text-slate-600 text-xs">
+                        <li class="flex items-center gap-2 cursor-pointer hover:text-[#5b7cff]">
+                            <span class="w-5 flex justify-center">
+                                <i class="fa-solid fa-users fa-lg"></i>
+                            </span>
+                            <span>Mes groupes</span>
+                        </li>
+
+                        <li class="flex items-center gap-2 cursor-pointer hover:text-[#5b7cff]">
+                            <span class="w-5 flex justify-center">
+                                <i class="fa-solid fa-calendar-days fa-lg"></i>
+                            </span>
+                            <span>Événements</span>
+                        </li>
+
+                        <li class="flex items-center gap-2 cursor-pointer hover:text-[#5b7cff]">
+                            <span class="w-5 flex justify-center">
+                                <i class="fa-solid fa-bookmark fa-lg"></i>
+                            </span>
+                            <span>Publications enregistrées</span>
+                        </li>
+
+                        <li class="flex items-center gap-2 cursor-pointer hover:text-[#5b7cff]">
+                            <span class="w-5 flex justify-center">
+                                <i class="fa-solid fa-arrow-trend-up fa-lg"></i>
+                            </span>
+                            <span>Tendances</span>
+                        </li>
+                    </ul>
+                </div>
+
+
+                <!-- Tendance  -->
+                <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
+                    <h3 class="font-semibold text-slate-800 mb-3">Sujets tendances</h3>
+                    <ul class="space-y-2 text-xs">
+                        <li class="flex justify-between">
+                            <a href="#" class="text-[#5b7cff] hover:underline">#TechNews</a>
+                            <span class="text-slate-400">895k</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <a href="#" class="text-[#5b7cff] hover:underline">#WebDev</a>
+                            <span class="text-slate-400">902k</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <a href="#" class="text-[#5b7cff] hover:underline">#DesignInspiration</a>
+                            <span class="text-slate-400">100k</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <a href="#" class="text-[#5b7cff] hover:underline">#Startup</a>
+                            <span class="text-slate-400">612k</span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>

@@ -1,0 +1,55 @@
+<header class="bg-white shadow-sm">
+  <div class="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
+    <div class="flex items-center gap-4">
+      <span class="text-xl font-semibold text-[#5b7cff] lowercase">loominetfy</span>
+      <div class="hidden md:flex items-center bg-slate-100 rounded-full px-4 py-2 text-sm">
+        <span class="material-icons text-slate-400 text-base mr-1">
+          <i class="fa-solid fa-magnifying-glass fa-sm" style="color: #ababab;"></i>
+        </span>
+        <input type="text" placeholder="Rechercher" class="bg-transparent outline-none text-slate-600 w-xl ml-4" />
+      </div>
+    </div>
+
+    <nav class="flex items-center gap-x-5 text-sm">
+      <button class="flex items-center gap-1 ml-4"
+        [ngClass]="activeTab === 'home' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
+        (click)="onTabClick('home')">
+        <span class="material-icons text-base">
+          <i class="fa-solid fa-house-chimney fa-lg"></i>
+        </span>
+      </button>
+
+      <button class="flex items-center gap-1"
+        [ngClass]="activeTab === 'notifications' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
+        (click)="onTabClick('notifications')">
+        <span class="material-icons text-base">
+          <i class="fa-solid fa-bell fa-lg"></i>
+        </span>
+      </button>
+
+      <button class="flex items-center gap-1"
+        [ngClass]="activeTab === 'messages' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
+        (click)="onTabClick('messages')">
+        <span class="material-icons text-base">
+          <i class="fa-sharp fa-solid fa-comment-dots fa-lg"></i>
+        </span>
+      </button>
+
+      <button class="flex items-center gap-1"
+        [ngClass]="activeTab === 'profile' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
+        (click)="onTabClick('profile')">
+        <span class="material-icons text-base">
+          <i class="fa-solid fa-user-plus fa-lg"></i>
+        </span>
+      </button>
+
+      <button class="hidden md:flex items-center gap-1"
+        [ngClass]="activeTab === 'settings' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
+        (click)="onTabClick('settings')">
+        <span class="material-icons text-base">
+          <i class="fa-solid fa-gear fa-lg"></i>
+        </span>
+      </button>
+    </nav>
+  </div>
+</header>
