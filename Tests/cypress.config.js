@@ -9,6 +9,7 @@ module.exports = defineConfig({
       await addCucumberPreprocessorPlugin(on, config);
       on("file:preprocessor",createBundler({plugins: [createEsbuildPlugin.default(config)],}));
       return config;
+
     },
     specPattern: "cypress/e2e/Features/**/*.feature",
     baseUrl: "http://localhost:3500/api",

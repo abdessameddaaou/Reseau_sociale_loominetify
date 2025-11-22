@@ -1,15 +1,18 @@
 const express = require('express');
 const db = require('./db/db');
 const config = require('./config');
+const cookieParser = require('cookie-parser');
 const cors = require("cors")
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(
     cors({
         origin : config.frontendBaseUrl,
-        credentials : true
+        credentials : true,
+        // allowedHeaders: ['Content-Type', 'Authorization'],
     })
 )
 // Routes

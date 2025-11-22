@@ -8,7 +8,7 @@ module.exports.getAllUsers = async (req, res) => {
     const users =  await Users.findAll();
     res.json(users);
   } catch (error) {
-    console.error("Erreur lors de la récupération des utilisateurs :", error);
+    console.error({ error: "Erreur lors de la récupération des utilisateurs :" });
     res.status(500).json({ error: "Une erreur est survenue lors de la récupération des utilisateurs." });
   }
 };
@@ -23,18 +23,15 @@ module.exports.createUser = async (req, res) => {
     const password = req.body.password;
 
     if (!regexPassword.test(password)) {
-    return res.status(400).json({
-      error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial."
-    });
+    return res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial." });
     }
 
     // Hasher le mot de passe 
     
     const cryptPassword = await bcrypt.hash(password, 10);
     const newUser = await Users.create({ nom, prenom, email, password: cryptPassword, telephone, dateNaissance, question, reponse, ville, pays, isAdmin });
-    res.status(201).json({message: "Compte créé avec succès", data: newUser});
+    res.status(201).json({ message: "Compte créé avec succès", data: newUser });
   } catch (error) {
-    console.error("Erreur lors de la création de l'utilisateur :", error);
-    res.status(500).json({ error : error.message});
+    res.status(500).json({ error : "Erreur lors de la création de l'utilisateur :" });
   } 
 };

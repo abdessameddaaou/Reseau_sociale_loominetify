@@ -3,19 +3,20 @@
   "version": "1.0.0",
   "description": "Ceci est un test de jira",
   "main": "index.js",
-"scripts": {
-  "start": "node server.js",
-  "dev": "cross-env APP_ENV=development nodemon server.js",
-  "start:dev": "cross-env APP_ENV=development node server.js",
-  "start:recette": "cross-env APP_ENV=recette node server.js",
-  "start:prod": "cross-env APP_ENV=production node server.js"
-},
+  "scripts": {
+    "start": "node server.js",
+    "dev": "cross-env APP_ENV=development nodemon server.js",
+    "start:dev": "cross-env APP_ENV=development node server.js",
+    "start:recette": "cross-env APP_ENV=recette node server.js",
+    "start:prod": "cross-env APP_ENV=production node server.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
