@@ -3,8 +3,8 @@ import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/fo
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-
+import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
+import Swal from 'sweetalert2';
 
 @Component({
 selector: 'app-auth-user',
@@ -16,34 +16,69 @@ export class AuthUserComponent implements OnInit {
   countries: any[] = [];
 
 
-  mode: 'login' | 'signup' = 'login';
+  pageRedirection: 'login' | 'signup' = 'login';
   signupStep = 1;
 
   loginForm: FormGroup;
   signupForm: FormGroup;
 
-  signupErrors: { [key: string]: string } = {};
+
   dropdownOpen = false;
   selectedCountry: any = null;
 
+  /**
+   * Erreurs
+   */
+  signupErrors: { [key: string]: string } = {};
+  loginError = '';
+  signupError = '';
+
+  /**
+   * URL API backend
+   */
+  private apiUrl = 'http://localhost:3500/api';
+
   constructor(private fb: FormBuilder, private router: Router, private http: HttpClient) {
-    this.loginForm = this.fb.group({
+    this.loginForm = this.buildLoginForm();
+    this.signupForm = this.buildSignupForm();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Getters pour le template
+  // ---------------------------------------------------------------------------
+
+  get LoginForm(): { [key: string]: AbstractControl } {
+    return this.loginForm.controls;
+  }
+
+  get SignUpForm(): { [key: string]: AbstractControl } {
+    return this.signupForm.controls;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Initialisation des formulaires
+  // ---------------------------------------------------------------------------
+
+  private buildLoginForm(): FormGroup {
+    return this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
     });
+  }
 
-    this.signupForm = this.fb.group({
+  private buildSignupForm(): FormGroup {
+    return this.fb.group({
       nom: ['', Validators.required],
       prenom: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       confirmPassword: ['', Validators.required],
       phone: [''],
-      birthdate: ['', Validators.required],
+      dateNaissance: ['', Validators.required],
       pays: [''],
       city: [''],
-      secretQuestion: ['', Validators.required],
-      secretAnswer: ['', Validators.required],
+      question: ['', Validators.required],
+      reponse: ['', Validators.required],
     });
   }
 
@@ -64,101 +99,133 @@ ngOnInit() {
   }
 
   selectCountry(country: any) {
+    // alert(country.name);
     this.selectedCountry = country;
     this.signupForm.get('pays')?.setValue(country.name);
     this.dropdownOpen = false;
   }
 
-  setMode(mode: 'login' | 'signup') {
-    this.mode = mode;
-    if (mode === 'signup') {
+
+  // ---------------------------------------------------------------------------
+  // Gestion du mode login / signup ( pour la redirection )
+  // ---------------------------------------------------------------------------
+
+  setMode(modeChoisis: 'login' | 'signup'): void {
+    this.pageRedirection = modeChoisis;
+    this.clearGlobalErrors();
+
+    if (modeChoisis === 'signup') {
       this.signupStep = 1;
-      this.clearErrors();
+      this.clearSignupFieldErrors();
     }
   }
 
-  // --- helpers ---
-  clearErrors() {
-    this.signupErrors = {};
+  // ---------------------------------------------------------------------------
+  // Connexion
+  // ---------------------------------------------------------------------------
+
+  onLogin(): void {
+    this.clearGlobalErrors();
+
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+
+    this.http
+      .post(`${this.apiUrl}/auth/login`, this.loginForm.value, { withCredentials: true })
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/fil-actualite']);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.loginError = this.extractErrorMessage(err, 'Impossible de se connecter au serveur.');
+        },
+      });
   }
 
-  private validatePassword(password: string): boolean {
-    const minLength = password.length >= 8;
-    const hasUpper = /[A-Z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    return minLength && hasUpper && hasNumber && hasSpecial;
-  }
+  // ---------------------------------------------------------------------------
+  // Inscription – Navigation entre les étapes
+  // ---------------------------------------------------------------------------
 
-  // --- navigation entre les étapes ---
-  goFromStep1() {
-    this.clearErrors();
+  goFromStep1(): void {
+    this.clearGlobalErrors();
+    this.clearSignupFieldErrors(['nom', 'prenom', 'email']);
     const nom = this.signupForm.get('nom')?.value?.trim();
     const prenom = this.signupForm.get('prenom')?.value?.trim();
     const email = this.signupForm.get('email')?.value?.trim();
-    let ok = true;
+
+    let isValid = true;
 
     if (!nom) {
-      this.signupErrors['nom'] = 'Le champ "Nom complet" est obligatoire';
-      ok = false;
+      this.signupErrors['nom'] = 'Le champ "Nom" est obligatoire.';
+      isValid = false;
     }
-
     if (!prenom) {
-      this.signupErrors['prenom'] = 'Le champ "Prénom" est obligatoire';
-      ok = false;
+      this.signupErrors['prenom'] = 'Le champ "Prénom" est obligatoire.';
+      isValid = false;
     }
 
     if (!email) {
-      this.signupErrors['email'] = 'Le champ "Adresse email" est obligatoire';
-      ok = false;
-    } else if (this.signupForm.get('email')?.invalid) {
-      this.signupErrors['email'] = 'Veuillez entrer une adresse email valide';
-      ok = false;
+      this.signupErrors['email'] = 'Le champ "Adresse email" est obligatoire.';
+      isValid = false;
+    } else if (this.SignUpForm['email']?.invalid) {
+      this.signupErrors['email'] = 'Veuillez entrer une adresse email valide.';
+      isValid = false;
     }
 
-    if (ok) this.signupStep = 2;
+    if (isValid) {
+      this.signupStep = 2;
+    }
   }
 
-  goFromStep2() {
-    this.clearErrors();
+  goFromStep2(): void {
+    this.clearGlobalErrors();
+    this.clearSignupFieldErrors(['password']);
+
     const password = this.signupForm.get('password')?.value;
     const confirmPassword = this.signupForm.get('confirmPassword')?.value;
-    let ok = true;
+
+    let isValid = true;
 
     if (!password) {
-      this.signupErrors['password'] = 'Le champ "Mot de passe" est obligatoire';
-      ok = false;
+      this.signupErrors['password'] = 'Le champ "Mot de passe" est obligatoire.';
+      isValid = false;
     } else if (!this.validatePassword(password)) {
-      this.signupErrors['password'] = 'Le mot de passe ne respecte pas les critères de sécurité';
-      ok = false;
-    } else if (password !== confirmPassword) {
+      this.signupErrors['password'] =
+        'Le mot de passe ne respecte pas les critères de sécurité (8 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial).';
+      isValid = false;
+    }else if (password !== confirmPassword) {
       this.signupErrors['confirmPassword'] = 'Les mots de passe ne correspondent pas';
-      ok = false;
+      isValid = false;
     }
 
-    if (ok) this.signupStep = 3;
+    if (isValid) {
+      this.signupStep = 3;
+    }
   }
 
-goFromStep3() {
-  this.clearErrors();
-  const birthdate = this.signupForm.get('birthdate')?.value;
-  const pays = this.signupForm.get('pays')?.value;
-  let ok = true;
+  goFromStep3(): void {
+    this.clearGlobalErrors();
+    this.clearSignupFieldErrors(['dateNaissance']);
 
-  // ta validation de date (je la laisse telle quelle)
-  if (!birthdate) {
-    this.signupErrors['birthdate'] = 'Le champ "Date de naissance" est obligatoire';
-    ok = false;
+    const dateNaissance = this.signupForm.get('dateNaissance')?.value;
+     const pays = this.signupForm.get('pays')?.value;
+    let isValid = true;
+
+ if (!dateNaissance) {
+    this.signupErrors['dateNaissance'] = 'Le champ "Date de naissance" est obligatoire';
+    isValid = false;
   } else {
-    const birth = new Date(birthdate);
+    const birth = new Date(dateNaissance);
     if (isNaN(birth.getTime())) {
-      this.signupErrors['birthdate'] = 'La date de naissance est invalide';
-      ok = false;
+      this.signupErrors['dateNaissance'] = 'La date de naissance est invalide';
+      isValid = false;
     } else {
       const today = new Date();
       if (birth > today) {
-        this.signupErrors['birthdate'] = 'La date de naissance ne peut pas être dans le futur';
-        ok = false;
+        this.signupErrors['dateNaissance'] = 'La date de naissance ne peut pas être dans le futur';
+        isValid = false;
       } else {
         let age = today.getFullYear() - birth.getFullYear();
         const m = today.getMonth() - birth.getMonth();
@@ -166,55 +233,131 @@ goFromStep3() {
           age--;
         }
         if (age < 18) {
-          this.signupErrors['birthdate'] =
+          this.signupErrors['dateNaissance'] =
             'Vous devez avoir au moins 18 ans pour vous inscrire';
-          ok = false;
+          isValid = false;
         }
       }
     }
   }
 
-  if (ok) this.signupStep = 4;
-}
-
-
-  // --- submit forms ---
-  onLogin() {
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      return;
+    if (isValid) {
+      this.signupStep = 4;
     }
-    console.log('Connexion...', this.loginForm.value); // appel API ici
-
   }
 
-  onSignup() {
-    this.clearErrors();
+  // ---------------------------------------------------------------------------
+  // Inscription
+  // ---------------------------------------------------------------------------
+
+  onSignup(): void {
+    this.clearGlobalErrors();
+
     if (this.signupStep !== 4) return;
 
-    const sq = this.signupForm.get('secretQuestion')?.value;
-    const sa = this.signupForm.get('secretAnswer')?.value?.trim();
-    let ok = true;
+    this.clearSignupFieldErrors(['question', 'reponse']);
 
-    if (!sq) {
-      this.signupErrors['secretQuestion'] = 'Le champ "Question secrète" est obligatoire';
-      ok = false;
+    const questionSecrete = this.SignUpForm['question']?.value;
+    const reponseQuestion = this.SignUpForm['reponse']?.value?.trim();
+
+    let isValid = true;
+
+    if (!questionSecrete) {
+      this.signupErrors['question'] = 'Le champ "Question secrète" est obligatoire.';
+      isValid = false;
     }
-    if (!sa) {
-      this.signupErrors['secretAnswer'] = 'Le champ "Réponse secrète" est obligatoire';
-      ok = false;
+    if (!reponseQuestion) {
+      this.signupErrors['reponse'] = 'Le champ "Réponse secrète" est obligatoire.';
+      isValid = false;
     }
 
-    if (!ok) return;
+    if (!isValid) return;
 
     if (this.signupForm.invalid) {
-      // au cas où d’autres champs seraient invalides
       this.signupForm.markAllAsTouched();
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Certains champs dans les étapes précédentes sont invalides.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      return;
+    }
+    console.log(this.signupForm.value);
+    this.http.post(`${this.apiUrl}/users/newUser`, this.signupForm.value, { withCredentials: true }).subscribe({
+        next: () => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Inscription réussie',
+            text: 'Vous pouvez maintenant vous connecter.',
+            timer: 1500,
+            showConfirmButton: false,
+          });
+
+          this.setMode('login');
+        },
+        error: (err: HttpErrorResponse) => {
+          this.signupError = this.extractErrorMessage(
+            err,
+            'Une erreur est survenue lors de la création du compte.'
+          );
+        },
+      });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Validation & Erreurs
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Valide les critères du mot de passe :
+   * - Min. 8 caractères
+   * - Min. 1 majuscule
+   * - Min. 1 chiffre
+   * - Min. 1 caractère spécial
+   */
+  private validatePassword(password: string): boolean {
+    const minLength = password?.length >= 8;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    return minLength && hasUpper && hasNumber && hasSpecial;
+  }
+
+  /**
+   * Extrait un message d'erreur depuis la réponse backend.
+   */
+  private extractErrorMessage(err: HttpErrorResponse, defaultMessage: string): string {
+
+    if (!err || err.status === 0) {
+      return 'Impossible de contacter le serveur. Veuillez réessayer plus tard.';
+    }
+
+    const backend = err.error;
+
+    if (typeof backend === 'string' && backend.trim()) {
+      return backend;
+    }
+    return defaultMessage;
+  }
+
+  private clearGlobalErrors(): void {
+    this.loginError = '';
+    this.signupError = '';
+  }
+
+  /**
+   * Efface toutes les erreurs de signup ou seulement certains champs.
+   */
+  private clearSignupFieldErrors(fields?: string[]): void {
+    if (!fields) {
+      this.signupErrors = {};
       return;
     }
 
-    console.log('Inscription complétée', this.signupForm.value);
-    alert('Inscription réussie ! Un email de confirmation vous a été envoyé.');
-    this.router.navigate(['/fil-actualite'])
+    fields.forEach((field) => delete this.signupErrors[field]);
   }
 }

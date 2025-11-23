@@ -1,5 +1,8 @@
 const Users = require("../models/users");
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
+
+
 
 // Récupérer tous les utilisateurs
 
@@ -8,8 +11,8 @@ module.exports.getAllUsers = async (req, res) => {
     const users =  await Users.findAll();
     res.json(users);
   } catch (error) {
-    console.error("Erreur lors de la récupération des utilisateurs :", error);
-    res.status(500).json({ message : 'Une erreur est survenue lors de la récupération des utilisateurs.', error: error.message });
+    console.error({ error: "Erreur lors de la récupération des utilisateurs :" });
+    res.status(500).json({ error: "Une erreur est survenue lors de la récupération des utilisateurs." });
   }
 };
 
@@ -21,7 +24,7 @@ module.exports.createUser = async (req, res) => {
 
     const { nom, prenom, email, telephone, dateNaissance, question, reponse, ville, pays, isAdmin } = req.body;
     const password = req.body.password;
-
+    
     const userExists = await Users.findOne({ where: { email: email } });
     if (userExists) {
       return res.status(400).json({ message: "Un utilisateur avec cet email existe déjà.", error: error.message });
@@ -37,35 +40,41 @@ module.exports.createUser = async (req, res) => {
       });
     }
     if (!regexPassword.test(password)) {
-    return res.status(400).json({
-      message: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.", error: error.message
-    });
+    return res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial." });
     }
 
     // Hasher le mot de passe 
     
     const cryptPassword = await bcrypt.hash(password, 10);
-    const newUser = await Users.create({ nom, prenom, email, password: cryptPassword, telephone, dateNaissance, question, reponse, ville, pays, isAdmin });
 
-    if(newUser){
-      var transporter = require('../mailer/nodemailer');
+    // Send Email de confirmation (à implémenter)
+    const transport = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'elhilali.abdelouahab@gmail.com',
+      pass: 'fikhmgcheswzhbft'
+    }
+  });
+
       const mailOptions = {
         from: 'elhilali.abdelouahab@gmail.com',
-        to: newUser.email,
+        to: req.body.email,
         subject: 'Bienvenue sur notre plateforme',
-        text: `Bonjour ${newUser.prenom},\n\nMerci de vous être inscrit sur notre plateforme.`
+        text: `Bonjour ${req.body.prenom},\n\nMerci de vous être inscrit sur notre plateforme.`
       };
 
-      transporter.sendMail(mailOptions, (error, info) => {
+      transport.sendMail(mailOptions, async (error, info) => {
         if (error) {
           console.error("Erreur lors de l'envoi de l'email de bienvenue :", error);
         } else {
+          const newUser = await Users.create({ nom, prenom, email, password: cryptPassword, telephone, dateNaissance, question, reponse, ville, pays, isAdmin });
           res.status(201).json({message: "Compte créé avec succès", data: newUser});
-          console.log("Email de bienvenue envoyé :", info.response);
         }
       });
-    }
+    
 
+    
+// res.status(201).json({message: "Compte créé avec succès", data: newUser});
     
   } catch (error) {
     res.status(500).json({ message: "Une erreur est survenue lors de la création de l'utilisateur.", error : error.message});

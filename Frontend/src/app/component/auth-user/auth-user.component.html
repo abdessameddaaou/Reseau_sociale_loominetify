@@ -77,7 +77,7 @@
     <div
       [ngClass]="[
         'flex flex-col justify-center bg-white rounded-[30px] my-5 mr-5 px-10 py-10 transition-all duration-500',
-        mode === 'signup' ? 'basis-[60%]' : 'basis-1/2'
+        pageRedirection === 'signup' ? 'basis-[60%]' : 'basis-1/2'
       ]"
     >
       <!-- Header -->
@@ -85,10 +85,14 @@
         <h1
           class="text-3xl font-bold bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] bg-clip-text text-transparent mb-1"
         >
-          {{ mode === 'login' ? 'Bon retour !' : 'Créer un compte' }}
+          {{ pageRedirection === 'login' ? 'Bon retour !' : 'Créer un compte' }}
         </h1>
         <p class="text-sm text-slate-500">
-          {{ mode === 'login' ? 'Connectez-vous pour continuer' : 'Rejoignez la communauté loominetfy.' }}
+          {{
+            pageRedirection === 'login'
+              ? 'Connectez-vous pour continuer'
+              : 'Rejoignez la communauté loominetfy.'
+          }}
         </p>
       </div>
 
@@ -97,7 +101,7 @@
         <button
           class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all"
           [ngClass]="
-            mode === 'login'
+            pageRedirection === 'login'
               ? 'bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] text-white shadow-md'
               : 'text-slate-500'
           "
@@ -109,7 +113,7 @@
         <button
           class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all"
           [ngClass]="
-            mode === 'signup'
+            pageRedirection === 'signup'
               ? 'bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] text-white shadow-md'
               : 'text-slate-500'
           "
@@ -120,9 +124,17 @@
         </button>
       </div>
 
+      <!-- Message d'erreur global LOGIN -->
+      <div
+        *ngIf="loginError"
+        class="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs text-red-600"
+      >
+        {{ loginError }}
+      </div>
+
       <!-- FORMULAIRE CONNEXION -->
       <form
-        *ngIf="mode === 'login'"
+        *ngIf="pageRedirection === 'login'"
         [formGroup]="loginForm"
         (ngSubmit)="onLogin()"
         class="flex flex-col gap-5"
@@ -201,18 +213,20 @@
           </span>
           <span>Continuer avec Google</span>
         </button>
-
-        <p class="mt-6 text-center text-[11px] text-slate-400">
-          En vous inscrivant, vous acceptez nos
-          <a href="#" class="text-[#5b7cff] hover:text-[#8b5cf6]">Conditions d'utilisation</a>
-          et la
-          <a href="#" class="text-[#5b7cff] hover:text-[#8b5cf6]">Politique de confidentialité</a>.
-        </p>
       </form>
 
       <!------------------------------------------------------- FORMULAIRE INSCRIPTION multi-étapes --------------------------------------------------------->
+      <!-- Message d'erreur global SIGNUP -->
+      <div
+        *ngIf="signupError && pageRedirection === 'signup'"
+        class="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs text-red-600"
+      >
+        {{ signupError }}
+      </div>
+
+      <!-- FORMULAIRE INSCRIPTION multi-étapes -->
       <form
-        *ngIf="mode === 'signup'"
+        *ngIf="pageRedirection === 'signup'"
         [formGroup]="signupForm"
         (ngSubmit)="onSignup()"
         class="flex flex-col "
@@ -315,7 +329,7 @@
           <div class="flex gap-3 mt-5">
             <button
               type="button"
-              (click)="signupStep = 1; clearErrors();"
+              (click)="signupStep = 1; signupErrors = {}"
               class="flex-1 rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition"
             >
               Retour
@@ -340,11 +354,11 @@
     </label>
     <input
       type="date"
-      formControlName="birthdate"
+      formControlName="dateNaissance"
       class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
     />
     <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
-      {{ signupErrors['birthdate'] }}
+      {{ signupErrors['dateNaissance'] }}
     </span>
   </div>
 
@@ -410,7 +424,7 @@ class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm flex items-
   <div class="flex gap-3 mt-5">
     <button
       type="button"
-      (click)="signupStep = 2; clearErrors();"
+      (click)="signupStep = 2; signupErrors = {};"
       class="flex-1 rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition"
     >
       Retour
@@ -431,17 +445,17 @@ class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm flex items-
           <div>
             <label class="block text-xs font-medium text-slate-800 mb-1">Question secrète</label>
             <select
-              formControlName="secretQuestion"
+              formControlName="question"
               class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
             >
               <option value="">Choisissez une question</option>
-              <option value="pet">Quel est le nom de votre premier animal de compagnie ?</option>
-              <option value="city">Dans quelle ville êtes-vous né(e) ?</option>
-              <option value="school">Quel est le nom de votre école primaire ?</option>
-              <option value="food">Quel est votre plat préféré ?</option>
+              <option value="Quel est le nom de votre premier animal de compagnie ?">Quel est le nom de votre premier animal de compagnie ?</option>
+              <option value="Dans quelle ville êtes-vous né(e) ?">Dans quelle ville êtes-vous né(e) ?</option>
+              <option value="Quel est le nom de votre école primaire ?">Quel est le nom de votre école primaire ?</option>
+              <option value="Quel est votre plat préféré ?">Quel est votre plat préféré ?</option>
             </select>
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
-              {{ signupErrors['secretQuestion'] }}
+              {{ signupErrors['question'] }}
             </span>
           </div>
 
@@ -449,19 +463,19 @@ class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm flex items-
             <label class="block text-xs font-medium text-slate-800 mb-1">Réponse secrète</label>
             <input
               type="text"
-              formControlName="secretAnswer"
+              formControlName="reponse"
               placeholder="Votre réponse"
               class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
             />
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
-              {{ signupErrors['secretAnswer'] }}
+              {{ signupErrors['reponse'] }}
             </span>
           </div>
 
           <div class="flex gap-3">
             <button
               type="button"
-              (click)="signupStep = 3; clearErrors();"
+              (click)="signupStep = 3; signupErrors = {}"
               class="flex-1 rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition"
             >
               Retour
@@ -484,7 +498,6 @@ class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm flex items-
             class="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-[#5b7cff] hover:-translate-y-[1px] transition"
           >
             <span class="w-4 h-4">
-              <!-- même icône Google que plus haut -->
               <svg viewBox="0 0 18 18">
                 <path
                   fill="#4285F4"
@@ -506,13 +519,6 @@ class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm flex items-
             </span>
             <span>Continuer avec Google</span>
           </button>
-
-          <p class="mt-6 text-center text-[11px] text-slate-400">
-            En vous inscrivant, vous acceptez nos
-            <a href="#" class="text-[#5b7cff] hover:text-[#8b5cf6]">Conditions d'utilisation</a>
-            et la
-            <a href="#" class="text-[#5b7cff] hover:text-[#8b5cf6]">Politique de confidentialité</a>.
-          </p>
         </ng-container>
       </form>
     </div>
