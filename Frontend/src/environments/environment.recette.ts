@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://recette.monsite.com/api',
+  apiUrl: 'http://recette.loominetify.fr/api',
 };
