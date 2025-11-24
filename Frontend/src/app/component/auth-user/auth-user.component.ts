@@ -4,6 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../../env/environment.dev';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -32,12 +33,6 @@ export class AuthUserComponent implements OnInit {
   signupErrors: { [key: string]: string } = {};
   loginError = '';
   signupError = '';
-
-  /**
-   * URL API backend
-   */
-  private apiUrl = 'http://localhost:3500/api';
-
   constructor(private fb: FormBuilder, private router: Router, private http: HttpClient) {
     this.loginForm = this.buildLoginForm();
     this.signupForm = this.buildSignupForm();
@@ -82,11 +77,15 @@ export class AuthUserComponent implements OnInit {
     });
   }
 
+  /**
+   * ngOnInit()
+   */
+
 ngOnInit() {
   this.http.get<any[]>('https://restcountries.com/v3.1/all?fields=name,flags,cca2,translations').subscribe((data) => {
     this.countries = data
       .map((c) => ({
-        name: c.translations?.fra?.common || c.name.common, // Nom en français ou fallback
+        name: c.translations?.fra?.common || c.name.common,
         code: c.cca2,
         flag: c.flags.png,
       }))
@@ -98,8 +97,11 @@ ngOnInit() {
   this.dropdownOpen = !this.dropdownOpen;
   }
 
+/**
+ * Fonction Choisir un pays 
+ * @param country 
+ */
   selectCountry(country: any) {
-    // alert(country.name);
     this.selectedCountry = country;
     this.signupForm.get('pays')?.setValue(country.name);
     this.dropdownOpen = false;
@@ -133,12 +135,12 @@ ngOnInit() {
     }
 
     this.http
-      .post(`${this.apiUrl}/auth/login`, this.loginForm.value, { withCredentials: true })
+      .post(`${environment.apiUrl}/auth/login`, this.loginForm.value, { withCredentials: true })
       .subscribe({
         next: () => {
           this.router.navigate(['/fil-actualite']);
         },
-        error: (err: HttpErrorResponse) => {
+        error: (err: any) => {
           this.loginError = this.extractErrorMessage(err, 'Impossible de se connecter au serveur.');
         },
       });
@@ -286,8 +288,7 @@ ngOnInit() {
 
       return;
     }
-    console.log(this.signupForm.value);
-    this.http.post(`${this.apiUrl}/users/newUser`, this.signupForm.value, { withCredentials: true }).subscribe({
+    this.http.post(`${environment.apiUrl}/users/newUser`, this.signupForm.value, { withCredentials: true }).subscribe({
         next: () => {
           Swal.fire({
             icon: 'success',
@@ -330,16 +331,19 @@ ngOnInit() {
   /**
    * Extrait un message d'erreur depuis la réponse backend.
    */
-  private extractErrorMessage(err: HttpErrorResponse, defaultMessage: string): string {
 
-    if (!err || err.status === 0) {
+  private extractErrorMessage(err: any, defaultMessage: string): string {
+    if (!err || typeof err.status === 'number' && err.status === 0) {
       return 'Impossible de contacter le serveur. Veuillez réessayer plus tard.';
     }
 
-    const backend = err.error;
+    const backend = err.error ?? err;
 
-    if (typeof backend === 'string' && backend.trim()) {
-      return backend;
+    if (backend && typeof backend === 'object') {
+
+      if (typeof backend.error === 'string' && backend.error.trim()) {
+        return backend.error;
+      }
     }
     return defaultMessage;
   }

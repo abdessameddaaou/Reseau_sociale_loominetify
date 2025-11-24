@@ -13,41 +13,41 @@
     <nav class="flex items-center gap-x-5 text-sm">
       <button class="flex items-center gap-1 ml-4"
         [ngClass]="activeTab === 'home' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
-        (click)="onTabClick('home')">
+        (click)="onTabClick('home')" title="Home">
         <span class="material-icons text-base">
           <i class="fa-solid fa-house-chimney fa-lg"></i>
         </span>
       </button>
 
       <button class="flex items-center gap-1"
-        [ngClass]="activeTab === 'notifications' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
-        (click)="onTabClick('notifications')">
-        <span class="material-icons text-base">
-          <i class="fa-solid fa-bell fa-lg"></i>
-        </span>
-      </button>
-
-      <button class="flex items-center gap-1"
         [ngClass]="activeTab === 'messages' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
-        (click)="onTabClick('messages')">
+        (click)="onTabClick('messages')" title="Messages">
         <span class="material-icons text-base">
           <i class="fa-sharp fa-solid fa-comment-dots fa-lg"></i>
         </span>
       </button>
 
       <button class="flex items-center gap-1"
-        [ngClass]="activeTab === 'profile' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
-        (click)="onTabClick('profile')">
+        [ngClass]="activeTab === 'notifications' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
+        (click)="onTabClick('notifications')" title="Notifications">
         <span class="material-icons text-base">
-          <i class="fa-solid fa-user-plus fa-lg"></i>
+          <i class="fa-solid fa-bell fa-lg"></i>
         </span>
       </button>
 
       <button class="hidden md:flex items-center gap-1"
         [ngClass]="activeTab === 'settings' ? 'text-[#5b7cff] font-semibold' : 'text-slate-500'"
-        (click)="onTabClick('settings')">
+        (click)="onTabClick('settings')" title="Paramètre">
         <span class="material-icons text-base">
           <i class="fa-solid fa-gear fa-lg"></i>
+        </span>
+      </button>
+
+      <button class="flex items-center gap-1"
+        [ngClass]="activeTab === 'deconnexion' ? 'text-[#8f0608] font-semibold' : 'text-slate-500'"
+        (click)="onTabClick('deconnexion')" title="Se déconnecter">
+        <span class="material-icons text-base">
+          <i class="fa-solid fa-arrow-right-from-bracket fa-lg" style="color: #be0909;"></i>
         </span>
       </button>
     </nav>

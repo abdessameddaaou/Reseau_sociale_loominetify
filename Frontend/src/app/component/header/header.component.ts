@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './header.component.html',
 })
 export class HeaderComponent {
-  @Input() activeTab: 'home' | 'notifications' | 'messages' | 'profile' | 'settings' = 'home';
+  @Input() activeTab: 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexion'  = 'home';
   @Output() tabChange = new EventEmitter<typeof this.activeTab>();
 
   onTabClick(tab: typeof this.activeTab) {

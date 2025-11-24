@@ -1,6 +1,11 @@
 const sequelize = require('../db/db.js');
 
-// Vider la base de données
+/**
+ * Vider la base de données
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 module.exports.resetdb = async(req, res) =>{
 
     try {

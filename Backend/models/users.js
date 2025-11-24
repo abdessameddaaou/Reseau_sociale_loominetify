@@ -45,7 +45,7 @@ const Users = db.define("Users", {
   },
   pays : {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
   },
   isAdmin: {
     type: DataTypes.BOOLEAN,
