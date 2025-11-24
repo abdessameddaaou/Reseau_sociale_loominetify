@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { jwtDecode } from 'jwt-decode';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
-import { environment } from '../../../env/environment.dev';
+import { environment } from '../../../environments/environment.dev';
 
 @Component({
   selector: 'app-activation-compte',

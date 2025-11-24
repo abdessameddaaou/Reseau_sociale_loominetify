@@ -6,7 +6,7 @@ import { HeaderComponent } from '../header/header.component'
 import { PostCreatorComponent } from '../post-creator/post-creator.component';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../env/environment.dev';
+import { environment } from '../../../environments/environment.dev';
 
 interface PostComment {
   id: number;

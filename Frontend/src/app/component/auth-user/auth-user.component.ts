@@ -4,7 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
-import { environment } from '../../../env/environment.dev';
+import { environment } from '../../../environments/environment.dev';
 import Swal from 'sweetalert2';
 
 @Component({
