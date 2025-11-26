@@ -305,3 +305,17 @@ module.exports.activerCompteUser = async( req, res ) =>{
     return res.status(500).json({error: "Une erreur est survenue lors de l'activation de votre compte"})
   }
 }
+
+module.exports.getUser = async(req,res) =>{
+  try {
+
+    const user = await Users.findByPk(req.userId, {
+      attributes: { exclude: ['password', 'reponse', 'id', 'question'] } 
+    });
+
+    return res.status(200).json({ user });
+    
+  } catch (error) {
+    return res.status(500).json({ error: "Une erreur est survenue lors de la récupération de l'utilisateur." });
+  }
+}

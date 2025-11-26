@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule , Validators, FormsModule  } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -37,6 +37,22 @@ interface OnlineFriend {
   lastActive?: string;
 }
 
+interface CurrentUser {
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone?: string;
+  dateNaissance: string;
+  ville?: string;
+  pays?: string;
+  isAdmin: boolean;
+  photo?: string;
+  createdAt:string;
+
+
+  // ajoute ce que ton backend renvoie
+}
+
 @Component({
   selector: 'app-fil-actualite',
   standalone: true,
@@ -50,12 +66,15 @@ interface OnlineFriend {
   ],
   templateUrl: './fil-actualite.component.html'
 })
-export class FilActualiteComponent {
+export class FilActualiteComponent implements OnInit {
   // Navigation du header
   activeTab: 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexion' = 'home';
 
-  onlineFriends2: any[] = [];
+  currentUser: CurrentUser | null = null; 
+  isUserLoading = true;
+
   // Formulaire de création de post
+  onlineFriends2: any[] = [];
   postForm: FormGroup;
   imagePreview: string | null = null;
   formErrors: { [key: string]: string } = {};
@@ -78,41 +97,22 @@ export class FilActualiteComponent {
       avatar: 'https://i.pravatar.cc/150?img=12',
       status: 'En ligne',
       lastActive: 'Actif maintenant',
-    },
-    {
-      name: 'Sofia Martin',
-      avatar: 'https://i.pravatar.cc/150?img=32',
-      status: 'En train d’écrire…',
-      lastActive: 'Il y a 2 min',
-    },
-    {
-      name: 'Yassine El Amrani',
-      avatar: 'https://i.pravatar.cc/150?img=48',
-      status: 'Sur mobile',
-      lastActive: 'Il y a 5 min',
-    },
-    {
-      name: 'Clara Rossi',
-      avatar: 'https://i.pravatar.cc/150?img=24',
-      status: 'En ligne',
-      lastActive: 'Actif maintenant',
-    },
+    }
   ];
 
   // Ami sélectionné pour le mini-chat
   selectedFriend: OnlineFriend | null = null;
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private http: HttpClient
-  ) {
+  constructor(private fb: FormBuilder, private router: Router, private http: HttpClient) {
+
     this.postForm = this.fb.group({
       text: ['', [Validators.maxLength(1000)]],
       image: [null]
     });
+  }
 
-    // Génération de quelques posts mock
+  ngOnInit(): void {
+    this.loadCurrentUser();
     this.seedPosts();
     this.loadInitialPosts();
   }
@@ -121,27 +121,57 @@ export class FilActualiteComponent {
   setActiveTab(tab: typeof this.activeTab) {
     this.activeTab = tab;
 
+    /**
+     * Home
+     */
     if (tab === 'home') {
-      this.router.navigate(['/fil-actualite']);
+        this.loadCurrentUser();
+        this.router.navigate(['/fil-actualite']);
     }
 
+    /**
+     * Déconnexion
+     */
     if (tab === 'deconnexion') {
-      this.http.post(
-        `${environment.apiUrl}/auth/logout`,
-        {},
-        { withCredentials: true }
-      ).subscribe({
+      this.http.post(`${environment.apiUrl}/auth/logout`,{},{ withCredentials: true }).subscribe({
         next: () => {
-          this.router.navigate(['/login']);
+          this.router.navigate(['/auth']);
         },
-        error: (err) => {
-          this.router.navigate(['/login']);
+        error: () => {
+          this.router.navigate(['/auth']);
         }
       });
     }
   }
 
-  // clic sur un ami connecté → ouvrir le mini chat
+
+
+
+/**
+ * Charger les informations de l'utilisateur
+ */
+private loadCurrentUser() {
+  this.http
+    .get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUser`, {
+      withCredentials: true
+    })
+    .subscribe({
+      next: (res) => {
+        this.currentUser = res.user;
+        this.isUserLoading = false;
+      },
+      error: () => {
+        this.isUserLoading = false;
+        this.router.navigate(['/auth']);
+      }
+    });
+}
+
+
+/**
+ * clic sur un ami connecté → ouvrir le mini chat
+ * @param friend 
+ */
   openChat(friend: OnlineFriend) {
     this.selectedFriend = friend;
     this.activeTab = 'messages';
