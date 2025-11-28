@@ -67,6 +67,14 @@ const Users = db.define("Users", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  codeReinitialisation : {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  dateExpirationCode : {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 });
 
 module.exports = Users;
