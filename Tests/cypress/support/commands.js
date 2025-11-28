@@ -31,9 +31,9 @@ Cypress.Commands.add('ChargerDonnes', ()=>{
 })
 
 Cypress.Commands.add('viderBase', () => {
-    cy.request({
+    return cy.request({
             method: "POST",
-            url: "/db/resetdbTests",
+            url: `${Cypress.env("apiUrl")}/db/resetdbTests`
   })
 })
 
@@ -41,7 +41,7 @@ Cypress.Commands.add('CreerCompte', () =>{
     return cy.ChargerDonnes().then((userData) =>{
         cy.request({
             method: 'POST',
-            url: '/users/newUser',
+            url: `${Cypress.env("apiUrl")}/users/newUser`,
             body: userData
         })
     })
