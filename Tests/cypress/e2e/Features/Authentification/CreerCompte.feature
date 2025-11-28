@@ -23,9 +23,16 @@ Feature: Création d'un compte utilisateur
             | Ab2017!        | Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial. |
             | abdelcso2017!  | Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial. |
 
-    # @API
-    # Scenario: Vérifier que le compte utilisateur est bien créé dans le système
-    #     Given qu’un utilisateur a créé un compte via l’API
-    #     When une requête de recherche de compte est envoyée à l’API avec ses identifiants
-    #     Then l’API renvoie les informations du compte correspondant
-    #     And le code de retour HTTP est 200
+    @API
+    Scenario: Vérifier que le compte utilisateur est bien créé dans le système
+        Given qu’un utilisateur a créé un compte via l’API
+        When une requête de recherche de compte est envoyée à l’API avec ses identifiants
+        Then l’API renvoie les informations du compte correspondant
+        And le code de retour HTTP est 200
+
+    @IHM
+    Scenario: Vérifier que la création d'un compte utilisateur fonctionne correctement
+        Given L'utilisateur est dans la page  de connexion
+        When Il clique sur le bouton Inscription
+        And Il saisit les informations
+        Then Il doit  recevoir un email de confirmation
