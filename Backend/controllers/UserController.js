@@ -15,13 +15,15 @@ const createToken = (id) => jwt.sign({ id }, "RANDOM_TOKEN_SECRET", { expiresIn:
     /**
      * Conf de transporteur
      */
-    const transport = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'elhilali.abdelouahab@gmail.com',
-        pass: 'fikhmgcheswzhbft'
+    const transport = nodemailer.createTransport(
+    { 
+      service: 'gmail', 
+      auth: { 
+        user: 'loominetify@gmail.com', 
+        pass: 'dqoe iemb gnfq azpa' 
       }
-    });
+    }
+);
 
 
 /**
@@ -176,7 +178,7 @@ module.exports.createUser = async (req, res) => {
 </html>`;
 
     const mailOptions = {
-      from: 'elhilali.abdelouahab@gmail.com',
+      from: 'loominetify@gmail.com',
       to: email,
       subject: 'Bienvenue sur Loominetfy - Confirmez votre compte',
       html: htmlEmail
@@ -291,7 +293,7 @@ module.exports.activerCompteUser = async( req, res ) =>{
 </html>`;
 
     const mailOptions = {
-      from: 'elhilali.abdelouahab@gmail.com',
+      from: 'loominetify@gmail.com',
       to: user.email,
       subject: 'Votre compte Loominetfy est activé ✅',
       html: htmlEmail
@@ -306,7 +308,7 @@ module.exports.activerCompteUser = async( req, res ) =>{
   }
 }
 
-module.exports.getUser = async(req,res) =>{
+module.exports.getUserConnecte = async(req,res) =>{
   try {
 
     const user = await Users.findByPk(req.userId, {
@@ -317,5 +319,16 @@ module.exports.getUser = async(req,res) =>{
     
   } catch (error) {
     return res.status(500).json({ error: "Une erreur est survenue lors de la récupération de l'utilisateur." });
+  }
+}
+
+module.exports.getUser = async(req, res) =>{
+  try {
+
+    const user = await Users.findOne({where: { email: req.body.email }, attributes: { exclude: ['password', 'reponse', 'id', 'question'] }})
+    return res.status(200).json({user: user})
+    
+  } catch (error) {
+    return res.status(500).json({error: "Un problème est servenu lors de la récupération d'un utilisateur "})
   }
 }
