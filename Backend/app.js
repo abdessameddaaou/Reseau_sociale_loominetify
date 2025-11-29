@@ -19,6 +19,8 @@ app.use(
 const routeUser = require('./routes/User');
 const routeAuthentification = require('./routes/Authentification');
 const routeResetBD = require('./routes/db')
+const PublicationRoute = require('./routes/Publication');
+app.use('/api/publications', PublicationRoute);
 
 app.use('/api/users', routeUser);
 app.use('/api/auth', routeAuthentification);
