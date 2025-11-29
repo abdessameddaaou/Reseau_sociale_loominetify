@@ -6,6 +6,7 @@ const { checkUser } = require('../controllers/Middleware.js');
 router.get('/', checkUser, UserController.getAllUsers);
 router.post('/newUser', UserController.createUser);
 router.put('/activationCompte', UserController.activerCompteUser);
-router.get('/getUser', checkUser, UserController.getUser);
+router.get('/getUserconnected', checkUser, UserController.getUserConnecte);
+router.get('/getUser', UserController.getUser);
 
 module.exports = router;
