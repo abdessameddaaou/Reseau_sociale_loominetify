@@ -152,7 +152,7 @@ export class FilActualiteComponent implements OnInit {
  */
 private loadCurrentUser() {
   this.http
-    .get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUser`, {
+    .get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUserconnected`, {
       withCredentials: true
     })
     .subscribe({

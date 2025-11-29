@@ -16,8 +16,8 @@ const createToken = (id) => jwt.sign({ id }, "RANDOM_TOKEN_SECRET", { expiresIn:
     const transport = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'elhilali.abdelouahab@gmail.com',
-        pass: 'fikhmgcheswzhbft'
+        user: 'loominetify@gmail.com', 
+        pass: 'dqoe iemb gnfq azpa' 
       }
     });
 
@@ -166,13 +166,13 @@ module.exports.demandeReinitialisation = async (req, res) => {
   <body>
     <div class="container">
       <div class="header">
-        <h1>loominetfy</h1>
+        <h1>loominetify</h1>
       </div>
 
       <div class="content">
         <p>
           Bonjour <strong>${checkUser.prenom}</strong>,<br /><br/>
-          Vous avez demandé la réinitialisation de votre mot de passe sur <strong>Loominetfy</strong> 🎉<br />
+          Vous avez demandé la réinitialisation de votre mot de passe sur <strong>Loominetify</strong> 🎉<br />
           Pour finaliser votre réinitialisation, veuillez utiliser le code ci-dessous :
         </p>
 
@@ -193,9 +193,9 @@ module.exports.demandeReinitialisation = async (req, res) => {
 </html>`;
 
     const mailOptions = {
-      from: 'loominetfy@gmail.com',
+      from: 'loominetify@gmail.com',
       to: checkUser.email,
-      subject: 'Réinitialisation du mot de passe sur Loominetfy',
+      subject: 'Réinitialisation du mot de passe sur Loominetify',
       html: htmlEmail
     };
 

@@ -18,8 +18,8 @@ const createToken = (id) => jwt.sign({ id }, "RANDOM_TOKEN_SECRET", { expiresIn:
     const transport = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'elhilali.abdelouahab@gmail.com',
-        pass: 'fikhmgcheswzhbft'
+        user: 'loominetify@gmail.com', 
+        pass: 'dqoe iemb gnfq azpa' 
       }
     });
 
@@ -149,13 +149,13 @@ module.exports.createUser = async (req, res) => {
   <body>
     <div class="container">
       <div class="header">
-        <h1>loominetfy</h1>
+        <h1>loominetify</h1>
       </div>
 
       <div class="content">
         <p>
           Bonjour <strong>${prenom}</strong>,<br /><br/>
-          Merci de vous être inscrit sur <strong>Loominetfy</strong> 🎉<br />
+          Merci de vous être inscrit sur <strong>Loominetify</strong> 🎉<br />
           Pour finaliser votre inscription, veuillez confirmer votre adresse email en
           cliquant sur le bouton ci-dessous :
         </p>
@@ -176,9 +176,9 @@ module.exports.createUser = async (req, res) => {
 </html>`;
 
     const mailOptions = {
-      from: 'elhilali.abdelouahab@gmail.com',
+      from: 'loominetify@gmail.com',
       to: email,
-      subject: 'Bienvenue sur Loominetfy - Confirmez votre compte',
+      subject: 'Bienvenue sur Loominetify - Confirmez votre compte',
       html: htmlEmail
     };
 
@@ -270,7 +270,7 @@ module.exports.activerCompteUser = async( req, res ) =>{
   <body>
     <div class="container">
       <div class="header">
-        <h1>loominetfy</h1>
+        <h1>loominetify</h1>
       </div>
 
       <div class="content">
@@ -291,9 +291,9 @@ module.exports.activerCompteUser = async( req, res ) =>{
 </html>`;
 
     const mailOptions = {
-      from: 'elhilali.abdelouahab@gmail.com',
+      from: 'loominetify@gmail.com',
       to: user.email,
-      subject: 'Votre compte Loominetfy est activé ✅',
+      subject: 'Votre compte Loominetify est activé ✅',
       html: htmlEmail
     };
     
