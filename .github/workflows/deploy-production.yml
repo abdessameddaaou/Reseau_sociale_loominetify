@@ -1,0 +1,99 @@
+name: Deploiement prod backend et front
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    
+  workflow_dispatch:
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+
+      - name: Setup Node (LTS)
+        uses: actions/setup-node@v6
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Installer dependances (Backend)
+        working-directory: Backend
+        run: |
+          npm ci || npm install
+
+      - name: synchronisation du Backend vers le serveur 
+        uses: burnett01/rsync-deployments@7.1.0
+        with:
+          switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules" --exclude=".env.production"
+          path: Backend/
+          remote_path: /var/www/backend/
+          remote_host: ${{ secrets.SSH_HOST }}
+          remote_user: ${{ secrets.SSH_USER }}
+          remote_key: ${{ secrets.SSH_KEY }}
+          remote_port: ${{ secrets.SSH_PORT }}
+
+      - name: Installer les dépendances dans le serveur et redémarrer le backend
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /var/www/backend
+            npm ci || npm install
+            pm2 restart backend-prod
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+
+      - name: Setup Node (LTS)
+        uses: actions/setup-node@v6
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Installer dependances (Frontend)
+        working-directory: Frontend
+        run: |
+            npm ci || npm install
+
+      - name: Build Angular (production)
+        working-directory: Frontend
+        run: |
+          npm run build -- --configuration production
+
+      - name: Synchronisation du front
+        uses: burnett01/rsync-deployments@7.1.0
+        with:
+          switches: -avz --delete --exclude=".git" --exclude=".github" --exclude="node_modules"
+          path: Frontend/dist/frontend
+          remote_path: /var/www/loominetify.fr/dist
+          remote_host: ${{ secrets.SSH_HOST }}
+          remote_user: ${{ secrets.SSH_USER }}
+          remote_key: ${{ secrets.SSH_KEY }}
+          remote_port: ${{ secrets.SSH_PORT }}
+
+      - name: redémarrage de apache
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            sudo systemctl restart apache2

@@ -15,3 +15,5 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands'
+import 'cypress-mailslurp';
+import "cymap/src/index"

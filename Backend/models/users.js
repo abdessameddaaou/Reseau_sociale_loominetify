@@ -45,7 +45,7 @@ const Users = db.define("Users", {
   },
   pays : {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
   },
   isAdmin: {
     type: DataTypes.BOOLEAN,
@@ -60,12 +60,20 @@ const Users = db.define("Users", {
     allowNull: true,
   },
   question : {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM('Quel est le nom de votre premier animal de compagnie ?', 'Dans quelle ville êtes-vous né(e) ?', 'Quel est le nom de votre école primaire ?', 'Quel est votre plat préféré ?'),
     allowNull: false,
   },
   reponse : {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  codeReinitialisation : {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  dateExpirationCode : {
+    type: DataTypes.DATE,
+    allowNull: true,
   },
 });
 

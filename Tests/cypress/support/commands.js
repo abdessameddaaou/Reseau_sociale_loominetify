@@ -23,3 +23,27 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+
+
+// charger les données depuis un fichier
+Cypress.Commands.add('ChargerDonnes', ()=>{
+    return cy.fixture("CreerUtilisateur")
+})
+
+Cypress.Commands.add('viderBase', () => {
+    return cy.request({
+            method: "POST",
+            url: `${Cypress.env("apiUrl")}/db/resetdbTests`
+  })
+})
+
+Cypress.Commands.add('CreerCompte', () =>{
+    return cy.ChargerDonnes().then((userData) =>{
+        cy.request({
+            method: 'POST',
+            url: `${Cypress.env("apiUrl")}/users/newUser`,
+            body: userData
+        })
+    })
+
+})
