@@ -12,7 +12,16 @@ const Commentaire = db.define('Commentaires', {
     contenu : {
         type: DataTypes.TEXT,
         allowNull: false,
+    },
+    image : {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    nombreLikes : {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
     }
+
 })
 
 // Relations

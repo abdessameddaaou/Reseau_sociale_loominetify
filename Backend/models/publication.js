@@ -21,6 +21,14 @@ const Publication = db.define('Publications', {
     video : {
         type: DataTypes.STRING,
         allowNull: true,
+    },
+    nombreLikes : {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+    },
+    nombrePartages : {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
     }
 })
 
@@ -30,4 +38,11 @@ Publication.belongsTo(Users, {foreignKey: 'userId'});
 
 Publication.hasMany(Commentaire, {foreignKey: 'publicationId', onDelete: 'CASCADE'});
 
+// Relation partage : un utilisateur peut partager plusieurs publications et une publication peut être partagée par plusieurs utilisateurs avec le nombre de like dans la table de jointure
+
+Users.belongsToMany(Publication, { through: 'Partages', as: 'Partageurs', foreignKey: 'userId', otherKey: 'publicationId' });
+Publication.belongsToMany(Users, { through: 'Partages', as: 'PublicationsPartagees', foreignKey: 'publicationId', otherKey: 'userId' });
+
+
+// 
 module.exports = Publication;
