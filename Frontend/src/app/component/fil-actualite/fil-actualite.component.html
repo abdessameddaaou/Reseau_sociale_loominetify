@@ -1,33 +1,31 @@
-<div class="min-h-screen bg-[#f5f7fa] flex flex-col">
+<div class="min-h-screen app-bg flex flex-col" id="home-page" data-testid="home-page">
   <!---------------------------------------------------------------- Header --------------------------------------------------------------------->
-  <app-header
-    [activeTab]="activeTab"
-    (tabChange)="setActiveTab($event)">
+  <app-header [activeTab]="activeTab" (tabChange)="setActiveTab($event)" id="home-header" data-testid="home-header">
   </app-header>
 
   <!--------------------------------------------------------------------- Body ------------------------------------------------------------------>
-  <main class="flex-1">
-    <div class="max-w-6xl mx-auto flex gap-6 px-4 py-6">
-
+  <main class="flex-1" id="home-main" data-testid="home-main">
+    <div class="max-w-6xl mx-auto flex gap-6 px-4 py-6" id="home-layout" data-testid="home-layout">
       <!-- Contenu principal -->
-      <section class="flex-1 space-y-4">
+      <section class="flex-1 space-y-4" id="home-feed-section" data-testid="home-feed-section">
         <!------------------------- Bloc de création de publication ------------------------->
-        <div class="mb-6">
+        <div class="mb-6" id="post-creator-wrapper" data-testid="post-creator-wrapper">
           <app-post-creator
             [postForm]="postForm"
             [imagePreview]="imagePreview"
             [formErrors]="formErrors"
             (fileSelected)="onFileSelected($event)"
-            (submitPost)="publishPost()">
+            (submitPost)="publishPost()"
+            id="post-creator"
+            data-testid="post-creator">
           </app-post-creator>
         </div>
 
         <!------------------------- Skeleton de chargement ------------------------->
         <ng-container *ngIf="isInitialLoading">
-          <div
-            *ngFor="let s of [1, 2, 3]"
-            class="bg-white rounded-2xl shadow-sm p-4 animate-pulse"
-          >
+          <div *ngFor="let s of [1, 2, 3]"
+               class="app-card rounded-2xl shadow-sm p-4 animate-pulse"
+               [attr.data-testid]="'feed-skeleton-' + s">
             <div class="flex items-center gap-3 mb-3">
               <div class="w-10 h-10 bg-slate-200 rounded-full"></div>
               <div class="flex-1 space-y-2">
@@ -42,31 +40,33 @@
         </ng-container>
 
         <!-- Etat aucun contenu -->
-        <div
-          *ngIf="!isInitialLoading && visiblePosts.length === 0"
-          class="bg-white rounded-2xl shadow-sm p-8 text-center text-sm text-slate-500"
-        >
+        <div *ngIf="!isInitialLoading && visiblePosts.length === 0"
+             class="app-card rounded-2xl shadow-sm p-8 text-center text-sm text-slate-500"
+             id="feed-empty-state"
+             data-testid="feed-empty-state">
           Aucun contenu pour le moment. Ajoutez une publication pour commencer 🚀
         </div>
 
         <!-- Liste des posts -->
-        <article
-          *ngFor="let post of visiblePosts"
-          class="bg-white rounded-2xl shadow-sm p-4 space-y-3"
-        >
-          <header class="flex items-start gap-3">
-            <img
-              [src]="post.authorAvatar"
-              alt="avatar"
-              class="w-10 h-10 rounded-full object-cover"
-            />
+        <article *ngFor="let post of visiblePosts"
+                 class="app-card rounded-2xl shadow-sm p-4 space-y-3"
+                 [attr.id]="'feed-post-' + post.id"
+                 [attr.data-testid]="'feed-post-' + post.id">
+          <header class="flex items-start gap-3"
+                  [attr.data-testid]="'feed-post-header-' + post.id">
+            <img [src]="post.authorAvatar"
+                 alt="avatar"
+                 class="w-10 h-10 rounded-full object-cover"
+                 [attr.data-testid]="'feed-post-avatar-' + post.id" />
             <div class="flex-1">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-sm font-semibold text-slate-800">
+                  <p class="text-sm font-semibold text-slate-800"
+                     [attr.data-testid]="'feed-post-author-' + post.id">
                     {{ post.authorName }}
                   </p>
-                  <p class="text-xs text-slate-400">
+                  <p class="text-xs text-slate-400"
+                     [attr.data-testid]="'feed-post-meta-' + post.id">
                     {{ post.authorHandle }} · {{ post.timeAgo }}
                   </p>
                 </div>
@@ -74,102 +74,112 @@
             </div>
           </header>
 
-          <p class="text-sm text-slate-700 whitespace-pre-line">
+          <p class="text-sm text-slate-700 whitespace-pre-line"
+             [attr.data-testid]="'feed-post-text-' + post.id">
             {{ post.text }}
           </p>
 
-          <div
-            *ngIf="post.imageUrl"
-            class="rounded-2xl overflow-hidden border border-slate-100"
-          >
-            <img
-              [src]="post.imageUrl"
-              alt="post image"
-              class="w-full object-cover"
-            />
+          <div *ngIf="post.imageUrl"
+               class="rounded-2xl overflow-hidden border border-slate-100"
+               [attr.data-testid]="'feed-post-image-wrapper-' + post.id">
+            <img [src]="post.imageUrl"
+                 alt="post image"
+                 class="w-full object-cover"
+                 [attr.data-testid]="'feed-post-image-' + post.id" />
           </div>
 
           <!-- Interactions -->
-          <div
-            class="flex items-center justify-between text-xs text-slate-500 mt-1"
-          >
+          <div class="flex items-center justify-between text-xs text-slate-500 mt-1"
+               [attr.data-testid]="'feed-post-actions-' + post.id">
             <div class="flex items-center gap-4">
-              <button
-                class="flex items-center gap-1"
-                [ngClass]="post.likedByMe ? 'text-[#9C2C2C]' : 'text-slate-500'"
-                (click)="toggleLike(post)"
-              >
+              <!-- Like -->
+              <button class="flex items-center gap-1"
+                      [ngClass]="post.likedByMe ? 'text-rose-600' : 'text-slate-500'"
+                      (click)="toggleLike(post)"
+                      type="button"
+                      [attr.data-testid]="'feed-post-like-button-' + post.id">
                 <span class="material-icons text-base">
                   <i class="fa-solid fa-heart fa-lg"></i>
                 </span>
-                <span class="font-semibold">{{ post.likes }}</span>
+                <span class="font-semibold"
+                      [attr.data-testid]="'feed-post-like-count-' + post.id">
+                  {{ post.likes }}
+                </span>
               </button>
 
-              <div class="flex items-center gap-1 text-slate-500">
+              <!-- Comments count -->
+              <div class="flex items-center gap-1 text-slate-500"
+                   [attr.data-testid]="'feed-post-comments-count-' + post.id">
                 <span class="material-icons text-base">
                   <i class="fa-solid fa-comment fa-lg"></i>
                 </span>
                 <span class="font-semibold">{{ post.commentsCount }}</span>
               </div>
 
-              <button
-                class="flex items-center gap-1 text-slate-500"
-                (click)="sharePost(post)"
-              >
+              <!-- Share -->
+              <button class="flex items-center gap-1 text-slate-500"
+                      (click)="sharePost(post)"
+                      type="button"
+                      [attr.data-testid]="'feed-post-share-button-' + post.id">
                 <span class="material-icons text-base">
                   <i class="fa-solid fa-retweet fa-lg"></i>
                 </span>
-                <span class="font-semibold">{{ post.shares }}</span>
+                <span class="font-semibold"
+                      [attr.data-testid]="'feed-post-share-count-' + post.id">
+                  {{ post.shares }}
+                </span>
               </button>
             </div>
           </div>
 
           <!-- Commentaires -->
-          <div class="pt-2 border-t border-slate-100 space-y-2">
-            <div *ngFor="let comment of post.comments" class="flex items-start gap-2">
-              <div
-                class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] text-slate-500"
-              >
+          <div class="pt-2 border-t border-slate-100 space-y-2"
+               [attr.data-testid]="'feed-post-comments-section-' + post.id">
+            <div *ngFor="let comment of post.comments"
+                 class="flex items-start gap-2"
+                 [attr.data-testid]="'feed-post-comment-' + post.id + '-' + comment.id">
+              <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] text-slate-500"
+                   [attr.data-testid]="'feed-comment-avatar-' + post.id + '-' + comment.id">
                 {{ comment.author[0] | uppercase }}
               </div>
-              <div class="bg-slate-50 rounded-2xl px-3 py-2 text-xs flex-1">
+              <div class="comment-bubble rounded-2xl px-3 py-2 text-xs flex-1"
+                   [attr.data-testid]="'feed-comment-card-' + post.id + '-' + comment.id">
                 <div class="flex justify-between gap-2">
-                  <span class="font-semibold text-slate-700">
+                  <span class="font-semibold text-slate-700"
+                        [attr.data-testid]="'feed-comment-author-' + post.id + '-' + comment.id">
                     {{ comment.author }}
                   </span>
-                  <button
-                    *ngIf="comment.mine"
-                    class="text-[10px] text-slate-400 hover:text-red-500"
-                    (click)="deleteComment(post, comment)"
-                  >
+                  <button *ngIf="comment.mine"
+                          class="text-[10px] text-slate-400 hover:text-red-500"
+                          (click)="deleteComment(post, comment)"
+                          type="button"
+                          [attr.data-testid]="'feed-comment-delete-' + post.id + '-' + comment.id">
                     Supprimer
                   </button>
                 </div>
-                <p class="text-slate-700 mt-0.5">
+                <p class="text-slate-700 mt-0.5"
+                   [attr.data-testid]="'feed-comment-text-' + post.id + '-' + comment.id">
                   {{ comment.text }}
                 </p>
               </div>
             </div>
 
             <!-- Ajouter un commentaire -->
-            <div class="flex items-start gap-2 mt-1">
-              <div
-                class="w-7 h-7 rounded-full bg-slate-300 flex items-center justify-center text-[10px] text-white"
-              >
+            <div class="flex items-start gap-2 mt-1"
+                 [attr.data-testid]="'feed-post-add-comment-' + post.id">
+              <div class="w-7 h-7 rounded-full bg-slate-300 flex items-center justify-center text-[10px] text-white">
                 T
               </div>
               <div class="flex-1 flex items-center gap-2">
-                <input
-                  type="text"
-                  [(ngModel)]="newCommentText[post.id]"
-                  placeholder="Écrire un commentaire..."
-                  class="flex-1 text-xs border border-slate-200 rounded-full px-3 py-2 outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10"
-                />
-                <button
-                  type="button"
-                  class="text-xs text-[#5b7cff] font-semibold"
-                  (click)="addComment(post)"
-                >
+                <input type="text"
+                       [(ngModel)]="newCommentText[post.id]"
+                       placeholder="Écrire un commentaire..."
+                       class="flex-1 text-xs border border-slate-200 rounded-full px-3 py-2 outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10"
+                       [attr.data-testid]="'feed-post-comment-input-' + post.id" />
+                <button type="button"
+                        class="text-xs text-accent font-semibold"
+                        (click)="addComment(post)"
+                        [attr.data-testid]="'feed-post-comment-submit-' + post.id">
                   Publier
                 </button>
               </div>
@@ -178,122 +188,162 @@
         </article>
 
         <!-- Loader infinite scroll -->
-        <div *ngIf="isLoadingMore" class="text-center text-xs text-slate-400 py-4">
+        <div *ngIf="isLoadingMore"
+             class="text-center text-xs text-slate-400 py-4"
+             id="feed-loader-more"
+             data-testid="feed-loader-more">
           Chargement de nouvelles publications...
         </div>
 
-        <div
-          *ngIf="!hasMore && visiblePosts.length > 0"
-          class="text-center text-[11px] text-slate-400 py-4"
-        >
+        <div *ngIf="!hasMore && visiblePosts.length > 0"
+             class="text-center text-[11px] text-slate-400 py-4"
+             id="feed-end-message"
+             data-testid="feed-end-message">
           Vous avez vu toutes les publications récentes.
         </div>
       </section>
 
       <!-- Colonne droite (sidebar) -->
-      <aside class="hidden lg:block w-72 space-y-4 lg:sticky lg:top-24 self-start">
+      <aside class="hidden lg:block w-72 space-y-4 lg:sticky lg:top-24 self-start"
+             id="home-sidebar"
+             data-testid="home-sidebar">
         <!-- Profil -->
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div class="h-16 bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6]"></div>
+        <div class="app-card rounded-2xl shadow-sm overflow-hidden"
+             id="sidebar-profile-card"
+             data-testid="sidebar-profile-card">
+          <div class="h-16 accent-gradient"></div>
           <div class="p-4 -mt-8 flex flex-col items-center">
-            <img
-              src="https://i.pravatar.cc/150?img=5"
-              class="w-16 h-16 rounded-full border-4 border-white object-cover"
-              alt="user"
-            />
-            <p class="mt-2 text-sm font-semibold text-slate-800">{{ currentUser?.nom }} {{ currentUser?.prenom }}</p>
-            <p class="text-xs text-slate-400">@{{ currentUser?.nom }}</p>
+            <img src=""
+                 class="w-16 h-16 rounded-full border-4 border-white object-cover"
+                 alt="user"
+                 id="sidebar-profile-avatar"
+                 data-testid="sidebar-profile-avatar" />
+            <p class="mt-2 text-sm font-semibold text-slate-800"
+               id="sidebar-profile-name"
+               data-testid="sidebar-profile-name">
+              {{ currentUser?.nom }} {{ currentUser?.prenom }}
+            </p>
+            <p class="text-xs text-slate-400"
+               id="sidebar-profile-handle"
+               data-testid="sidebar-profile-handle">
+              @{{ currentUser?.nom }}
+            </p>
 
-            <div class="flex justify-between w-full mt-4 text-xs text-slate-600">
+            <div class="flex justify-between w-full mt-4 text-xs text-slate-600"
+                 id="sidebar-profile-stats"
+                 data-testid="sidebar-profile-stats">
               <div class="text-center flex-1">
                 <div class="font-semibold">256</div>
                 <div class="text-slate-400 text-[11px]">Abonnés</div>
               </div>
               <div class="text-center flex-1">
                 <div class="font-semibold">189</div>
-                <div class="text-slate-400 text-[11px]">Abonnements</div>
+                <div class="text-slate-400 text-[11px]">
+                  Abonnements
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Amis connectés -->
-        <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
+        <div class="app-card rounded-2xl shadow-sm p-4 text-sm"
+             id="sidebar-online-friends"
+             data-testid="sidebar-online-friends">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-slate-800">Amis connectés</h3>
-            <span class="text-[11px] text-slate-400">
-              {{ onlineFriends2.length }}
+            <h3 class="font-semibold text-slate-800">
+              Amis connectés
+            </h3>
+            <span class="text-[11px] text-slate-400"
+                  id="sidebar-online-friends-count"
+                  data-testid="sidebar-online-friends-count">
+              {{ onlineFriends.length }}
             </span>
           </div>
 
-          <div
-            *ngIf="onlineFriends?.length; else noFriends"
-            class="space-y-3 max-h-56 overflow-y-auto pr-1"
-          >
-            <button
-              *ngFor="let friend of onlineFriends"
-              class="w-full flex items-center gap-3 text-xs text-slate-700 hover:bg-slate-50 rounded-xl px-2 py-2 transition-colors"
-              (click)="openChat(friend)"
-            >
+          <div *ngIf="onlineFriends?.length; else noFriends"
+               class="space-y-3 max-h-56 overflow-y-auto pr-1"
+               id="sidebar-online-friends-list"
+               data-testid="sidebar-online-friends-list">
+            <button *ngFor="let friend of onlineFriends; let i = index"
+                    class="w-full flex items-center gap-3 text-xs text-slate-700 hover:bg-accent-soft rounded-xl px-2 py-2 transition-colors"
+                    (click)="openChat(friend)"
+                    type="button"
+                    [attr.data-testid]="'sidebar-online-friend-' + i">
               <div class="relative">
-                <img
-                  [src]="friend.avatar"
-                  [alt]="friend.name"
-                  class="w-8 h-8 rounded-full object-cover"
-                />
-                <span
-                  class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white"
-                ></span>
+                <img [src]="friend.avatar"
+                     [alt]="friend.name"
+                     class="w-8 h-8 rounded-full object-cover"
+                     [attr.data-testid]="'sidebar-online-friend-avatar-' + i" />
+                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white"
+                      [attr.data-testid]="'sidebar-online-friend-status-' + i"></span>
               </div>
 
               <div class="flex-1 text-left">
-                <p class="font-semibold leading-tight">
+                <p class="font-semibold leading-tight"
+                   [attr.data-testid]="'sidebar-online-friend-name-' + i">
                   {{ friend.name }}
                 </p>
-                <p class="text-[11px] text-slate-400">
+                <p class="text-[11px] text-slate-400"
+                   [attr.data-testid]="'sidebar-online-friend-state-' + i">
                   {{ friend.status || 'En ligne' }}
                 </p>
               </div>
 
-              <span class="text-[10px] text-slate-400">
+              <span class="text-[10px] text-slate-400"
+                    [attr.data-testid]="'sidebar-online-friend-last-active-' + i">
                 {{ friend.lastActive || 'Actif maintenant' }}
               </span>
             </button>
           </div>
 
           <ng-template #noFriends>
-            <p class="text-xs text-slate-400">
+            <p class="text-xs text-slate-400"
+               id="sidebar-no-friends"
+               data-testid="sidebar-no-friends">
               Aucun ami en ligne pour le moment.
             </p>
           </ng-template>
         </div>
 
         <!-- Raccourcis -->
-        <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
-          <h3 class="font-semibold text-slate-800 mb-3">Raccourcis</h3>
+        <div class="app-card rounded-2xl shadow-sm p-4 text-sm"
+             id="sidebar-shortcuts"
+             data-testid="sidebar-shortcuts">
+          <h3 class="font-semibold text-slate-800 mb-3">
+            Raccourcis
+          </h3>
           <ul class="space-y-2 text-slate-600 text-xs">
-            <li class="flex items-center gap-2 cursor-pointer hover:text-[#5b7cff]">
+            <li class="flex items-center gap-2 cursor-pointer hover:text-accent"
+                id="shortcut-groups"
+                data-testid="shortcut-groups">
               <span class="w-5 flex justify-center">
                 <i class="fa-solid fa-users fa-lg"></i>
               </span>
               <span>Mes groupes</span>
             </li>
 
-            <li class="flex items-center gap-2 cursor-pointer hover:text-[#5b7cff]">
+            <li class="flex items-center gap-2 cursor-pointer hover:text-accent"
+                id="shortcut-events"
+                data-testid="shortcut-events">
               <span class="w-5 flex justify-center">
                 <i class="fa-solid fa-calendar-days fa-lg"></i>
               </span>
               <span>Événements</span>
             </li>
 
-            <li class="flex items-center gap-2 cursor-pointer hover:text-[#5b7cff]">
+            <li class="flex items-center gap-2 cursor-pointer hover:text-accent"
+                id="shortcut-saved-posts"
+                data-testid="shortcut-saved-posts">
               <span class="w-5 flex justify-center">
                 <i class="fa-solid fa-bookmark fa-lg"></i>
               </span>
               <span>Publications enregistrées</span>
             </li>
 
-            <li class="flex items-center gap-2 cursor-pointer hover:text-[#5b7cff]">
+            <li class="flex items-center gap-2 cursor-pointer hover:text-accent"
+                id="shortcut-trends"
+                data-testid="shortcut-trends">
               <span class="w-5 flex justify-center">
                 <i class="fa-solid fa-arrow-trend-up fa-lg"></i>
               </span>
@@ -303,25 +353,37 @@
         </div>
 
         <!-- Sujets tendances -->
-        <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
-          <h3 class="font-semibold text-slate-800 mb-3">Sujets tendances</h3>
+        <div class="app-card rounded-2xl shadow-sm p-4 text-sm"
+             id="sidebar-trending-topics"
+             data-testid="sidebar-trending-topics">
+          <h3 class="font-semibold text-slate-800 mb-3">
+            Sujets tendances
+          </h3>
           <ul class="space-y-2 text-xs">
-            <li class="flex justify-between">
-              <a href="#" class="text-[#5b7cff] hover:underline">#TechNews</a>
+            <li class="flex justify-between"
+                id="trend-technews"
+                data-testid="trend-technews">
+              <a href="#" class="text-accent hover:underline">#TechNews</a>
               <span class="text-slate-400">895k</span>
             </li>
-            <li class="flex justify-between">
-              <a href="#" class="text-[#5b7cff] hover:underline">#WebDev</a>
+            <li class="flex justify-between"
+                id="trend-webdev"
+                data-testid="trend-webdev">
+              <a href="#" class="text-accent hover:underline">#WebDev</a>
               <span class="text-slate-400">902k</span>
             </li>
-            <li class="flex justify-between">
-              <a href="#" class="text-[#5b7cff] hover:underline">
+            <li class="flex justify-between"
+                id="trend-design"
+                data-testid="trend-design">
+              <a href="#" class="text-accent hover:underline">
                 #DesignInspiration
               </a>
               <span class="text-slate-400">100k</span>
             </li>
-            <li class="flex justify-between">
-              <a href="#" class="text-[#5b7cff] hover:underline">#Startup</a>
+            <li class="flex justify-between"
+                id="trend-startup"
+                data-testid="trend-startup">
+              <a href="#" class="text-accent hover:underline">#Startup</a>
               <span class="text-slate-400">612k</span>
             </li>
           </ul>
@@ -331,28 +393,34 @@
   </main>
 
   <!-- Mini chat avec l’ami sélectionné -->
-  <div
-    *ngIf="selectedFriend"
-    class="fixed bottom-4 right-4 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 flex flex-col overflow-hidden z-50"
-  >
+  <div *ngIf="selectedFriend"
+       class="fixed bottom-4 right-4 w-72 app-card rounded-2xl shadow-xl border border-slate-100 flex flex-col overflow-hidden z-50"
+       id="mini-chat"
+       data-testid="mini-chat">
     <!-- Header du chat -->
-    <div class="flex items-center justify-between px-3 py-2 bg-slate-50 border-b">
+    <div class="flex items-center justify-between px-3 py-2 app-soft border-b border-slate-100"
+         id="mini-chat-header"
+         data-testid="mini-chat-header">
       <div class="flex items-center gap-2">
         <div class="relative">
-          <img
-            [src]="selectedFriend.avatar"
-            [alt]="selectedFriend.name"
-            class="w-8 h-8 rounded-full object-cover"
-          />
-          <span
-            class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white"
-          ></span>
+          <img [src]="selectedFriend.avatar"
+               [alt]="selectedFriend.name"
+               class="w-8 h-8 rounded-full object-cover"
+               id="mini-chat-avatar"
+               data-testid="mini-chat-avatar" />
+          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white"
+                id="mini-chat-status"
+                data-testid="mini-chat-status"></span>
         </div>
         <div>
-          <p class="text-xs font-semibold text-slate-800">
+          <p class="text-xs font-semibold text-slate-800"
+             id="mini-chat-name"
+             data-testid="mini-chat-name">
             {{ selectedFriend.name }}
           </p>
-          <p class="text-[10px] text-slate-400">
+          <p class="text-[10px] text-slate-400"
+             id="mini-chat-subtitle"
+             data-testid="mini-chat-subtitle">
             {{ selectedFriend.status || 'En ligne' }}
           </p>
         </div>
@@ -360,57 +428,66 @@
 
       <div class="flex items-center gap-2">
         <!-- Appel audio -->
-        <button
-          class="text-[13px] text-slate-400 hover:text-[#5b7cff] transition-colors"
-          title="Appel audio"
-          type="button"
-        >
+        <button class="text-[13px] text-slate-400 hover:text-accent transition-colors"
+                title="Appel audio"
+                type="button"
+                id="mini-chat-call-audio"
+                data-testid="mini-chat-call-audio">
           <i class="fa-solid fa-phone"></i>
         </button>
 
         <!-- Appel vidéo -->
-        <button
-          class="text-[13px] text-slate-400 hover:text-[#5b7cff] transition-colors"
-          title="Appel vidéo"
-          type="button"
-        >
+        <button class="text-[13px] text-slate-400 hover:text-accent transition-colors"
+                title="Appel vidéo"
+                type="button"
+                id="mini-chat-call-video"
+                data-testid="mini-chat-call-video">
           <i class="fa-solid fa-video"></i>
         </button>
 
         <!-- Fermer -->
-        <button
-          class="text-[13px] text-slate-400 hover:text-slate-600"
-          (click)="selectedFriend = null"
-          title="Fermer"
-          type="button"
-        >
+        <button class="text-[13px] text-slate-400 hover:text-slate-600"
+                (click)="selectedFriend = null"
+                title="Fermer"
+                type="button"
+                id="mini-chat-close"
+                data-testid="mini-chat-close">
           ✕
         </button>
       </div>
     </div>
 
     <!-- Corps du chat -->
-    <div class="flex-1 px-3 py-2 text-[11px] text-slate-400">
-      <p>Conversation avec {{ selectedFriend.name }} (à implémenter 😄)</p>
+    <div class="flex-1 px-3 py-2 text-[11px] text-slate-400"
+         id="mini-chat-body"
+         data-testid="mini-chat-body">
+      <p>
+        Conversation avec {{ selectedFriend.name }} (à implémenter 😄)
+      </p>
     </div>
 
     <!-- Zone de saisie -->
-    <div class="border-t px-2 py-2 flex items-center gap-2">
+    <div class="border-t px-2 py-2 flex items-center gap-2"
+         id="mini-chat-input-wrapper"
+         data-testid="mini-chat-input-wrapper">
       <!-- Emoji -->
-      <button
-        class="text-[16px] text-slate-400 hover:text-[#5b7cff] transition-colors"
-        title="Emoji"
-        type="button"
-      >
+      <button class="text-[16px] text-slate-400 hover:text-accent transition-colors"
+              title="Emoji"
+              type="button"
+              id="mini-chat-emoji-button"
+              data-testid="mini-chat-emoji-button">
         <i class="fa-regular fa-face-smile"></i>
       </button>
 
-      <input
-        type="text"
-        placeholder="Écrire un message..."
-        class="flex-1 text-[11px] border border-slate-200 rounded-full px-3 py-1 outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10"
-      />
-      <button class="text-[11px] text-[#5b7cff] font-semibold">
+      <input type="text"
+             placeholder="Écrire un message..."
+             class="flex-1 text-[11px] border border-slate-200 rounded-full px-3 py-1 outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10"
+             id="mini-chat-input"
+             data-testid="mini-chat-input" />
+      <button class="text-[11px] text-accent font-semibold"
+              type="button"
+              id="mini-chat-send-button"
+              data-testid="mini-chat-send-button">
         Envoyer
       </button>
     </div>

@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
   selector: 'app-reset-password',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './reset-password.component.html'
+  templateUrl: './reset-password.component.html',
 })
 export class ResetPasswordComponent {
   resetForm: FormGroup;
@@ -28,7 +28,7 @@ export class ResetPasswordComponent {
       phone: [''],
       code: [''],
       newPassword: [''],
-      confirmPassword: ['']
+      confirmPassword: [''],
     });
   }
 
@@ -60,7 +60,6 @@ export class ResetPasswordComponent {
     let ok = true;
     const email = this.resetForm.get('email')?.value?.trim();
     if (method === 'email') {
-
       if (!email) {
         this.errors['email'] = "L'email est obligatoire.";
         ok = false;
@@ -79,27 +78,25 @@ export class ResetPasswordComponent {
     if (!ok) return;
 
     // Appel API
-    this.http.post(`${environment.apiUrl}/auth/forgotpassword`, { email}).subscribe({
-        next: () => {
-           // Passage à l’étape 2
-           this.currentStep = 2;
-           this.success = false;
-           this.clearErrors();
-           this.startTimer();
-        },
-        error: (err: HttpErrorResponse) => {
-          console.error('Erreur lors de l\'envoi du code de vérification', err);
-          Swal.fire({
-            icon: 'error',
-            title: 'Erreur',
-            text: err.error.error || 'Une erreur est survenue lors de l\'envoi du code.',
-          });
-        },
-      });
+    this.http.post(`${environment.apiUrl}/auth/forgotpassword`, { email }).subscribe({
+      next: () => {
+        // Passage à l’étape 2
+        this.currentStep = 2;
+        this.success = false;
+        this.clearErrors();
+        this.startTimer();
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error("Erreur lors de l'envoi du code de vérification", err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erreur',
+          text: err.error.error || "Une erreur est survenue lors de l'envoi du code.",
+        });
+      },
+    });
     // TODO: appel API pour envoyer le code
     // console.log('Envoi du code de vérification...', this.resetForm.value);
-
-
   }
 
   resendCode() {
@@ -134,15 +131,17 @@ export class ResetPasswordComponent {
 
     // TODO: appel API pour vérifier le code
     console.log('Vérification du code...', code);
-    this.http.post(`${environment.apiUrl}/auth/checkcode`, { email, codeReinitialisation: code }).subscribe({
+    this.http
+      .post(`${environment.apiUrl}/auth/checkcode`, { email, codeReinitialisation: code })
+      .subscribe({
         next: () => {
-           // Passage à l’étape 3
-            this.currentStep = 3;
-            this.success = false;
-            this.clearErrors();
+          // Passage à l’étape 3
+          this.currentStep = 3;
+          this.success = false;
+          this.clearErrors();
         },
         error: (err: HttpErrorResponse) => {
-          console.error('Erreur lors de l\'envoi du code de vérification', err);
+          console.error("Erreur lors de l'envoi du code de vérification", err);
           Swal.fire({
             icon: 'error',
             title: 'Erreur',
@@ -150,8 +149,6 @@ export class ResetPasswordComponent {
           });
         },
       });
-
-
   }
 
   // Étape 3 : nouveau mot de passe
@@ -170,8 +167,7 @@ export class ResetPasswordComponent {
       this.errors['newPassword'] = 'Le nouveau mot de passe est obligatoire.';
       ok = false;
     } else if (!this.validatePassword(newPassword)) {
-      this.errors['newPassword'] =
-        'Le mot de passe ne respecte pas les critères de sécurité.';
+      this.errors['newPassword'] = 'Le mot de passe ne respecte pas les critères de sécurité.';
       ok = false;
     }
 
@@ -186,28 +182,28 @@ export class ResetPasswordComponent {
     if (!ok) return;
 
     // TODO: appel API pour changer le mot de passe
-        this.http.put(`${environment.apiUrl}/auth/resetpassword`, { email, newPassword }).subscribe({
-        next: () => {
-          Swal.fire({
-           icon: 'success',
+    this.http.put(`${environment.apiUrl}/auth/resetpassword`, { email, newPassword }).subscribe({
+      next: () => {
+        Swal.fire({
+          icon: 'success',
           title: 'Mot de passe réinitialisé',
           text: 'Votre mot de passe a été modifié avec succès.',
           confirmButtonText: 'Retour à la connexion',
-          confirmButtonColor: '#5b7cff'
-          }).then(() => {
-            this.success = true;
-            this.router.navigate(['/auth']);
-          });
-        },
-        error: (err: HttpErrorResponse) => {
-          console.error(err);
-          Swal.fire({
-            icon: 'error',
-            title: 'Erreur',
-            text: err.error.error || 'Une erreur est survenue lors de la vérification du code.',
-          });
-        },
-      });
+          confirmButtonColor: '#5b7cff',
+        }).then(() => {
+          this.success = true;
+          this.router.navigate(['/auth']);
+        });
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erreur',
+          text: err.error.error || 'Une erreur est survenue lors de la vérification du code.',
+        });
+      },
+    });
 
     this.success = true;
   }
@@ -217,30 +213,30 @@ export class ResetPasswordComponent {
   }
 
   startTimer() {
-  this.remainingTime = 5 * 60;  // 5 minutes
-  this.isDisabled = true;
+    this.remainingTime = 5 * 60; // 5 minutes
+    this.isDisabled = true;
 
-  if (this.interval) {
-    clearInterval(this.interval);
-  }
-
-  this.interval = setInterval(() => {
-    this.remainingTime--;
-
-    if (this.remainingTime <= 0) {
+    if (this.interval) {
       clearInterval(this.interval);
-      this.isDisabled = false;
     }
-  }, 1000);
+
+    this.interval = setInterval(() => {
+      this.remainingTime--;
+
+      if (this.remainingTime <= 0) {
+        clearInterval(this.interval);
+        this.isDisabled = false;
+      }
+    }, 1000);
   }
 
   formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
 
-  const mm = m < 10 ? '0' + m : m;
-  const ss = s < 10 ? '0' + s : s;
+    const mm = m < 10 ? '0' + m : m;
+    const ss = s < 10 ? '0' + s : s;
 
-  return `${mm}:${ss}`;
-}
+    return `${mm}:${ss}`;
+  }
 }

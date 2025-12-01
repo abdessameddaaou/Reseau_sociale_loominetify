@@ -1,2 +1,348 @@
-/* You can add global styles to this file, and also import other style files */
+/* Tailwind */
 @use "tailwindcss";
+
+/* ============ VARIABLES GLOBALES ============ */
+
+:root {
+  /* Fonds & textes */
+  --bg-page: #f5f7fa;      /* fond global clair */
+  --bg-card: #ffffff;      /* cartes / panneaux */
+  --bg-soft: #f9fafb;      /* panneaux secondaires (bg-slate-50 like) */
+  --border-soft: #e2e8f0;  /* bordures subtiles */
+
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+
+  /* couleur d'accent par défaut (violet loom) */
+  --accent-start: #5b7cff;
+  --accent-end: #8b5cf6;
+  --accent-main: #5b7cff; /* accent uni (pour textes, pills, etc.) */
+
+  /* états */
+  --danger-soft: #fef2f2;
+  --danger-main: #f97373;
+  --success-soft: #ecfdf5;
+  --success-main: #10b981;
+}
+
+/* Variantes de couleur d'accent (pilotées par data-accent sur <html>) */
+:root[data-accent='indigo'] {
+  --accent-start: #5b7cff;
+  --accent-end: #8b5cf6;
+  --accent-main: #5b7cff;
+}
+
+:root[data-accent='emerald'] {
+  --accent-start: #10b981;
+  --accent-end: #059669;
+  --accent-main: #10b981;
+}
+
+:root[data-accent='rose'] {
+  --accent-start: #fb7185;
+  --accent-end: #f97316;
+  --accent-main: #fb7185;
+}
+
+:root[data-accent='sky'] {
+  --accent-start: #0ea5e9;
+  --accent-end: #38bdf8;
+  --accent-main: #0ea5e9;
+}
+
+/* Thème sombre => on mettra .theme-dark sur <body> */
+body.theme-dark { 
+  /* Fond global très sombre + cartes légèrement plus claires */
+  --bg-page: #020617;         /* arrière-plan (presque noir) */
+  --bg-card: #050818;         /* cartes / panneaux */
+  --bg-soft: #020617;         /* panneaux secondaires */
+
+  --border-soft: rgba(148, 163, 184, 0.35);
+
+  --text-main: #e5e7eb;       /* texte principal clair */
+  --text-muted: #9ca3af;      /* texte secondaire */
+
+  /* états adaptés au sombre */
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --danger-main: #f97373;
+  --success-soft: rgba(16, 185, 129, 0.12);
+  --success-main: #34d399;
+}
+/* ========== Notifications dropdown ========== */
+
+.notif-item {
+  background-color: transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* Hover clair (mode light) */
+.notif-item:hover {
+  background-color: #f1f5f9; /* équivalent bg-slate-100 mais un poil moins violent */
+}
+
+/* Non lues */
+.notif-item-unread {
+  background-color: color-mix(in srgb, var(--accent-main) 14%, transparent);
+}
+
+/* Version dark */
+body.theme-dark .notif-item {
+  background-color: transparent;
+}
+
+body.theme-dark .notif-item:hover {
+  /* léger voile basé sur l'accent + fond sombre */
+  background-color: color-mix(
+    in srgb,
+    var(--accent-main) 10%,
+    #020617
+  );
+}
+
+body.theme-dark .notif-item-unread {
+  background-color: color-mix(
+    in srgb,
+    var(--accent-main) 26%,
+    #020617
+  );
+  border-radius: 0.75rem;
+}
+
+
+/* Transition douce entre les thèmes */
+body {
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* ============ UTILITAIRES COMMUNES ============ */
+
+/* Fond global */
+.app-bg {
+  background-color: var(--bg-page);
+}
+
+/* Cartes principales */
+.app-card {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+/* Cartes/panneaux "soft" (ex: aperçus, encarts infos) */
+.app-soft {
+  background-color: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+}
+
+/* Bouton principal avec dégradé d'accent */
+.btn-primary-gradient {
+  background-image: linear-gradient(
+    to right,
+    var(--accent-start),
+    var(--accent-end)
+  );
+  color: #ffffff;
+}
+
+/* Bandeaux dégradés (mini profil, etc.) */
+.accent-gradient {
+  background-image: linear-gradient(
+    to right,
+    var(--accent-start),
+    var(--accent-end)
+  );
+}
+
+/* Texte dans la couleur principale */
+.text-accent {
+  color: var(--accent-main);
+}
+
+/* Fond “soft” basé sur l’accent */
+.bg-accent-soft {
+  background-color: color-mix(in srgb, var(--accent-main) 12%, transparent);
+  color: var(--accent-main);
+}
+
+/* Pills / onglets actifs (menu de gauche par ex.) */
+.accent-pill {
+  background-color: color-mix(in srgb, var(--accent-main) 14%, transparent);
+  color: var(--accent-main);
+}
+
+/* Bordure accent (boutons actifs, etc.) */
+.border-accent {
+  border-color: var(--accent-main);
+}
+
+/* Switch ON */
+.toggle-accent-on {
+  background-color: var(--accent-main);
+}
+
+/* ============ DARK MODE : MAPPINGS TAILWIND ============ */
+
+/* Cartes en sombre (on renforce juste l'ombre) */
+body.theme-dark .app-card {
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.8);
+}
+
+/* Textes Tailwind remappés */
+body.theme-dark .text-slate-900,
+body.theme-dark .text-slate-800,
+body.theme-dark .text-slate-700 {
+  color: var(--text-main) !important;
+}
+
+body.theme-dark .text-slate-600,
+body.theme-dark .text-slate-500,
+body.theme-dark .text-slate-400 {
+  color: var(--text-muted) !important;
+}
+
+/* Fonds clairs Tailwind ajustés */
+body.theme-dark .bg-white {
+  background-color: var(--bg-card) !important;
+}
+
+body.theme-dark .bg-slate-50,
+body.theme-dark .bg-slate-100 {
+  background-color: var(--bg-soft) !important;
+}
+
+body.theme-dark .bg-slate-200,
+body.theme-dark .bg-slate-300 {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+}
+
+/* Bordures plus douces */
+body.theme-dark .border-slate-100,
+body.theme-dark .border-slate-200 {
+  border-color: var(--border-soft) !important;
+}
+
+/* États “success / danger” en version dark */
+body.theme-dark .bg-emerald-50 {
+  background-color: var(--success-soft) !important;
+  color: var(--success-main) !important;
+}
+
+body.theme-dark .text-emerald-500,
+body.theme-dark .text-emerald-600 {
+  color: var(--success-main) !important;
+}
+
+body.theme-dark .bg-rose-50 {
+  background-color: var(--danger-soft) !important;
+  color: var(--danger-main) !important;
+}
+
+body.theme-dark .text-rose-500,
+body.theme-dark .text-rose-600 {
+  color: var(--danger-main) !important;
+}
+/* ========== PAGE MESSAGES ========== */
+
+/* Bulles "moi" */
+.chat-bubble-me {
+  background-image: linear-gradient(
+    to right,
+    var(--accent-start),
+    var(--accent-end)
+  );
+  color: #ffffff;
+}
+
+/* Bulles "autre" */
+.chat-bubble-other {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+body.theme-dark .chat-bubble-other {
+  background-color: #050818; /* légèrement plus clair que le fond */
+  color: var(--text-main);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+/* Zone de saisie */
+.chat-input-shell {
+  background-color: #f8fafc;
+  border: 1px solid var(--border-soft);
+}
+
+body.theme-dark .chat-input-shell {
+  background-color: #050818;
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+/* Placeholder du champ de message */
+#chat-message-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* Optionnel : un peu plus de contraste pour le switch Tous / Messages / Groupes */
+body.theme-dark #messages-filter-switch {
+  background-color: #050818;
+}
+/* ========== Liste de conversations (messages) ========== */
+
+.conv-item {
+  background-color: transparent;
+  border: 1px solid transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Hover en mode clair */
+.conv-item:hover {
+  background-color: #f1f5f9; /* léger gris, pas tout blanc */
+}
+
+/* Conversation sélectionnée */
+.conv-item-active {
+  background-color: color-mix(in srgb, var(--accent-main) 14%, #ffffff);
+  border-color: var(--accent-main);
+}
+
+/* Conversation non lue mais pas sélectionnée */
+.conv-item-unread:not(.conv-item-active) {
+  background-color: #f9fafb;
+}
+
+/* ---------- Overrides dark mode ---------- */
+
+body.theme-dark .conv-item {
+  background-color: transparent;
+  border-color: rgba(15, 23, 42, 0.7);
+}
+
+body.theme-dark .conv-item:hover {
+  /* halo discret basé sur la couleur d'accent */
+  background-color: color-mix(
+    in srgb,
+    var(--accent-main) 10%,
+    #020617
+  );
+}
+
+body.theme-dark .conv-item-active {
+  background-color: color-mix(
+    in srgb,
+    var(--accent-main) 24%,
+    #020617
+  );
+  border-color: var(--accent-main);
+}
+
+body.theme-dark .conv-item-unread:not(.conv-item-active) {
+  background-color: color-mix(
+    in srgb,
+    var(--accent-main) 14%,
+    #020617
+  );
+}
