@@ -1,58 +1,42 @@
-<form
-  class="bg-white rounded-2xl shadow-sm p-4"
-  [formGroup]="postForm"
-  (ngSubmit)="onSubmit()"
->
+<form class="app-card rounded-2xl p-4" [formGroup]="postForm" (ngSubmit)="onSubmit()" id="post-form" name="post-form"
+  data-testid="post-form">
   <div class="flex items-start gap-3 mb-3">
-    <img
-      src="https://i.pravatar.cc/150?img=5"
-      alt="avatar"
-      class="w-10 h-10 rounded-full object-cover"
-    />
+    <img src="https://i.pravatar.cc/150?img=5" alt="avatar" class="w-10 h-10 rounded-full object-cover" id="post-avatar"
+      data-testid="post-avatar" />
     <div class="flex-1">
-      <textarea
-        rows="5"
-        placeholder="Quoi de neuf ?"
-        formControlName="text"
-        class="w-full resize-none border border-slate-200 rounded-2xl px-4 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-      ></textarea>
+      <textarea rows="5" placeholder="Quoi de neuf ?" formControlName="text" id="post-text" name="post-text"
+        data-testid="post-text-input"
+        class="w-full resize-none border border-slate-200 rounded-2xl px-4 py-2 text-sm outline-none bg-transparent focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"></textarea>
 
-      <div class="mt-1 text-xs text-red-600 min-h-[1rem]">
+      <div class="mt-1 text-xs text-red-600 min-h-[1rem]" id="post-text-error" data-testid="post-text-error">
         {{ formErrors['text'] }}
       </div>
     </div>
   </div>
 
-  <div
-    *ngIf="imagePreview"
-    class="ml-12 mb-3 rounded-2xl overflow-hidden border border-slate-200 max-h-72"
-  >
-    <img [src]="imagePreview" alt="preview" class="w-full object-cover" />
+  <div *ngIf="imagePreview" class="ml-12 mb-3 rounded-2xl overflow-hidden border border-slate-200 max-h-72"
+    id="post-image-preview" data-testid="post-image-preview">
+    <img [src]="imagePreview" alt="preview" class="w-full object-cover" id="post-image-preview-img"
+      data-testid="post-image-preview-img" />
   </div>
 
   <div class="flex items-center justify-between mt-2">
     <div class="flex items-center gap-3 ml-12 text-xs text-slate-500">
-      <label
-        class="flex items-center gap-1 px-3 py-1 rounded-full hover:bg-slate-100 cursor-pointer"
-      >
+      <label class="flex items-center gap-1 px-3 py-1 rounded-full hover:bg-slate-100 cursor-pointer"
+        id="post-image-upload-label" data-testid="post-image-upload-label" for="post-image-input">
         <span class="material-icons text-base">
           <i class="fa-regular fa-images fa-lg"></i>
         </span>
-        <input
-          type="file"
-          class="hidden"
-          (change)="onFileChange($event)"
-        />
+        <input type="file" class="hidden" id="post-image-input" name="post-image-input" data-testid="post-image-input"
+          (change)="onFileChange($event)" />
       </label>
-      <span class="text-[11px] text-red-600 min-h-[1rem]">
+      <span class="text-[11px] text-red-600 min-h-[1rem]" id="post-image-error" data-testid="post-image-error">
         {{ formErrors['image'] }}
       </span>
     </div>
 
-    <button
-      type="submit"
-      class="px-5 py-2 rounded-full bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] text-white text-sm font-semibold shadow-sm hover:shadow-md hover:-translate-y-[1px] transition"
-    >
+    <button type="submit" id="post-submit-btn" data-testid="post-submit-btn"
+      class="px-5 py-2 rounded-full btn-primary-gradient text-white text-sm font-semibold shadow-sm hover:shadow-md hover:-translate-y-[1px] transition">
       Publier
     </button>
   </div>

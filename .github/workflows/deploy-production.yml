@@ -75,7 +75,7 @@ jobs:
       - name: Build Angular (production)
         working-directory: Frontend
         run: |
-          npm run build -- --configuration production
+          npm run build:prod
 
       - name: Synchronisation du front
         uses: burnett01/rsync-deployments@7.1.0
