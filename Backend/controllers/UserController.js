@@ -331,3 +331,27 @@ module.exports.getUser = async(req, res) =>{
     return res.status(500).json({error: "Un problème est servenu lors de la récupération d'un utilisateur "})
   }
 }
+
+
+module.exports.UpdateInformationsUser = async(req, res) =>{
+  try {
+    
+      const user = await Users.findByPk(req.userId);
+        user.nom = req.body.nom || user.nom;
+        user.prenom = req.body.prenom || user.prenom;
+        user.telephone = req.body.telephone || user.telephone;
+        user.dateNaissance = req.body.dateNaissance || user.dateNaissance;
+        user.ville = req.body.ville || user.ville;
+        user.pays = req.body.pays || user.pays;
+        user.isAdmin = req.body.isAdmin || user.isAdmin;
+        user.photo = req.body.photo || user.photo;
+        user.bio = req.body.bio || user.bio;
+        user.siteweb = req.body.siteweb;
+        user.profession = req.body.profession;
+
+        await user.save();
+        return res.status(201).json({ status: 'success', user });
+  } catch (error) {
+    return res.status(500).json({error: "Un problème est servenu lors de la modification des informations de l'utilisateur "})
+  }
+}

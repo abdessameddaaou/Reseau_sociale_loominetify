@@ -13,7 +13,7 @@ const Users = db.define("Users", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-    prenom: {
+  prenom: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -31,7 +31,7 @@ const Users = db.define("Users", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-    telephone: {
+  telephone: {
     type: DataTypes.INTEGER,
     unique: true,
   },
@@ -39,11 +39,11 @@ const Users = db.define("Users", {
     type: DataTypes.DATEONLY,
     allowNull: false,
   },
-  ville : {
+  ville: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  pays : {
+  pays: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -55,26 +55,44 @@ const Users = db.define("Users", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
-  photo : {
+  photo: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  question : {
-    type: DataTypes.ENUM('Quel est le nom de votre premier animal de compagnie ?', 'Dans quelle ville êtes-vous né(e) ?', 'Quel est le nom de votre école primaire ?', 'Quel est votre plat préféré ?'),
+  question: {
+    type: DataTypes.ENUM(
+      "Quel est le nom de votre premier animal de compagnie ?",
+      "Dans quelle ville êtes-vous né(e) ?",
+      "Quel est le nom de votre école primaire ?",
+      "Quel est votre plat préféré ?"
+    ),
     allowNull: false,
   },
-  reponse : {
+  reponse: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  codeReinitialisation : {
+  codeReinitialisation: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  dateExpirationCode : {
+  dateExpirationCode: {
     type: DataTypes.DATE,
+    allowNull: true,
+  },
+  bio: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  siteweb: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  profession: {
+    type: DataTypes.STRING,
     allowNull: true,
   },
 });
 
 module.exports = Users;
+  
