@@ -349,7 +349,7 @@ module.exports.UpdateInformationsUser = async(req, res) =>{
         user.profession = req.body.profession;
 
         await user.save();
-        return res.status(201).json({ message: 'success', user });
+        return res.status(201).json({ message: 'success update user', user });
   } catch (error) {
     return res.status(500).json({error: "Un problème est servenu lors de la modification des informations de l'utilisateur "})
   }
