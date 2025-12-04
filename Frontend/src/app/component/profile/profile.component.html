@@ -293,16 +293,16 @@
                   Site web
                 </span>
                 <br />
-                <ng-container *ngIf="currentUser?.website; else noWebsite">
+                <ng-container *ngIf="currentUser?.siteweb; else nositeweb">
                   <a
-                    [href]="currentUser?.website"
+                    [href]="currentUser?.siteweb"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="text-[#5b7cff] hover:text-[#8b5cf6] hover:underline break-all">
-                    {{ currentUser?.website || 'Non renseigné' }}
+                    {{ currentUser?.siteweb || 'Non renseigné' }}
                   </a>
                 </ng-container>
-                <ng-template #noWebsite>
+                <ng-template #nositeweb>
                   Non renseigné
                 </ng-template>
               </p>

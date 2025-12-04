@@ -57,6 +57,7 @@ interface CurrentUser {
   photo?: string;
 }
 
+
 @Component({
   selector: 'app-fil-actualite',
   standalone: true,
@@ -82,6 +83,8 @@ export class FilActualiteComponent implements OnInit {
   hasMore = true;
   newCommentText: { [postId: number]: string } = {};
   selectedFriend: OnlineFriend | null = null;
+
+  defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
   private postsPage = 0;
   private readonly postsLimit = 5; // adapte à ton API
 

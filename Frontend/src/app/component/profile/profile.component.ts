@@ -21,7 +21,7 @@ interface CurrentUser {
   bio?: string;
   relationStatus?: string;
   profession?: string; 
-  website?: string;
+  siteweb?: string;
 }
 
 interface ProfilePostPreview {

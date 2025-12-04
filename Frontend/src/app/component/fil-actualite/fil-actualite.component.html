@@ -213,7 +213,7 @@
              data-testid="sidebar-profile-card">
           <div class="h-16 accent-gradient"></div>
           <div class="p-4 -mt-8 flex flex-col items-center">
-            <img src="https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png"
+            <img [src]="currentUser?.photo || defaultAvatar"
                  class="w-16 h-16 rounded-full border-4 border-white object-cover"
                  alt="user"
                  id="sidebar-profile-avatar"

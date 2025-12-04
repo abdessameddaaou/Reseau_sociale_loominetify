@@ -56,7 +56,7 @@ const Users = db.define("Users", {
     defaultValue: false,
   },
   photo: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT('long'),
     allowNull: true,
   },
   question: {
