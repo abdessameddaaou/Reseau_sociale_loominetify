@@ -1,14 +1,25 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { HeaderComponent } from '../header/header.component';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { HeaderComponent } from '../header/header.component';
 import { ThemeService, ThemeMode, AccentId } from '../../service/theme.service';
 import { environment } from '../../../environments/environment.dev';
 
+/* =========================================================
+ *                      TYPES & INTERFACES
+ * ========================================================= */
+
 type Tab = 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexion';
-type Section = 'profile' | 'security' | 'privacy' | 'notifications' | 'appearance' | 'account';
+
+type Section =
+  | 'profile'
+  | 'security'
+  | 'privacy'
+  | 'notifications'
+  | 'appearance'
+  | 'account';
 
 interface RecentSession {
   device: string;
@@ -19,47 +30,49 @@ interface RecentSession {
 
 interface AccentColor {
   id: AccentId;
-  value: string; // dégradé CSS pour l'aperçu
+  value: string;
+}
+
+/**
+ * Profil tel que renvoyé par le backend pour l'utilisateur connecté.
+ */
+interface UserProfile {
+  nom?: string;
+  prenom?: string;
+  telephone: string;
+  dateNaissance: string;
+  ville?: string;
+  pays: string;
+  photo?: string;
+  bio?: string;
+  siteweb?: string;   // optionnels pour le backend actuel
+  profession?: string;
 }
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, HeaderComponent],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent implements OnInit {
-  // onglet actif du header
-  activeTab: Tab = 'settings';
+  /* =========================================================
+   *                 NAVIGATION / LAYOUT
+   * ========================================================= */
 
-  // section active dans la page
+  activeTab: Tab = 'settings';
   section: Section = 'profile';
 
-  /* ================= PROFIL ================= */
+  /* =========================================================
+   *                        PROFIL
+   * ========================================================= */
 
-  profileForm = {
-    avatar: '',
-    firstName: '',
-    lastName: '',
-    username: '',
-    bio: '',
-    location: '',
-    website: '',
-    interests: '',
-    relationStatus: '',
-    profession: '',
-    birthDate: '',
-  };
+  userForm!: FormGroup;
   profileSaved = false;
 
-  get interestChips(): string[] {
-    return this.profileForm.interests
-      .split(',')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-  }
-
-  /* ================= SÉCURITÉ ================= */
+  /* =========================================================
+   *                        SÉCURITÉ
+   * ========================================================= */
 
   securityForm = {
     currentPassword: '',
@@ -67,8 +80,8 @@ export class SettingsComponent implements OnInit {
     confirmPassword: '',
     twoFactorEnabled: false,
   };
-  securitySaved = false;
 
+  securitySaved = false;
   recentSessions: RecentSession[] = [];
 
   get passwordsDontMatch(): boolean {
@@ -76,7 +89,9 @@ export class SettingsComponent implements OnInit {
     return !!f.newPassword && f.newPassword !== f.confirmPassword;
   }
 
-  /* ================= CONFIDENTIALITÉ ================= */
+  /* =========================================================
+   *                     CONFIDENTIALITÉ
+   * ========================================================= */
 
   privacyForm = {
     profileVisibility: 'friends' as 'public' | 'friends' | 'private',
@@ -86,7 +101,9 @@ export class SettingsComponent implements OnInit {
   };
   privacySaved = false;
 
-  /* ================= NOTIFICATIONS ================= */
+  /* =========================================================
+   *                     NOTIFICATIONS
+   * ========================================================= */
 
   notificationsForm = {
     emailLikes: true,
@@ -98,7 +115,9 @@ export class SettingsComponent implements OnInit {
   };
   notificationsSaved = false;
 
-  /* ================= APPARENCE ================= */
+  /* =========================================================
+   *                      APPARENCE (100% FRONT)
+   * ========================================================= */
 
   appearanceForm = {
     theme: 'light' as ThemeMode,
@@ -117,43 +136,133 @@ export class SettingsComponent implements OnInit {
     return this.accentColors.find((c) => c.id === this.appearanceForm.accent);
   }
 
-  /* ================= COMPTE ================= */
+  /* =========================================================
+   *                        COMPTE
+   * ========================================================= */
 
   accountForm = {
     language: 'fr' as 'fr' | 'en' | 'es',
   };
 
-  /* ================= CONSTRUCTEUR ================= */
+  /* =========================================================
+   *                   CONSTRUCTEUR / INIT
+   * ========================================================= */
 
   constructor(
     private router: Router,
     private http: HttpClient,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private fb: FormBuilder
   ) {}
 
   ngOnInit(): void {
-    // Préférences actuelles côté front
-    const current = this.themeService.current;
-    this.appearanceForm.theme = current.theme;
-    this.appearanceForm.accent = current.accent;
-
-    // Chargement initial depuis le backend
+    this.buildUserForm();
     this.loadProfile();
-    this.loadSecuritySettings();
-    this.loadRecentSessions();
-    this.loadPrivacy();
-    this.loadNotifications();
-    this.loadAppearance();
-    this.loadAccount();
+    this.loadAppearanceFromTheme();
   }
 
-  /* ================= MÉTHODES GÉNÉRALES ================= */
+  /* =========================================================
+   *              FORMULAIRE PROFIL (RÉACTIF)
+   * ========================================================= */
 
-  setSection(section: Section) {
+  private buildUserForm(): void {
+    this.userForm = this.fb.group({
+      nom: [''],
+      prenom: [''],
+      telephone: [''],
+      dateNaissance: [''],
+      ville: [''],
+      pays: [''],
+      photo: [''],
+      bio: [''],
+      siteweb: [''],
+      profession: [''],
+    });
+  }
+
+  private loadProfile(): void {
+    this.http.get<{ user: UserProfile }>(`${environment.apiUrl}/users/getUserconnected`,{ withCredentials: true }).subscribe({
+        next: (res) => {
+          const u = res.user;
+          this.userForm.patchValue({
+            nom: u.nom,
+            prenom: u.prenom,
+            telephone: u.telephone ?? '',
+            dateNaissance: u.dateNaissance ? u.dateNaissance.substring(0, 10) : '',
+            ville: u.ville ?? '',
+            pays: u.pays,
+            photo: u.photo ?? '',
+            bio: u.bio ?? '',
+            siteweb: u.siteweb ?? '',
+            profession: u.profession ?? '',
+          });
+        },
+        error: () => {
+          this.themeService.applyAuthTheme();
+          this.router.navigate(['/auth']);
+        },
+      });
+  }
+
+  saveProfile(): void {
+    const raw = this.userForm.value as Partial<UserProfile>;
+
+    const payload: UserProfile = {
+      nom: raw.nom ?? '',
+      prenom: raw.prenom ?? '',
+      telephone: raw.telephone ?? '',
+      dateNaissance: raw.dateNaissance ?? '',
+      ville: raw.ville ?? '',
+      pays: raw.pays ?? '',
+      photo: raw.photo ?? '',
+      bio: raw.bio ?? '',
+      siteweb: raw.siteweb ?? '',
+      profession: raw.profession ?? '',
+    };
+
+    this.http
+      .put(`${environment.apiUrl}/users/updateUser`, payload, {
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => {
+          this.profileSaved = true;
+          setTimeout(() => (this.profileSaved = false), 2000);
+        },
+        error: (err) => {
+          console.error('Erreur lors de la sauvegarde du profil', err);
+        },
+      });
+  }
+
+onAvatarSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  // Optionnel : check taille
+  if (file.size > 5 * 1024 * 1024) {
+    console.error('Fichier trop lourd (> 5 Mo)');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const base64 = reader.result as string;
+    this.userForm.patchValue({ photo: base64 });
+  };
+  reader.readAsDataURL(file);
+}
+
+  /* =========================================================
+   *                 MÉTHODES GÉNÉRALES / NAV
+   * ========================================================= */
+
+  setSection(section: Section): void {
     this.section = section;
   }
 
-  setActiveTab(tab: Tab) {
+  setActiveTab(tab: Tab): void {
     this.activeTab = tab;
 
     if (tab === 'home') {
@@ -164,7 +273,11 @@ export class SettingsComponent implements OnInit {
       this.router.navigate(['/settings']);
     } else if (tab === 'deconnexion') {
       this.http
-        .post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true })
+        .post(
+          `${environment.apiUrl}/auth/logout`,
+          {},
+          { withCredentials: true }
+        )
         .subscribe({
           next: () => {
             this.themeService.applyAuthTheme();
@@ -178,90 +291,17 @@ export class SettingsComponent implements OnInit {
     }
   }
 
-  /* ================= PROFIL ================= */
+  /* =========================================================
+   *                           SÉCURITÉ
+   * ========================================================= */
 
-  private loadProfile() {
-    this.http
-      .get<Partial<typeof this.profileForm>>(
-        `${environment.apiUrl}/settings/profile`,
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: (data) => {
-          this.profileForm = {
-            ...this.profileForm,
-            ...data,
-          };
-        },
-        error: (err) => {
-          console.error('Erreur lors du chargement du profil', err);
-        },
-      });
+  private loadSecuritySettings(): void {
+    // à implémenter quand l'API sera prête
   }
 
-  saveProfile() {
-    this.profileSaved = false;
-
-    this.http
-      .put(
-        `${environment.apiUrl}/settings/profile`,
-        this.profileForm,
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: () => {
-          this.profileSaved = true;
-          setTimeout(() => (this.profileSaved = false), 2000);
-        },
-        error: (err) => {
-          console.error('Erreur lors de la sauvegarde du profil', err);
-        },
-      });
-  }
-
-  onAvatarSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) {
-      return;
-    }
-
-    const file = input.files[0];
-
-    // Prévisualisation immédiate
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.profileForm.avatar = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-
-    // ➜ si tu veux envoyer l'avatar au backend séparément :
-    // const formData = new FormData();
-    // formData.append('avatar', file);
-    // this.http.post(`${environment.apiUrl}/settings/profile/avatar`, formData, { withCredentials: true }).subscribe(...)
-  }
-
-  /* ================= SÉCURITÉ ================= */
-
-  private loadSecuritySettings() {
-    this.http
-      .get<{ twoFactorEnabled: boolean }>(
-        `${environment.apiUrl}/settings/security`,
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: (data) => {
-          this.securityForm.twoFactorEnabled = data.twoFactorEnabled;
-        },
-        error: (err) => {
-          console.error('Erreur lors du chargement des paramètres de sécurité', err);
-        },
-      });
-  }
-
-  saveSecurity() {
+  saveSecurity(): void {
     if (this.passwordsDontMatch) return;
 
-    // 1. changer le mot de passe
     const payload: { currentPassword: string; newPassword: string } = {
       currentPassword: this.securityForm.currentPassword,
       newPassword: this.securityForm.newPassword,
@@ -277,7 +317,6 @@ export class SettingsComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          // 2. mettre à jour 2FA
           this.http
             .post(
               `${environment.apiUrl}/settings/security/two-factor`,
@@ -288,80 +327,46 @@ export class SettingsComponent implements OnInit {
               next: () => {
                 this.securitySaved = true;
                 setTimeout(() => (this.securitySaved = false), 2000);
-                // On nettoie les champs mots de passe
                 this.securityForm.currentPassword = '';
                 this.securityForm.newPassword = '';
                 this.securityForm.confirmPassword = '';
               },
               error: (err) => {
-                console.error('Erreur lors de la mise à jour de la 2FA', err);
+                console.error(
+                  'Erreur lors de la mise à jour de la 2FA',
+                  err
+                );
               },
             });
         },
         error: (err) => {
-          console.error('Erreur lors de la modification du mot de passe', err);
+          console.error(
+            'Erreur lors de la modification du mot de passe',
+            err
+          );
         },
       });
   }
 
-  private loadRecentSessions() {
-    this.http
-      .get<RecentSession[]>(
-        `${environment.apiUrl}/settings/sessions`,
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: (sessions) => {
-          this.recentSessions = sessions || [];
-        },
-        error: (err) => {
-          console.error('Erreur lors du chargement des sessions récentes', err);
-          this.recentSessions = [];
-        },
-      });
+  private loadRecentSessions(): void {
+    // à implémenter quand l'API sera prête
   }
 
-  logoutAllDevices() {
-    this.http
-      .post(
-        `${environment.apiUrl}/auth/logout-all`,
-        {},
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: () => {
-          // Tu peux aussi recharger les sessions depuis le backend
-          this.loadRecentSessions();
-        },
-        error: (err) => {
-          console.error('Erreur lors de la déconnexion de tous les appareils', err);
-        },
-      });
+  logoutAllDevices(): void {
+    // à implémenter quand l'API sera prête
   }
 
-  /* ================= CONFIDENTIALITÉ ================= */
+  /* =========================================================
+   *                        CONFIDENTIALITÉ
+   * ========================================================= */
 
-  private loadPrivacy() {
-    this.http
-      .get<Partial<typeof this.privacyForm>>(
-        `${environment.apiUrl}/settings/privacy`,
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: (data) => {
-          this.privacyForm = {
-            ...this.privacyForm,
-            ...data,
-          };
-        },
-        error: (err) => {
-          console.error('Erreur lors du chargement des paramètres de confidentialité', err);
-        },
-      });
+  private loadPrivacy(): void {
+    // à implémenter quand l'API sera prête
   }
 
-  savePrivacy() {
+  savePrivacy(): void {
     this.privacySaved = false;
+
     this.http
       .put(
         `${environment.apiUrl}/settings/privacy`,
@@ -374,33 +379,23 @@ export class SettingsComponent implements OnInit {
           setTimeout(() => (this.privacySaved = false), 2000);
         },
         error: (err) => {
-          console.error('Erreur lors de la sauvegarde de la confidentialité', err);
+          console.error(
+            'Erreur lors de la sauvegarde de la confidentialité',
+            err
+          );
         },
       });
   }
 
-  /* ================= NOTIFICATIONS ================= */
+  /* =========================================================
+   *                        NOTIFICATIONS
+   * ========================================================= */
 
-  private loadNotifications() {
-    this.http
-      .get<Partial<typeof this.notificationsForm>>(
-        `${environment.apiUrl}/settings/notifications`,
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: (data) => {
-          this.notificationsForm = {
-            ...this.notificationsForm,
-            ...data,
-          };
-        },
-        error: (err) => {
-          console.error('Erreur lors du chargement des notifications', err);
-        },
-      });
+  private loadNotifications(): void {
+    // à implémenter quand l'API sera prête
   }
 
-  saveNotifications() {
+  saveNotifications(): void {
     this.notificationsSaved = false;
 
     this.http
@@ -415,82 +410,44 @@ export class SettingsComponent implements OnInit {
           setTimeout(() => (this.notificationsSaved = false), 2000);
         },
         error: (err) => {
-          console.error('Erreur lors de la sauvegarde des notifications', err);
+          console.error(
+            'Erreur lors de la sauvegarde des notifications',
+            err
+          );
         },
       });
   }
 
-  /* ================= APPARENCE ================= */
+  /* =========================================================
+   *                         APPARENCE
+   *              (uniquement ThemeService côté front)
+   * ========================================================= */
 
-  private loadAppearance() {
-    this.http
-      .get<Partial<typeof this.appearanceForm>>(
-        `${environment.apiUrl}/settings/appearance`,
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: (data) => {
-          this.appearanceForm = {
-            ...this.appearanceForm,
-            ...data,
-          };
-
-          // applique aussi côté front
-          this.themeService.setTheme(this.appearanceForm.theme);
-          this.themeService.setAccent(this.appearanceForm.accent);
-        },
-        error: (err) => {
-          console.error('Erreur lors du chargement de l’apparence', err);
-        },
-      });
+  /** Récupère le thème courant stocké par ThemeService (localStorage, etc.). */
+  private loadAppearanceFromTheme(): void {
+    const current = this.themeService.current;
+    this.appearanceForm.theme = current.theme;
+    this.appearanceForm.accent = current.accent;
   }
 
-  saveAppearance() {
-    // applique le thème globalement + sauvegarde dans le service
+  /** Applique le thème + accent et affiche juste un indicateur visuel. */
+  saveAppearance(): void {
     this.themeService.setTheme(this.appearanceForm.theme);
     this.themeService.setAccent(this.appearanceForm.accent);
 
-    this.appearanceSaved = false;
-
-    this.http
-      .put(
-        `${environment.apiUrl}/settings/appearance`,
-        this.appearanceForm,
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: () => {
-          this.appearanceSaved = true;
-          setTimeout(() => (this.appearanceSaved = false), 2000);
-        },
-        error: (err) => {
-          console.error('Erreur lors de la sauvegarde de l’apparence', err);
-        },
-      });
+    this.appearanceSaved = true;
+    setTimeout(() => (this.appearanceSaved = false), 2000);
   }
 
-  /* ================= COMPTE ================= */
+  /* =========================================================
+   *                           COMPTE
+   * ========================================================= */
 
-  private loadAccount() {
-    this.http
-      .get<Partial<typeof this.accountForm>>(
-        `${environment.apiUrl}/settings/account`,
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: (data) => {
-          this.accountForm = {
-            ...this.accountForm,
-            ...data,
-          };
-        },
-        error: (err) => {
-          console.error('Erreur lors du chargement des paramètres de compte', err);
-        },
-      });
+  private loadAccount(): void {
+    // à implémenter quand l'API sera prête
   }
 
-  downloadData() {
+  downloadData(): void {
     this.http
       .get(`${environment.apiUrl}/account/export`, {
         withCredentials: true,
@@ -506,12 +463,15 @@ export class SettingsComponent implements OnInit {
           window.URL.revokeObjectURL(url);
         },
         error: (err) => {
-          console.error('Erreur lors du téléchargement des données', err);
+          console.error(
+            'Erreur lors du téléchargement des données',
+            err
+          );
         },
       });
   }
 
-  requestAccountDeletion() {
+  requestAccountDeletion(): void {
     this.http
       .post(
         `${environment.apiUrl}/account/delete-request`,
@@ -520,10 +480,13 @@ export class SettingsComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          // Ici tu peux ouvrir un toast / message de confirmation
+          // TODO: afficher un toast / message de confirmation si tu veux
         },
         error: (err) => {
-          console.error('Erreur lors de la demande de suppression du compte', err);
+          console.error(
+            'Erreur lors de la demande de suppression du compte',
+            err
+          );
         },
       });
   }

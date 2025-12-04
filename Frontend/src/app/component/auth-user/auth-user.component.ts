@@ -71,10 +71,10 @@ export class AuthUserComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       confirmPassword: ['', Validators.required],
-      phone: [''],
+      telephone: [''],
       dateNaissance: ['', Validators.required],
       pays: [''],
-      city: [''],
+      ville: [''],
       question: ['', Validators.required],
       reponse: ['', Validators.required],
     });

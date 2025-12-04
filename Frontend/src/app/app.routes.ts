@@ -27,15 +27,18 @@ export const routes: Routes = [
   },
   { 
     path: 'messages', 
-    component: MessagesComponent 
+    component: MessagesComponent,
+    canActivate: [AuthGuard],
   },
   { 
     path: 'settings', 
-    component: SettingsComponent 
+    component: SettingsComponent,
+    canActivate: [AuthGuard],
   },
   { 
     path: 'profile', 
-    component: ProfileComponent 
+    component: ProfileComponent, 
+    canActivate: [AuthGuard],
   },
   {
     path: '',

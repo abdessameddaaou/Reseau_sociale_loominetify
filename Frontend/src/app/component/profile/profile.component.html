@@ -39,22 +39,21 @@
               class="mt-2 text-base font-semibold text-slate-900"
               id="profile-name"
               data-testid="profile-name">
-              {{ displayName }}
+              {{ currentUser?.nom }} {{ currentUser?.prenom }}
             </h1>
 
             <p
               class="text-[12px] text-slate-400"
               id="profile-handle"
               data-testid="profile-handle">
-              @{{ handle }}
+              @{{ currentUser?.nom }}{{ currentUser?.prenom }}
             </p>
 
             <p
               class="mt-1 text-[11px] text-slate-500 flex items-center gap-1"
-              id="profile-location"
-              data-testid="profile-location">
+              id="profile-location">
               <i class="fa-solid fa-location-dot text-[10px]"></i>
-              <span>{{ location }}</span>
+              <span>{{ currentUser?.ville || 'Non renseigné' }}</span>
             </p>
 
             <div
@@ -83,14 +82,6 @@
                 id="profile-edit-button"
                 data-testid="profile-edit-button">
                 Modifier mon profil
-              </button>
-              <button
-                type="button"
-                class="px-3 rounded-full border border-slate-200 text-[11px] text-slate-600 bg-white hover:bg-slate-50"
-                (click)="goToSettings()"
-                id="profile-settings-button"
-                data-testid="profile-settings-button">
-                Paramètres
               </button>
             </div>
 
@@ -215,7 +206,7 @@
           </div>
 
           <p class="text-[13px] text-slate-700 leading-relaxed">
-            {{ bio }}
+            {{ currentUser?.bio || 'Non renseigné' }}
           </p>
         </section>
 
@@ -253,10 +244,10 @@
 
               <p>
                 <span class="font-semibold text-slate-500 text-[11px] uppercase tracking-wide">
-                  Localisation
+                  Pays de résidence
                 </span>
                 <br />
-                {{ location }}
+                {{ currentUser?.pays || 'Non renseigné' }}
               </p>
             </div>
           </div>
@@ -271,20 +262,14 @@
             </h2>
 
             <div class="space-y-1 text-slate-600">
-              <p>
-                <span class="font-semibold text-slate-500 text-[11px] uppercase tracking-wide">
-                  Rôle
-                </span>
-                <br />
-                {{ currentUser?.isAdmin ? 'Administrateur' : 'Utilisateur' }}
-              </p>
+
 
               <p>
                 <span class="font-semibold text-slate-500 text-[11px] uppercase tracking-wide">
                   Statut relationnel
                 </span>
                 <br />
-                {{ relationStatus }}
+                {{ currentUser?.relationStatus || 'Non renseigné' }}
               </p>
 
               <p>
@@ -292,7 +277,7 @@
                   Profession
                 </span>
                 <br />
-                {{ profession }}
+                {{ currentUser?.profession || 'Non renseigné'}}
               </p>
 
               <p>
@@ -308,16 +293,16 @@
                   Site web
                 </span>
                 <br />
-                <ng-container *ngIf="website; else noWebsite">
+                <ng-container *ngIf="currentUser?.siteweb; else nositeweb">
                   <a
-                    [href]="website"
+                    [href]="currentUser?.siteweb"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="text-[#5b7cff] hover:text-[#8b5cf6] hover:underline break-all">
-                    {{ website }}
+                    {{ currentUser?.siteweb || 'Non renseigné' }}
                   </a>
                 </ng-container>
-                <ng-template #noWebsite>
+                <ng-template #nositeweb>
                   Non renseigné
                 </ng-template>
               </p>
@@ -464,16 +449,8 @@
 
           <div class="flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-900">
-              Dernières publications
+              Mes publications
             </h2>
-            <button
-              type="button"
-              class="text-[11px] text-[#5b7cff] hover:text-[#8b5cf6] hover:underline"
-              (click)="goToFeed()"
-              id="profile-posts-see-full"
-              data-testid="profile-posts-see-full">
-              Voir le fil complet
-            </button>
           </div>
 
           <div class="space-y-3">
@@ -493,10 +470,10 @@
                 <div class="flex items-center justify-between gap-2">
                   <div>
                     <p class="text-xs font-semibold text-slate-900">
-                      {{ displayName }}
+                      {{ currentUser?.nom }}
                     </p>
                     <p class="text-[11px] text-slate-400">
-                      @{{ handle }} · {{ post.timeAgo }}
+                      @{{ currentUser?.nom }} · {{ post.timeAgo }}
                     </p>
                   </div>
 

@@ -53,27 +53,15 @@ interface OnlineFriend {
 interface CurrentUser {
   nom: string;
   prenom: string;
-  email: string;
-  telephone?: string;
-  dateNaissance: string;
-  ville?: string;
-  pays?: string;
   isAdmin: boolean;
   photo?: string;
-  createdAt: string;
 }
+
 
 @Component({
   selector: 'app-fil-actualite',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    FontAwesomeModule,
-    HeaderComponent,
-    PostCreatorComponent
-  ],
+  imports: [ CommonModule, ReactiveFormsModule, FormsModule, FontAwesomeModule, HeaderComponent, PostCreatorComponent ],
   templateUrl: './fil-actualite.component.html'
 })
 export class FilActualiteComponent implements OnInit {
@@ -83,17 +71,11 @@ export class FilActualiteComponent implements OnInit {
    */
   activeTab: 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexion' = 'home';
   currentUser: CurrentUser | null = null;
-  isUserLoading = true;
-
-  // amis en ligne (uniquement depuis le backend)
+  // isUserLoading = true;
   onlineFriends: OnlineFriend[] = [];
-
-  // formulaire de création de post
   postForm: FormGroup;
   imagePreview: string | null = null;
   formErrors: { [key: string]: string } = {};
-
-  // posts & feed (uniquement backend)
   allPosts: Post[] = [];
   visiblePosts: Post[] = [];
   isInitialLoading = true;
@@ -102,16 +84,11 @@ export class FilActualiteComponent implements OnInit {
   newCommentText: { [postId: number]: string } = {};
   selectedFriend: OnlineFriend | null = null;
 
-  // pagination backend
+  defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
   private postsPage = 0;
   private readonly postsLimit = 5; // adapte à ton API
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private http: HttpClient,
-    private themeService: ThemeService
-  ) {
+  constructor( private fb: FormBuilder, private router: Router, private http: HttpClient, private themeService: ThemeService) {
     this.postForm = this.fb.group({
       text: ['', [Validators.maxLength(1000)]],
       image: [null]
@@ -133,10 +110,8 @@ export class FilActualiteComponent implements OnInit {
   setActiveTab(tab: typeof this.activeTab) {
     this.activeTab = tab;
 
-    if (tab === 'home') {
-      this.loadCurrentUser();
-      this.router.navigate(['/fil-actualite']);
-    } else if (tab === 'deconnexion') {
+    if (tab === 'home') { this.router.navigate(['/fil-actualite']) } 
+    else if (tab === 'deconnexion') {
       this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
         next: () => {
           this.themeService.applyAuthTheme();
@@ -158,19 +133,14 @@ export class FilActualiteComponent implements OnInit {
    * Charger les informations de l'utilisateur
    */
   private loadCurrentUser() {
-    this.isUserLoading = true;
-
-    this.http
-      .get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUserconnected`, {
-        withCredentials: true
-      })
-      .subscribe({
+    // this.isUserLoading = true;
+    this.http.get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true }).subscribe({
         next: (res) => {
           this.currentUser = res.user;
-          this.isUserLoading = false;
+          // this.isUserLoading = false;
         },
         error: () => {
-          this.isUserLoading = false;
+          // this.isUserLoading = false;
           this.themeService.applyAuthTheme();
           this.router.navigate(['/auth']);
         }
@@ -181,11 +151,7 @@ export class FilActualiteComponent implements OnInit {
    * Charger les amis en ligne depuis le backend
    */
   private loadOnlineFriends() {
-    this.http
-      .get<OnlineFriend[]>(`${environment.apiUrl}/friends/online`, {
-        withCredentials: true
-      })
-      .subscribe({
+    this.http.get<OnlineFriend[]>(`${environment.apiUrl}/friends/online`, { withCredentials: true }).subscribe({
         next: (friends) => {
           this.onlineFriends = friends;
         },
@@ -211,15 +177,13 @@ export class FilActualiteComponent implements OnInit {
     this.isInitialLoading = true;
     this.postsPage = 0;
 
-    this.http
-      .get<Post[]>(`${environment.apiUrl}/posts`, {
+    this.http.get<Post[]>(`${environment.apiUrl}/posts`, {
         params: {
           page: this.postsPage.toString(),
           limit: this.postsLimit.toString()
         },
         withCredentials: true
-      })
-      .subscribe({
+      }).subscribe({
         next: (posts) => {
           this.allPosts = posts;
           this.visiblePosts = posts;
@@ -244,15 +208,13 @@ export class FilActualiteComponent implements OnInit {
     this.isLoadingMore = true;
     this.postsPage++;
 
-    this.http
-      .get<Post[]>(`${environment.apiUrl}/posts`, {
+    this.http.get<Post[]>(`${environment.apiUrl}/posts`, {
         params: {
           page: this.postsPage.toString(),
           limit: this.postsLimit.toString()
         },
         withCredentials: true
-      })
-      .subscribe({
+      }).subscribe({
         next: (posts) => {
           this.allPosts = [...this.allPosts, ...posts];
           this.visiblePosts = this.allPosts;

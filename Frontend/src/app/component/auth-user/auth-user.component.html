@@ -179,7 +179,7 @@
         <ng-container *ngIf="signupStep === 2">
           <div>
             <label class="block text-xs font-medium text-slate-800 mb-1">Mot de passe</label>
-            <input type="password" formControlName="password" placeholder="••••••••"
+            <input type="password" formControlName="password" placeholder="********"
               class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
               {{ signupErrors['password'] }}
@@ -191,7 +191,7 @@
 
           <div>
             <label class="block text-xs font-medium text-slate-800 mb-1">Confirmation du mot de passe</label>
-            <input type="password" formControlName="confirmPassword" placeholder="••••••••"
+            <input type="password" formControlName="confirmPassword" placeholder="********"
               class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
               {{ signupErrors['confirmPassword'] }}
@@ -200,7 +200,7 @@
 
           <div>
             <label class="block text-xs font-medium text-slate-800 mb-1">Numéro de téléphone (facultatif)</label>
-            <input type="tel" formControlName="phone" placeholder="+33 6 12 34 56 78"
+            <input type="tel" formControlName="telephone" placeholder="+33 6 12 34 56 78"
               class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
           </div>
 
@@ -266,7 +266,7 @@
             <label class="block text-xs font-medium text-slate-800 mb-1">
               Ville de résidence (facultatif)
             </label>
-            <input type="text" formControlName="city" placeholder="Paris"
+            <input type="text" formControlName="ville" placeholder="Paris"
               class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
           </div>
 
