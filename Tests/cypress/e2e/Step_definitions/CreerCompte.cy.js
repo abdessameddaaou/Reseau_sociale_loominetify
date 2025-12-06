@@ -154,7 +154,7 @@ When('Il saisit les informations',()=>{
     cy.xpath(locators.Inscription.Inscription_Date_De_Naissance).should('be.enabled')
     cy.xpath(locators.Inscription.Inscription_Date_De_Naissance).type(convertedDate)
 
-    // cy.xpath(locators.Inscription.Inscription_Country_Button).should('be.enabled')
+    // // cy.xpath(locators.Inscription.Inscription_Country_Button).should('be.enabled')
     cy.xpath(locators.Inscription.Inscription_Country_Button).type(userdata.pays)
 
     cy.xpath(locators.Inscription.Inscription_Country_Liste).should('be.visible')
