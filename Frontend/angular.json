@@ -27,7 +27,9 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss", "flag-icons/css/flag-icons.min.css"]
+            "styles": [
+              "src/styles.scss",
+              "flag-icons/css/flag-icons.min.css","node_modules/@ctrl/ngx-emoji-mart/picker.css"]
           },
           "configurations": {
             "production": {

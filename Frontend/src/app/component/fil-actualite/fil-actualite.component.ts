@@ -8,7 +8,8 @@ import { HeaderComponent } from '../header/header.component';
 import { PostCreatorComponent } from '../post-creator/post-creator.component';
 import { environment } from '../../../environments/environment.dev';
 import { ThemeService } from '../../service/theme.service';
-
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 /**
  * Interface pour les commentaires
  */
@@ -24,12 +25,21 @@ interface PostComment {
  */
 interface Post {
   id: number;
-  authorName: string;
-  authorHandle: string;
+  description: string;
+  image?: string;
+  user : {
+    id: number;
+    nom: string;
+    prenom: string;
+    photo?: string;
+  };
+  nombreLikes: number;
+  nombrePartages: number;
+  createdAt: string;
+
   authorAvatar: string;
   timeAgo: string;
   text: string;
-  imageUrl?: string;
   likes: number;
   commentsCount: number;
   shares: number;
@@ -62,7 +72,7 @@ interface CurrentUser {
   selector: 'app-fil-actualite',
   standalone: true,
   imports: [ CommonModule, ReactiveFormsModule, FormsModule, FontAwesomeModule, HeaderComponent, PostCreatorComponent ],
-  templateUrl: './fil-actualite.component.html'
+  templateUrl: './fil-actualite.component.html',
 })
 export class FilActualiteComponent implements OnInit {
 
@@ -110,7 +120,7 @@ export class FilActualiteComponent implements OnInit {
   setActiveTab(tab: typeof this.activeTab) {
     this.activeTab = tab;
 
-    if (tab === 'home') { this.router.navigate(['/fil-actualite']) } 
+    if (tab === 'home') { this.router.navigate(['/fil-actualite']) }
     else if (tab === 'deconnexion') {
       this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
         next: () => {
@@ -177,7 +187,7 @@ export class FilActualiteComponent implements OnInit {
     this.isInitialLoading = true;
     this.postsPage = 0;
 
-    this.http.get<Post[]>(`${environment.apiUrl}/posts`, {
+    this.http.get<Post[]>(`${environment.apiUrl}/publications/getAllPosts`, {
         params: {
           page: this.postsPage.toString(),
           limit: this.postsLimit.toString()
@@ -185,6 +195,7 @@ export class FilActualiteComponent implements OnInit {
         withCredentials: true
       }).subscribe({
         next: (posts) => {
+          console.log('Posts chargés depuis le backend', posts);
           this.allPosts = posts;
           this.visiblePosts = posts;
           this.hasMore = posts.length === this.postsLimit;
@@ -198,6 +209,7 @@ export class FilActualiteComponent implements OnInit {
           this.visiblePosts = [];
         }
       });
+
   }
 
   /**
@@ -208,7 +220,7 @@ export class FilActualiteComponent implements OnInit {
     this.isLoadingMore = true;
     this.postsPage++;
 
-    this.http.get<Post[]>(`${environment.apiUrl}/posts`, {
+    this.http.get<Post[]>(`${environment.apiUrl}/publications/getAllPosts`, {
         params: {
           page: this.postsPage.toString(),
           limit: this.postsLimit.toString()
@@ -281,7 +293,6 @@ export class FilActualiteComponent implements OnInit {
     };
     reader.readAsDataURL(file);
   }
-
   /**
    * Création de publication → uniquement via backend
    */
@@ -315,14 +326,16 @@ export class FilActualiteComponent implements OnInit {
       formData.append('image', image);
     }
 
-    this.http.post<Post>(`${environment.apiUrl}/posts`, formData, { withCredentials: true }).subscribe({
+    this.http.post<Post>(`${environment.apiUrl}/publications/addPost`, formData, { withCredentials: true }).subscribe({
         next: (createdPost) => {
+          console.log('Post publié avec succès', createdPost);
           // On insère le post renvoyé par l’API en haut du feed
-          this.allPosts = [createdPost, ...this.allPosts];
-          this.visiblePosts = [createdPost, ...this.visiblePosts];
+          //this.allPosts = [createdPost, ...this.allPosts];
+          //this.visiblePosts = [createdPost, ...this.visiblePosts];
 
           this.postForm.reset({ text: '', image: null });
           this.imagePreview = null;
+          this.loadInitialPosts();
         },
         error: (err) => {
           console.error('Erreur lors de la publication du post', err);
@@ -402,5 +415,17 @@ export class FilActualiteComponent implements OnInit {
           console.error('Erreur lors du partage du post', err);
         }
       });
+  }
+
+  timeAgo(date: string | Date) {
+  return formatDistanceToNow(new Date(date), { addSuffix: true, locale: fr });
+  }
+
+  srcImage(imagePath: string | null | undefined): string {
+
+    // Example: remove `/api` from apiUrl
+    const base = environment.apiUrl.replace('/api', '');
+
+    return base + imagePath;
   }
 }

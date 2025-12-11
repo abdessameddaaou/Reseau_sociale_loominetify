@@ -54,7 +54,7 @@
                  [attr.data-testid]="'feed-post-' + post.id">
           <header class="flex items-start gap-3"
                   [attr.data-testid]="'feed-post-header-' + post.id">
-            <img [src]="post.authorAvatar"
+            <img [src]="post.user.photo || defaultAvatar"
                  alt="avatar"
                  class="w-10 h-10 rounded-full object-cover"
                  [attr.data-testid]="'feed-post-avatar-' + post.id" />
@@ -63,11 +63,11 @@
                 <div>
                   <p class="text-sm font-semibold text-slate-800"
                      [attr.data-testid]="'feed-post-author-' + post.id">
-                    {{ post.authorName }}
+                    {{ post.user.nom }} {{ post.user.prenom }}
                   </p>
                   <p class="text-xs text-slate-400"
                      [attr.data-testid]="'feed-post-meta-' + post.id">
-                    {{ post.authorHandle }} · {{ post.timeAgo }}
+                    {{ post.user.nom }} {{ post.user.prenom }} · {{ timeAgo(post.createdAt) }}
                   </p>
                 </div>
               </div>
@@ -76,13 +76,13 @@
 
           <p class="text-sm text-slate-700 whitespace-pre-line"
              [attr.data-testid]="'feed-post-text-' + post.id">
-            {{ post.text }}
+            {{ post.description }}
           </p>
 
-          <div *ngIf="post.imageUrl"
+          <div *ngIf="post.image"
                class="rounded-2xl overflow-hidden border border-slate-100"
                [attr.data-testid]="'feed-post-image-wrapper-' + post.id">
-            <img [src]="post.imageUrl"
+            <img [src]="srcImage(post.image)"
                  alt="post image"
                  class="w-full object-cover"
                  [attr.data-testid]="'feed-post-image-' + post.id" />

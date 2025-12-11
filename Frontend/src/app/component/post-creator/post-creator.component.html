@@ -1,5 +1,11 @@
 <form class="app-card rounded-2xl p-4" [formGroup]="postForm" (ngSubmit)="onSubmit()" id="post-form" name="post-form"
   data-testid="post-form">
+<!-- <emoji-mart ></emoji-mart>
+<emoji-mart ></emoji-mart>
+<emoji-mart [style]="{ position: 'absolute', bottom: '20px', right: '20px' }"></emoji-mart>
+<emoji-mart
+  [i18n]="{ search: 'Recherche', categories: { search: 'Résultats de recherche', recent: 'Récents' } }"
+></emoji-mart> -->
   <div class="flex items-start gap-3 mb-3">
     <img src="https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png" alt="avatar" class="w-10 h-10 rounded-full object-cover" id="post-avatar"
       data-testid="post-avatar" />
@@ -27,9 +33,23 @@
         <span class="material-icons text-base">
           <i class="fa-regular fa-images fa-lg"></i>
         </span>
+
         <input type="file" class="hidden" id="post-image-input" name="post-image-input" data-testid="post-image-input"
           (change)="onFileChange($event)" />
+
       </label>
+       <label class="flex items-center gap-1 py-1 rounded-full hover:bg-slate-100 cursor-pointer"
+        id="post-emoji-upload-label" data-testid="post-emoji-upload-label" for="post-emoji-input">
+        <span (click)="toggleEmoji()" class="material-icons text-base">
+          <i class="fa-regular fa-face-grin-beam fa-lg" ></i>
+        </span>
+
+
+      </label>
+      <div>
+        <emoji-mart  (emojiSelect)="handleEmojiSelect($event)" *ngIf="showEmoji" title="Pick your emoji…" [style]="{ position: 'absolute' }"></emoji-mart>
+      </div>
+
       <span class="text-[11px] text-red-600 min-h-[1rem]" id="post-image-error" data-testid="post-image-error">
         {{ formErrors['image'] }}
       </span>
@@ -39,5 +59,7 @@
       class="px-5 py-2 rounded-full btn-primary-gradient text-white text-sm font-semibold shadow-sm hover:shadow-md hover:-translate-y-[1px] transition">
       Publier
     </button>
+
   </div>
 </form>
+
