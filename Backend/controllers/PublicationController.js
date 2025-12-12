@@ -19,7 +19,7 @@ module.exports.createPublication = async (req, res) => {
     });
 
     const description = req.body.text;        // texte du FormData
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null; // image reçue par multer
+    const imagePath = req.file ? req.file.filename : null; // image reçue par multer
 
     const newPublication = await Publications.create({
       description,

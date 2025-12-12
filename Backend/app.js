@@ -28,7 +28,7 @@ app.use('/api/auth', routeAuthentification);
 app.use('/api/db', routeResetBD);
 
 // Image public access
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/media', express.static(path.join(__dirname, 'uploads')));
 
 // Sync DB
 db.sync()
