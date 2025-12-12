@@ -1,7 +1,7 @@
 const {DataTypes, Model} = require('sequelize');
 const db = require('../db/db');
 const Users = require('./users');
-const Commentaire = require('./Commentaire');
+const Commentaire = require('./commentaire');
 
 const Publication = db.define('Publications', {
     id: {
@@ -10,9 +10,9 @@ const Publication = db.define('Publications', {
         autoIncrement: true,
         allowNull: false,
     },
-    descrition : {
+    description : {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
     },
     image : {
         type: DataTypes.STRING,
@@ -32,9 +32,9 @@ const Publication = db.define('Publications', {
     }
 })
 
-Users.hasMany(Publication, {foreignKey: 'userId', onDelete: 'CASCADE'});
+Users.hasMany(Publication, {foreignKey: 'userId', as: 'publications', onDelete: 'CASCADE'});
   
-Publication.belongsTo(Users, {foreignKey: 'userId'});
+Publication.belongsTo(Users, {foreignKey: 'userId', as: 'user'});
 
 Publication.hasMany(Commentaire, {foreignKey: 'publicationId', onDelete: 'CASCADE'});
 

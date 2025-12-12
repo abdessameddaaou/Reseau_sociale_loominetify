@@ -30,6 +30,7 @@ const createToken = (id) => jwt.sign({ id }, "RANDOM_TOKEN_SECRET", { expiresIn:
  */
 module.exports.loginUser = async (req, res) => {
   try {
+    
     const user = await Users.findOne({
       where: { email: req.body.email }
     });

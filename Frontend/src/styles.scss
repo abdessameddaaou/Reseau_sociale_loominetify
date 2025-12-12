@@ -1,5 +1,8 @@
-/* Tailwind */
 @use "tailwindcss";
+
+/* Tailwind */
+
+
 
 /* ============ VARIABLES GLOBALES ============ */
 
@@ -51,7 +54,7 @@
 }
 
 /* Thème sombre => on mettra .theme-dark sur <body> */
-body.theme-dark { 
+body.theme-dark {
   /* Fond global très sombre + cartes légèrement plus claires */
   --bg-page: #020617;         /* arrière-plan (presque noir) */
   --bg-card: #050818;         /* cartes / panneaux */
