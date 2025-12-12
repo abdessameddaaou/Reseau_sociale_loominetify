@@ -6,8 +6,8 @@
 <emoji-mart
   [i18n]="{ search: 'Recherche', categories: { search: 'Résultats de recherche', recent: 'Récents' } }"
 ></emoji-mart> -->
-  <div class="flex items-start gap-3 mb-3">
-    <img src="https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png" alt="avatar" class="w-10 h-10 rounded-full object-cover" id="post-avatar"
+  <div class="flex items-start gap-3">
+    <img [src]="currentUser?.photo || defaultAvatar" alt="avatar" class="w-10 h-10 rounded-full object-cover" id="post-avatar"
       data-testid="post-avatar" />
     <div class="flex-1">
       <textarea rows="5" placeholder="Quoi de neuf ?" formControlName="text" id="post-text" name="post-text"
@@ -26,7 +26,7 @@
       data-testid="post-image-preview-img" />
   </div>
 
-  <div class="flex items-center justify-between mt-2">
+  <div class="flex items-center justify-between">
     <div class="flex items-center gap-3 ml-12 text-xs text-slate-500">
       <label class="flex items-center gap-1 px-3 py-1 rounded-full hover:bg-slate-100 cursor-pointer"
         id="post-image-upload-label" data-testid="post-image-upload-label" for="post-image-input">

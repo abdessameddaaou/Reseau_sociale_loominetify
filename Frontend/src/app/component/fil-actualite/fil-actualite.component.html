@@ -13,6 +13,7 @@
           <app-post-creator
             [postForm]="postForm"
             [imagePreview]="imagePreview"
+            [currentUser]="currentUser"
             [formErrors]="formErrors"
             (fileSelected)="onFileSelected($event)"
             (submitPost)="publishPost()"

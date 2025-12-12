@@ -12,7 +12,7 @@ const Publication = db.define('Publications', {
     },
     description : {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
     },
     image : {
         type: DataTypes.STRING,

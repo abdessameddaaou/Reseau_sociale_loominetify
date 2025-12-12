@@ -60,7 +60,7 @@ interface OnlineFriend {
 /**
  * Interface pour l'utilisateur connecté
  */
-interface CurrentUser {
+export interface CurrentUser {
   nom: string;
   prenom: string;
   isAdmin: boolean;
