@@ -424,8 +424,8 @@ export class FilActualiteComponent implements OnInit {
   srcImage(imagePath: string | null | undefined): string {
 
     // Example: remove `/api` from apiUrl
-    const base = environment.apiUrl.replace('/api', '');
-
-    return base + imagePath;
+    //const base = environment.apiUrl.replace('/api', '');
+    const baseAssets = environment.assetsUrl;
+    return baseAssets + '/' + imagePath;
   }
 }
