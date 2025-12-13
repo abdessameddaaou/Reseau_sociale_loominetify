@@ -1,0 +1,612 @@
+src/app/components/user-profile/user-profile.component.html
+
+<div
+  class="min-h-screen app-bg flex flex-col"
+  id="public-profile-page"
+  data-testid="public-profile-page">
+
+  <!-- HEADER --
+  <app-header
+    [activeTab]="activeTab"
+    (tabChange)="setActiveTab($event)"
+    id="public-profile-header"
+    data-testid="public-profile-header">
+  </app-header>
+
+  <!-- BODY --
+  <main class="flex-1" id="public-profile-main" data-testid="public-profile-main">
+    <div
+      class="max-w-6xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6"
+      id="public-profile-layout"
+      data-testid="public-profile-layout">
+
+      <!-- LOADING --
+      <div *ngIf="isLoading" class="w-full text-center text-slate-500">
+        Chargement du profil...
+      </div>
+
+      <ng-container *ngIf="!isLoading && profileUser">
+
+        <!-- COLONNE GAUCHE : résumé + amis + groupes --
+        <aside
+          class="w-full lg:w-72 space-y-4"
+          id="public-profile-sidebar"
+          data-testid="public-profile-sidebar">
+
+          <!-- Carte profil principale --
+          <section
+            class="app-card rounded-2xl shadow-sm overflow-hidden"
+            id="public-profile-hero-card"
+            data-testid="public-profile-hero-card">
+            <div class="h-20 accent-gradient"></div>
+
+            <div class="p-4 -mt-10 flex flex-col items-center text-center">
+              <img
+                [src]="profileUser?.photo || defaultAvatar"
+                alt="avatar"
+                class="w-20 h-20 rounded-full border-4 border-white object-cover shadow"
+                id="public-profile-avatar"
+                data-testid="public-profile-avatar" />
+
+              <h1
+                class="mt-2 text-base font-semibold text-slate-900"
+                id="public-profile-name"
+                data-testid="public-profile-name">
+                {{ profileUser?.nom }} {{ profileUser?.prenom }}
+              </h1>
+
+              <p
+                class="text-[12px] text-slate-400"
+                id="public-profile-handle"
+                data-testid="public-profile-handle">
+                @{{ profileUser?.nom }}{{ profileUser?.prenom }}
+              </p>
+
+              <p
+                class="mt-1 text-[11px] text-slate-500 flex items-center gap-1"
+                id="public-profile-location">
+                <i class="fa-solid fa-location-dot text-[10px]"></i>
+                <span>{{ profileUser?.ville || 'Non renseigné' }}</span>
+              </p>
+
+              <div
+                class="mt-4 flex justify-between w-full text-xs text-slate-700"
+                id="public-profile-header-stats"
+                data-testid="public-profile-header-stats">
+                <div class="flex-1 text-center">
+                  <p class="font-semibold">{{ followers }}</p>
+                  <p class="text-[11px] text-slate-400">Abonnés</p>
+                </div>
+                <div class="flex-1 text-center">
+                  <p class="font-semibold">{{ following }}</p>
+                  <p class="text-[11px] text-slate-400">Abonnements</p>
+                </div>
+                <div class="flex-1 text-center">
+                  <p class="font-semibold">{{ postsCount }}</p>
+                  <p class="text-[11px] text-slate-400">Publications</p>
+                </div>
+              </div>
+
+              <!-- Boutons d’action : abonné / non abonné OU mon propre profil --
+              <div class="mt-4 flex gap-2 w-full">
+                <!-- Si c'est mon propre profil --
+                <button
+                  *ngIf="isOwnProfile"
+                  type="button"
+                  class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md"
+                  (click)="goToEditProfile()"
+                  id="public-profile-edit-button"
+                  data-testid="public-profile-edit-button">
+                  Modifier mon profil
+                </button>
+
+                <!-- Si ce n'est pas mon profil --
+                <ng-container *ngIf="!isOwnProfile">
+                  <button
+                    type="button"
+                    class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md disabled:opacity-60"
+                    (click)="toggleFollow()"
+                    [disabled]="followStatus === 'requested'"
+                    id="public-profile-follow-button"
+                    data-testid="public-profile-follow-button">
+                    <ng-container [ngSwitch]="followStatus">
+                      <span *ngSwitchCase="'not-following'">
+                        S’abonner
+                      </span>
+                      <span *ngSwitchCase="'following'">
+                        Abonné(e)
+                      </span>
+                      <span *ngSwitchCase="'requested'">
+                        ...
+                      </span>
+                      <span *ngSwitchDefault>
+                        S’abonner
+                      </span>
+                    </ng-container>
+                  </button>
+
+                <button
+                *ngIf="followStatus === 'following'"
+                type="button"
+                class="flex-1 rounded-full border border-slate-200 bg-white text-[11px] font-semibold py-1.5 hover:bg-slate-50 transition"
+                (click)="openConversationWithUser()"
+                id="public-profile-message-button"
+                data-testid="public-profile-message-button">
+                Message
+                </button>
+                </ng-container>
+              </div>
+
+              <!-- Petit label abonné / non abonné --
+              <p
+                *ngIf="!isOwnProfile"
+                class="mt-2 text-[11px] text-slate-400 flex items-center gap-1"
+                id="public-profile-follow-state">
+                <span
+                  class="w-2 h-2 rounded-full"
+                  [ngClass]="
+                    followStatus === 'following'
+                      ? 'bg-emerald-400'
+                      : 'bg-slate-300'
+                  ">
+                </span>
+                <span *ngIf="followStatus === 'following'">
+                  Vous êtes abonné(e) à ce profil
+                </span>
+                <span *ngIf="followStatus === 'not-following'">
+                  Vous n’êtes pas abonné(e) à ce profil
+                </span>
+              </p>
+
+              <p
+                class="mt-3 text-[11px] text-slate-400"
+                id="public-profile-member-since"
+                data-testid="public-profile-member-since">
+                Membre depuis {{ joinedDate }}
+              </p>
+            </div>
+          </section>
+
+          <!-- Amis proches (ou abonnés en commun etc. à toi d’adapter) --
+          <section
+          *ngIf="followStatus === 'following' || isOwnProfile"
+            class="app-card rounded-2xl shadow-sm p-4 space-y-3"
+            id="public-profile-friends-card"
+            data-testid="public-profile-friends-card">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-slate-900">
+                Amis proches
+              </h2>
+              <span
+                class="text-[11px] text-slate-400"
+                id="public-profile-friends-count"
+                data-testid="public-profile-friends-count">
+                {{ closeFriends.length }}
+              </span>
+            </div>
+
+            <div class="space-y-2">
+              <button
+                type="button"
+                *ngFor="let friend of closeFriends"
+                class="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-slate-50 transition"
+                (click)="openFriend(friend)"
+                [attr.data-testid]="'public-profile-friend-' + friend.id">
+                <div class="relative">
+                  <img
+                    [src]="friend.avatar"
+                    [alt]="friend.name"
+                    class="w-8 h-8 rounded-full object-cover" />
+                  <span
+                    class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white"
+                    [ngClass]="friend.online ? 'bg-emerald-400' : 'bg-slate-300'">
+                  </span>
+                </div>
+                <div class="flex-1 text-left">
+                  <p class="text-xs font-semibold text-slate-800">
+                    {{ friend.name }}
+                  </p>
+                  <p class="text-[11px] text-slate-400">
+                    @{{ friend.handle }} · {{ friend.mutual }} amis en commun
+                  </p>
+                </div>
+              </button>
+            </div>
+          </section>
+
+          <!-- Groupes --
+          <section
+          *ngIf="followStatus === 'following' || isOwnProfile"
+            class="app-card rounded-2xl shadow-sm p-4 space-y-3"
+            id="public-profile-groups-card"
+            data-testid="public-profile-groups-card">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-slate-900">
+                Groupes
+              </h2>
+              <span
+                class="text-[11px] text-slate-400"
+                id="public-profile-groups-count"
+                data-testid="public-profile-groups-count">
+                {{ groups.length }}
+              </span>
+            </div>
+
+            <div class="space-y-2">
+              <button
+                type="button"
+                *ngFor="let group of groups"
+                class="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-slate-50 transition"
+                (click)="openGroup(group)"
+                [attr.data-testid]="'public-profile-group-' + group.id">
+                <img
+                  [src]="group.avatar"
+                  [alt]="group.name"
+                  class="w-8 h-8 rounded-xl object-cover" />
+                <div class="flex-1 text-left">
+                  <p class="text-xs font-semibold text-slate-800 truncate">
+                    {{ group.name }}
+                  </p>
+                  <p class="text-[11px] text-slate-400">
+                    {{ group.members }} membres · {{ group.role }}
+                  </p>
+                  <p class="text-[10px] text-slate-400">
+                    {{ group.lastActivity }}
+                  </p>
+                </div>
+              </button>
+            </div>
+          </section>
+        </aside>
+
+        <!-- COLONNE DROITE : contenu principal --
+        <section
+        class="flex-1 space-y-4"
+        id="public-profile-content"
+        data-testid="public-profile-content"
+        *ngIf="followStatus === 'following' || isOwnProfile; else privateProfile">
+
+          <!-- Bio / résumé --
+          <section
+            class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-3"
+            id="public-profile-bio-card"
+            data-testid="public-profile-bio-card">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-slate-900">
+                À propos
+              </h2>
+              <span class="text-[11px] text-emerald-500 flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                En ligne
+              </span>
+            </div>
+
+            <p class="text-[13px] text-slate-700 leading-relaxed">
+              {{ profileUser?.bio || 'Non renseigné' }}
+            </p>
+          </section>
+
+          <!-- Coordonnées + infos compte --
+          <section
+            class="grid md:grid-cols-2 gap-4"
+            id="public-profile-details-grid"
+            data-testid="public-profile-details-grid">
+
+            <!-- Coordonnées --
+            <div
+              class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-2 text-[13px]"
+              id="public-profile-contact-card"
+              data-testid="public-profile-contact-card">
+              <h2 class="text-sm font-semibold text-slate-900 mb-1">
+                Coordonnées
+              </h2>
+
+              <div class="space-y-1 text-slate-600">
+                <p>
+                  <span class="font-semibold text-slate-500 text-[11px] uppercase tracking-wide">
+                    Email
+                  </span>
+                  <br />
+                  {{ profileUser?.email || 'Non renseigné' }}
+                </p>
+
+                <p>
+                  <span class="font-semibold text-slate-500 text-[11px] uppercase tracking-wide">
+                    Téléphone
+                  </span>
+                  <br />
+                  {{ profileUser?.telephone || 'Non renseigné' }}
+                </p>
+
+                <p>
+                  <span class="font-semibold text-slate-500 text-[11px] uppercase tracking-wide">
+                    Pays de résidence
+                  </span>
+                  <br />
+                  {{ profileUser?.pays || 'Non renseigné' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Infos perso --
+            <div
+              class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-2 text-[13px]"
+              id="public-profile-account-card"
+              data-testid="public-profile-account-card">
+              <h2 class="text-sm font-semibold text-slate-900 mb-1">
+                Infos personnelles
+              </h2>
+
+              <div class="space-y-1 text-slate-600">
+                <p>
+                  <span class="font-semibold text-slate-500 text-[11px] uppercase tracking-wide">
+                    Statut relationnel
+                  </span>
+                  <br />
+                  {{ profileUser?.relationStatus || 'Non renseigné' }}
+                </p>
+
+                <p>
+                  <span class="font-semibold text-slate-500 text-[11px] uppercase tracking-wide">
+                    Profession
+                  </span>
+                  <br />
+                  {{ profileUser?.profession || 'Non renseigné' }}
+                </p>
+
+                <p>
+                  <span class="font-semibold text-slate-500 text-[11px] uppercase tracking-wide">
+                    Âge
+                  </span>
+                  <br />
+                  {{ age }}
+                </p>
+
+                <p>
+                  <span class="font-semibold text-slate-500 text-[11px] uppercase tracking-wide">
+                    Site web
+                  </span>
+                  <br />
+                  <ng-container *ngIf="profileUser?.siteweb; else nositeweb">
+                    <a
+                      [href]="profileUser?.siteweb"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-[#5b7cff] hover:text-[#8b5cf6] hover:underline break-all">
+                      {{ profileUser?.siteweb }}
+                    </a>
+                  </ng-container>
+                  <ng-template #nositeweb>Non renseigné</ng-template>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Activité + Stats --
+          <section
+            class="grid lg:grid-cols-[1.4fr,1fr] gap-4"
+            id="public-profile-activity-grid"
+            data-testid="public-profile-activity-grid">
+
+            <!-- Activité récente --
+            <div
+              class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-3 text-[13px]"
+              id="public-profile-activity-card"
+              data-testid="public-profile-activity-card">
+              <div class="flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-slate-900">
+                  Dernières activités
+                </h2>
+                <button
+                  type="button"
+                  class="text-[11px] text-[#5b7cff] hover:text-[#8b5cf6] hover:underline"
+                  id="public-profile-activity-see-all"
+                  data-testid="public-profile-activity-see-all">
+                  Voir tout
+                </button>
+              </div>
+
+              <div class="space-y-2">
+                <div
+                  *ngFor="let item of recentActivity"
+                  class="flex items-start gap-3 text-slate-600"
+                  [attr.data-testid]="'public-profile-activity-item-' + item.id">
+                  <div
+                    class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <i
+                      class="fa-solid"
+                      [ngClass]="{
+                        'fa-comment-dots': item.icon === 'comment',
+                        'fa-star': item.icon === 'star',
+                        'fa-user-group': item.icon === 'group'
+                      }">
+                    </i>
+                  </div>
+                  <div class="flex-1">
+                    <p>{{ item.text }}</p>
+                    <p class="text-[11px] text-slate-400">
+                      {{ item.timeAgo }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stats & badges --
+            <div
+              class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-4"
+              id="public-profile-stats-card"
+              data-testid="public-profile-stats-card">
+              <h2 class="text-sm font-semibold text-slate-900">
+                Statistiques & centres d’intérêt
+              </h2>
+
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <div
+                  class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
+                  <p class="text-slate-900 font-semibold">
+                    {{ stats.activityScore }}
+                  </p>
+                  <p class="text-[11px] text-slate-500">
+                    Score d’activité
+                  </p>
+                </div>
+                <div
+                  class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
+                  <p class="text-slate-900 font-semibold">
+                    {{ stats.daysStreak }}
+                  </p>
+                  <p class="text-[11px] text-slate-500">
+                    Jours consécutifs
+                  </p>
+                </div>
+                <div
+                  class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
+                  <p class="text-slate-900 font-semibold">
+                    {{ stats.groupsJoined }}
+                  </p>
+                  <p class="text-[11px] text-slate-500">
+                    Groupes rejoints
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-2 text-[11px]">
+                <span
+                  *ngFor="let tag of badges"
+                  class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200"
+                  [attr.data-testid]="'public-profile-badge-' + tag">
+                  #{{ tag }}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Photos récentes --
+          <section
+            class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-4"
+            id="public-profile-photos-card"
+            data-testid="public-profile-photos-card">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-slate-900">
+                Photos récentes
+              </h2>
+              <span class="text-[11px] text-slate-400">
+                {{ recentPhotos.length }} photos
+              </span>
+            </div>
+
+            <div class="grid grid-cols-3 md:grid-cols-4 gap-2">
+              <button
+                *ngFor="let photo of recentPhotos; let i = index"
+                type="button"
+                class="relative group rounded-xl overflow-hidden aspect-square bg-slate-100"
+                (click)="openPhoto(photo)"
+                [attr.data-testid]="'public-profile-photo-' + i">
+                <img
+                  [src]="photo"
+                  alt="photo"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <div
+                  class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors">
+                </div>
+              </button>
+            </div>
+          </section>
+
+          <!-- Dernières publications --
+          <section
+            class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-4"
+            id="public-profile-posts-card"
+            data-testid="public-profile-posts-card">
+
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-slate-900">
+                Publications de {{ profileUser?.prenom }}
+              </h2>
+            </div>
+
+            <div class="space-y-3">
+              <article
+                *ngFor="let post of lastPosts"
+                class="rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.04)] hover:-translate-y-[1px] hover:shadow-md transition flex gap-3 items-start"
+                [attr.data-testid]="'public-profile-post-item-' + post.id">
+
+                <div class="mt-0.5 flex flex-col items-center gap-1">
+                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                    <i class="fa-solid fa-pen text-[11px] text-slate-500"></i>
+                  </div>
+                  <span class="w-px h-6 bg-slate-100"></span>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-2">
+                    <div>
+                      <p class="text-xs font-semibold text-slate-900">
+                        {{ profileUser?.nom }}
+                      </p>
+                      <p class="text-[11px] text-slate-400">
+                        @{{ profileUser?.nom }} · {{ post.timeAgo }}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="px-3 py-1 rounded-full border border-slate-200 text-[11px] text-slate-600 bg-slate-50 hover:bg-slate-100 hover:text-slate-800 transition"
+                      (click)="openPost(post)"
+                      [attr.data-testid]="'public-profile-post-open-' + post.id">
+                      Aperçu
+                    </button>
+                  </div>
+
+                  <p class="mt-1 text-[13px] text-slate-700">
+                    {{ post.text }}
+                  </p>
+
+                  <div class="mt-2 flex items-center gap-4 text-[11px] text-slate-500">
+                    <span class="inline-flex items-center gap-1">
+                      <i class="fa-solid fa-heart text-[10px] text-[#e11d48]"></i>
+                      {{ post.likes }}
+                    </span>
+                    <span class="inline-flex items-center gap-1">
+                      <i class="fa-solid fa-comment text-[10px] text-[#0ea5e9]"></i>
+                      {{ post.comments }}
+                    </span>
+                  </div>
+                </div>
+              </article>
+
+              <p
+                *ngIf="lastPosts.length === 0"
+                class="text-[12px] text-slate-500 text-center py-2">
+                Aucune publication récente.
+              </p>
+            </div>
+          </section>
+        </section>
+        <!-- Ce qu’on affiche quand on n’est PAS abonné --
+<ng-template #privateProfile>
+  <section class="flex-1" id="public-profile-locked">
+    <div class="app-card rounded-2xl shadow-sm p-6 text-center space-y-3">
+      <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 flex items-center justify-center">
+        <i class="fa-solid fa-lock text-slate-500"></i>
+      </div>
+
+      <h2 class="text-sm font-semibold text-slate-900">
+        Ce profil est privé
+      </h2>
+
+      <p class="text-[13px] text-slate-500">
+        Abonne-toi pour voir les informations, les photos et les publications de cet utilisateur.
+      </p>
+
+      <p class="text-[11px] text-slate-400">
+        Tu pourras aussi lui envoyer des messages une fois abonné(e).
+      </p>
+    </div>
+  </section>
+</ng-template>
+      </ng-container>
+    </div>
+  </main>
+</div> -->

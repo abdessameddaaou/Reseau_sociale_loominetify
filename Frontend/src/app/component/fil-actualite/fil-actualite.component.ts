@@ -421,11 +421,11 @@ export class FilActualiteComponent implements OnInit {
   return formatDistanceToNow(new Date(date), { addSuffix: true, locale: fr });
   }
 
-  srcImage(imagePath: string | null | undefined): string {
 
-    // Example: remove `/api` from apiUrl
-    //const base = environment.apiUrl.replace('/api', '');
-    const baseAssets = environment.assetsUrl;
-    return baseAssets + '/' + imagePath;
-  }
+srcImage(imagePath?: string | null): string {
+  if (!imagePath) return this.defaultAvatar;
+
+  const api = environment.apiUrl.replace(/\/$/, ''); // enlève le / final si présent
+  return `${api}/media/${encodeURIComponent(imagePath)}`;
+}
 }

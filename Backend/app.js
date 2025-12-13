@@ -12,7 +12,6 @@ app.use(
     cors({
         origin : config.frontendBaseUrl,
         credentials : true,
-        // allowedHeaders: ['Content-Type', 'Authorization'],
     })
 )
 // Routes
@@ -28,7 +27,7 @@ app.use('/api/auth', routeAuthentification);
 app.use('/api/db', routeResetBD);
 
 // Image public access
-app.use('/media', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/media', express.static(path.join(__dirname, 'uploads')));
 
 // Sync DB
 db.sync()

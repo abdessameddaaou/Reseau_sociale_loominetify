@@ -7,6 +7,7 @@ import { ActivationCompte } from './component/activation-compte/activation-compt
 import { MessagesComponent } from './component/messages/messages.component';
 import { SettingsComponent } from './component/settingscomponent/settings.component';
 import { ProfileComponent } from './component/profile/profile.component';
+import { UserprofileviewComponent } from './component/userprofileview.component/userprofileview.component';
 export const routes: Routes = [
   {
     path: 'auth',
@@ -38,6 +39,11 @@ export const routes: Routes = [
   { 
     path: 'profile', 
     component: ProfileComponent, 
+    canActivate: [AuthGuard],
+  },
+    { 
+    path: 'profil/:id', 
+    component: UserprofileviewComponent, 
     canActivate: [AuthGuard],
   },
   {
