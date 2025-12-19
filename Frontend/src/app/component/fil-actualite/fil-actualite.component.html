@@ -80,14 +80,30 @@
             {{ post.description }}
           </p>
 
-          <div *ngIf="post.image"
-               class="rounded-2xl overflow-hidden border border-slate-100"
-               [attr.data-testid]="'feed-post-image-wrapper-' + post.id">
-            <img [src]="srcImage(post.image)"
-                 alt="post image"
-                 class="w-full object-cover"
-                 [attr.data-testid]="'feed-post-image-' + post.id" />
-          </div>
+<div *ngIf="post.image"
+     class="rounded-2xl overflow-hidden border border-slate-100 bg-black/5">
+  <div class="relative w-full aspect-square sm:aspect-[4/5] max-h-[560px]">
+
+    <!-- Fond flouté (remplit le cadre) -->
+    <img
+      [src]="srcImage(post.image)"
+      class="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-60"
+      alt=""
+      aria-hidden="true"
+    />
+
+    <!-- Image principale (jamais coupée) -->
+    <img
+      [src]="srcImage(post.image)"
+      class="relative z-10 w-full h-full object-contain"
+      alt="post image"
+      loading="lazy"
+    />
+
+  </div>
+</div>
+
+
 
           <!-- Interactions -->
           <div class="flex items-center justify-between text-xs text-slate-500 mt-1"
@@ -219,14 +235,16 @@
                  alt="user"
                  id="sidebar-profile-avatar"
                  data-testid="sidebar-profile-avatar" />
-            <p class="mt-2 text-sm font-semibold text-slate-800"
+            <p class="mt-2 text-sm font-semibold text-slate-800 cursor-pointer hover:text-accent transition-colors"
                id="sidebar-profile-name"
-               data-testid="sidebar-profile-name">
+               data-testid="sidebar-profile-name"
+               [routerLink]="['/profile']">
               {{ currentUser?.nom }} {{ currentUser?.prenom }}
             </p>
             <p class="text-xs text-slate-400"
                id="sidebar-profile-handle"
-               data-testid="sidebar-profile-handle">
+               data-testid="sidebar-profile-handle"
+               [routerLink]="['/profile']">
               @{{ currentUser?.nom }}{{ currentUser?.prenom }}
             </p>
 

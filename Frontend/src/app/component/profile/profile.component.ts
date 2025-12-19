@@ -26,12 +26,22 @@ interface CurrentUser {
 
 interface ProfilePostPreview {
   id: number;
-  text: string;
-  timeAgo: string;
+  description: string;
+  image?: string | null;
   likes: number;
-  comments: number;
+  commentaires: number;
+  createdAt?: string;
+  timeAgo: string;
 }
 
+interface ApiPublication {
+  id: number;
+  description: string;
+  image: string | null;
+  likes?: number;
+  commentaires?: number;
+  createdAt: string;
+}
 interface ProfileActivity {
   id: number;
   icon: 'comment' | 'star' | 'group';
@@ -65,18 +75,6 @@ interface GroupPreview {
 })
 export class ProfileComponent implements OnInit {
 
-  activeTab: HeaderTab = 'home';
-
-  currentUser: CurrentUser | null = null;
-  isUserLoading = true;
-
-  defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
-
-  // Stats "header"
-  followers = 256;
-  following = 189;
-  postsCount = 34;
-
   // Dernières activités
   recentActivity: ProfileActivity[] = [
     {
@@ -99,40 +97,41 @@ export class ProfileComponent implements OnInit {
     },
   ];
 
-  // Petites stats
+  /**
+   * Variables
+   */
+  defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
+  activeTab: HeaderTab = 'home';
+  currentUser: CurrentUser | null = null;
+  isUserLoading = true;
   stats = {
-    activityScore: 4.8,
-    daysStreak: 72,
-    groupsJoined: 12,
+    activityScore: 0,
+    daysStreak: 0,
+    groupsJoined: 0,
   };
-
-  // Badges / tags
-  badges: string[] = ['WebDev', 'Design', 'Startup', 'Productivité'];
-
-  // Dernières publication
-  lastPosts: ProfilePostPreview[] = []
-
-  // Amis proches
-  closeFriends: FriendPreview[] = []
-
-  // Groupes
+  followers = 0;
+  following = 0;
+  postsCount = 0;
+  badges: string[] = ['WebDev'];
+  Publications: ProfilePostPreview[] = []
+  Friends: FriendPreview[] = []
   groups: GroupPreview[] = [];
-
-  // Photos récentes
-  recentPhotos: string[] = [];
+  Photos: string[] = [];
+  selectedPhoto: string | null = null;
 
   constructor(private router: Router, private http: HttpClient ) {}
 
+  /**
+   * ngOninit => Pour l'affiche lors de chargement de la page
+   */
   ngOnInit(): void {
     this.loadCurrentUser();
+    this.loadMyPosts();
   }
 
-  /* ================== GETTERS ================== */
-
-  /**
-   * 
-   * Formater la date de création du compte
-   */
+/**
+ * Formater la date de création du compte
+ */
   get joinedDate(): string {
     if (!this.currentUser?.createdAt) return 'Non renseigné';
     return new Date(this.currentUser.createdAt).toLocaleDateString('fr-FR', {
@@ -142,9 +141,9 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  /**
-   * Calculer l'age 
-   */
+/**
+ * Calculer l'age de l'utilisateur
+ */
   get age(): string {
     if (!this.currentUser?.dateNaissance) return 'Non renseigné';
     const birth = new Date(this.currentUser.dateNaissance);
@@ -155,8 +154,11 @@ export class ProfileComponent implements OnInit {
     return `${years} ans`;
   }
 
-  /* ============== NAVIGATION HEADER ============== */
 
+/**
+ * Navigation dans le header
+ * @param tab 
+ */
   setActiveTab(tab: HeaderTab) {
     this.activeTab = tab;
 
@@ -176,9 +178,11 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  /* ============== API UTILISATEUR ============== */
 
-  private loadCurrentUser() {
+/**
+ * Récupération de l'utilisateur connecté
+ */
+loadCurrentUser() {
     this.http.get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true } ).subscribe({
         next: (res) => {
           this.currentUser = res.user;
@@ -211,6 +215,74 @@ export class ProfileComponent implements OnInit {
   }
 
   openPhoto(photo: string) {
-    console.log('Ouvrir photo', photo);
+    this.selectedPhoto = photo;
   }
+
+  closePhotoModal() {
+    this.selectedPhoto = null;
+  }
+
+/**
+ * uploader une image
+ * @param imagePath 
+ * @returns 
+ */
+srcImage(imagePath?: string | null): string {
+  if (!imagePath) return '';
+  const api = environment.apiUrl.replace(/\/$/, '');
+  return `${api}/media/${encodeURIComponent(imagePath)}`;
+}
+
+/**
+ * Affichage de la date dans la publication
+ * @param dateStr 
+ * @returns 
+ */
+timeAgo(dateStr: string): string {
+  const date = new Date(dateStr);
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+
+  if (seconds < 60) return `il y a ${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `il y a ${hours} h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `il y a ${days} j`;
+
+  return date.toLocaleDateString('fr-FR');
+}
+
+/**
+ * Récupération des publications
+ */
+loadMyPosts() {
+  this.http.get<ApiPublication[]>(`${environment.apiUrl}/publications/getAllPostUserConnected`, { withCredentials: true }).subscribe({
+      next: (posts) => {
+      const list = posts ?? [];
+        this.Publications = list.map(res => ({
+          id: res.id,
+          description: res.description,
+          timeAgo: this.timeAgo(res.createdAt),
+          likes: res.likes ?? 0,
+          commentaires: res.commentaires ?? 0,
+          image: res.image,
+          createdAt: res.createdAt
+        }));
+        this.postsCount = list.length;
+        this.Photos = list
+          .filter(p => !!p.image)
+          .map(p => this.srcImage(p.image!));
+      },
+      error: (err) => {
+        console.error('Erreur lors de la récupération des informations de l\'utilisateur de l’invitation', err);
+        this.Publications = [];
+        this.Photos = [];
+        this.postsCount = 0;
+      }
+    });
+}
+
+
+
 }

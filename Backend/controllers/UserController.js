@@ -1,8 +1,11 @@
 const Users = require("../models/users");
+const Publications = require('../models/publication');
+const Commentaires = require('../models/commentaire');
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const config = require('../config');
 const jwt = require("jsonwebtoken");
+const { Op } = require("sequelize");
 
 
 /**
@@ -33,10 +36,9 @@ const createToken = (id) => jwt.sign({ id }, "RANDOM_TOKEN_SECRET", { expiresIn:
 module.exports.getAllUsers = async (req, res) => {
   try {
     const users =  await Users.findAll();
-    res.json(users);
+    return res.status(200).json(users);
   } catch (error) {
-    console.error({ error: "Erreur lors de la récupération des utilisateurs :" });
-    res.status(500).json({ error: "Une erreur est survenue lors de la récupération des utilisateurs." });
+    return res.status(500).json(error.message);
   }
 };
 
@@ -307,32 +309,62 @@ module.exports.activerCompteUser = async( req, res ) =>{
   }
 }
 
-module.exports.getUserConnecte = async(req,res) =>{
+/**
+ * Récupération des informations du user connecté
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+module.exports.getUserConnecte = async (req, res) => {
   try {
-
     const user = await Users.findByPk(req.userId, {
-      attributes: { exclude: ['password', 'reponse', 'id', 'question'] } 
+      attributes: { exclude: ['password', 'reponse', 'question'] }
     });
-
     return res.status(200).json({ user });
-    
+
   } catch (error) {
     return res.status(500).json({ error: "Une erreur est survenue lors de la récupération de l'utilisateur." });
   }
-}
+};
 
+/**
+ * Récupération des informations d'un utilisateur passé en paramètre
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 module.exports.getUser = async(req, res) =>{
   try {
+    const requestedId = req.params.id;
+    const currentUserId = res.locals.user ? res.locals.user.id : null;  
+    const user = await Users.findByPk(requestedId, {
+      attributes: { exclude: ['id', 'password', 'reponse', 'question'] }
+    })
 
-    const user = await Users.findOne({where: { email: req.body.email }, attributes: { exclude: ['password', 'reponse', 'id', 'question'] }})
-    return res.status(200).json({user: user})
+    const userData = user.toJSON();
+    const isMe = currentUserId && currentUserId.toString() === requestedId.toString();
+    return res.status(200).json({
+      user: userData,
+      isMe: isMe,
+      isFollowing: false,
+      stats: {
+        followers: 0, 
+        following: 0, 
+        postsCount: 0 
+      }
+    });
     
   } catch (error) {
     return res.status(500).json({error: "Un problème est servenu lors de la récupération d'un utilisateur "})
   }
 }
 
-
+/**
+ * Mise à jour des informations de l'utilisateur
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 module.exports.UpdateInformationsUser = async(req, res) =>{
   try {
     
@@ -352,5 +384,33 @@ module.exports.UpdateInformationsUser = async(req, res) =>{
         return res.status(201).json({ message: 'success', user });
   } catch (error) {
     return res.status(500).json({error: "Un problème est servenu lors de la modification des informations de l'utilisateur "})
+  }
+}
+
+/**
+ * Récupération de tout les utilisateurs avec la recherche 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+module.exports.getAllUsersSearch = async(req, res) =>{
+  try {
+    const { term } = req.query;
+    if (!term) {
+        return res.status(200).json({ users: [] });
+    }
+    const user = await Users.findAll({
+      attributes: ['id', 'nom', 'prenom', 'photo'],
+      where: {
+        [Op.or]: [
+          { nom: { [Op.like]: `%${term}%` } },
+          { prenom: { [Op.like]: `%${term}%` } }
+        ]
+      },
+      limit: 10
+    })
+    return res.status(201).json({ message: 'success', user });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 }

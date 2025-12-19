@@ -14,7 +14,11 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-router.post('/addPost', upload.single('image'), PublicationController.createPublication);
-router.get('/getAllPosts', PublicationController.getAllPublications);
+router.post('/addPost', upload.single('image'), checkUser, PublicationController.createPublication);
+router.get('/getAllPosts', checkUser, PublicationController.getAllPublications);
+router.get('/getAllPostUserConnected', checkUser, PublicationController.getAllPublicationsUserConnecter);
+
+
+
 
 module.exports = router;

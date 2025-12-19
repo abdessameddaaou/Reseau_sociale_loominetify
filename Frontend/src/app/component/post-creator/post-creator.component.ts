@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, HostListener  } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -31,10 +31,18 @@ export class PostCreatorComponent {
   onSubmit() {
     this.submitPost.emit();
   }
-
-  toggleEmoji() {
+toggleEmoji(event?: Event) {
+  event?.stopPropagation();
   this.showEmoji = !this.showEmoji;
+}
+
+@HostListener('document:click', ['$event'])
+onDocClick(event: MouseEvent) {
+  const el = event.target as HTMLElement;
+  if (!el.closest('#emoji-popover') && !el.closest('#post-emoji-btn')) {
+    this.showEmoji = false;
   }
+}
 
   handleEmojiSelect(event: any) {
   const emoji = event.emoji.native;
