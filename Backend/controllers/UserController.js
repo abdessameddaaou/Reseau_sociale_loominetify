@@ -337,24 +337,10 @@ module.exports.getUserConnecte = async (req, res) => {
  */
 module.exports.getUser = async(req, res) =>{
   try {
-    const requestedId = req.params.id;
-    const currentUserId = res.locals.user ? res.locals.user.id : null;  
-    const user = await Users.findByPk(requestedId, {
-      attributes: { exclude: ['id', 'password', 'reponse', 'question'] }
+    const user = await Users.findByPk(req.params.id, {
+      attributes: { exclude: ['password', 'reponse', 'question'] }
     })
-
-    const userData = user.toJSON();
-    const isMe = currentUserId && currentUserId.toString() === requestedId.toString();
-    return res.status(200).json({
-      user: userData,
-      isMe: isMe,
-      isFollowing: false,
-      stats: {
-        followers: 0, 
-        following: 0, 
-        postsCount: 0 
-      }
-    });
+    return res.status(200).json({user: user});
     
   } catch (error) {
     return res.status(500).json({error: "Un problème est servenu lors de la récupération d'un utilisateur "})

@@ -90,6 +90,7 @@
       class="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-60"
       alt=""
       aria-hidden="true"
+      (click)="openPhoto(post.image)"
     />
 
     <!-- Image principale (jamais coupée) -->
@@ -98,6 +99,7 @@
       class="relative z-10 w-full h-full object-contain"
       alt="post image"
       loading="lazy"
+      (click)="openPhoto(post.image)"
     />
 
   </div>
@@ -547,4 +549,10 @@
       </button>
     </div>
   </div>
+    <img 
+    [src]="selectedPhoto" 
+    alt="Photo agrandie" 
+    class="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl animate-in fade-in zoom-in duration-300"
+    (click)="$event.stopPropagation()"
+  />
 </div>

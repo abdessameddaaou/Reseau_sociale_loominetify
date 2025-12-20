@@ -36,6 +36,12 @@ module.exports.createPublication = async (req, res) => {
   }
 };
 
+/**
+ * Récupération de tous les publications
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 module.exports.getAllPublications = async (req, res) => {
   try {
     const publications = (await Publications.findAll({ 
@@ -67,13 +73,18 @@ module.exports.getAllPublications = async (req, res) => {
   }
 }
 
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 module.exports.likePublication = async (req, res) => {
   try {
     // À implémenter : ajouter une interaction de type 'like' pour la publication donnée par l'utilisateur connecté
     const publicationId = req.params.id;
     const userId = req.userId;
-    const likeOrDislike = req.body.like; // true pour like, false pour dislike
+    const likeOrDislike = req.body.like;
     const publication = await Publications.findByPk(publicationId);
     if (!publication) {
       return res.status(404).json({ error: "Publication non trouvée." });
@@ -102,6 +113,12 @@ module.exports.likePublication = async (req, res) => {
   }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 module.exports.addCommentToPublication = async (req, res) => {
   try {
     const publicationId = req.params.id;
@@ -130,6 +147,13 @@ module.exports.addCommentToPublication = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 }
+
+/**
+ *  récupération de mes publications et commentaires
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 module.exports.getAllPublicationsUserConnecter = async(req, res) => {
   try {
 
@@ -139,16 +163,10 @@ module.exports.getAllPublicationsUserConnecter = async(req, res) => {
       order: [['createdAt', 'DESC']], 
       include: [{
         model: Commentaire,
-        as: 'Commentaires',
+        as: 'comments',
         attributes: ['id', 'contenu', 'image', 'nombreLikes']
       }] 
     });
-    
-    const countComments = await Commentaire.count({
-      
-    })
-
-
     return res.status(200).json(publications);
   } catch (error) {
     return res.status(500).json({ error: error.message });

@@ -106,6 +106,7 @@ export class FilActualiteComponent implements OnInit {
   defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
   private postsPage = 0;
   private readonly postsLimit = 5; // adapte à ton API
+  selectedPhoto: string | null = null;
 
   constructor( private fb: FormBuilder, private router: Router, private http: HttpClient, private themeService: ThemeService) {
     this.postForm = this.fb.group({
@@ -281,10 +282,10 @@ export class FilActualiteComponent implements OnInit {
     const file = input.files[0];
     this.formErrors['image'] = '';
 
-    const allowedTypes = ['image/jpeg', 'image/png'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/heic'];
     if (!allowedTypes.includes(file.type)) {
       this.formErrors['image'] =
-        'Format non supporté. Formats acceptés : JPG, PNG.';
+        'Format non supporté. Formats acceptés : JPG, PNG, HEIC';
       this.postForm.patchValue({ image: null });
       this.imagePreview = null;
       return;
@@ -482,4 +483,12 @@ removeCommentImage(postId: number, input: HTMLInputElement) {
   // 🔥 clé de la solution
   input.value = '';
 }
+
+  openPhoto(photo: string) {
+    this.selectedPhoto = photo;
+  }
+
+  closePhotoModal() {
+    this.selectedPhoto = null;
+  }
 }

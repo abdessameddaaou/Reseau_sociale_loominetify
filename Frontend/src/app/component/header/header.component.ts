@@ -11,9 +11,6 @@ type HeaderTab = 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexi
 type NotificationType = 'invite' | 'like' | 'comment' | 'share';
 type NotificationsFilter = 'all' | 'invites' | 'activity';
 
-/**
- * Interface notification
- */
 interface HeaderNotification {
   id: number;
   type: NotificationType;
@@ -31,32 +28,24 @@ interface HeaderNotification {
   templateUrl: './header.component.html'
 })
 export class HeaderComponent implements OnInit {
+
   @Input() activeTab: HeaderTab = 'home';
   @Output() tabChange = new EventEmitter<HeaderTab>();
-
-  /**
-   * état du dropdown
-   */
-  showNotifications = false;
-  notificationsFilter: NotificationsFilter = 'all';
-
-  /**
-   * refs vers le bouton et le dropdown
-   */
   @ViewChild('notificationsDropdown') notificationsDropdown?: ElementRef;
   @ViewChild('notificationsButton') notificationsButton?: ElementRef;
+  @ViewChild('searchContainer') searchContainer?: ElementRef;
 
   /**
-   * Notifications venant du backend
-   */
+    * Variables
+    */
+  showNotifications = false;
+  notificationsFilter: NotificationsFilter = 'all';
   notifications: HeaderNotification[] = [];
-
-  // --- AJOUT : Partie Recherche ---
   searchControl = new FormControl('');
   searchResults: any[] = [];  
   showSearchDropdown = false;
-  @ViewChild('searchContainer') searchContainer?: ElementRef;
-
+  defaultAvatar ='https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png'
+  
   constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit(): void {
@@ -65,13 +54,11 @@ export class HeaderComponent implements OnInit {
   }
 
 
-
-  // --- AJOUT : Logique de Recherche ---
-  private setupSearch() {
-    this.searchControl.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap((term: string | null) => {
+  /**
+   * Méthode de recherche
+   */
+   setupSearch() {
+    this.searchControl.valueChanges.pipe( debounceTime(300), distinctUntilChanged(), switchMap((term: string | null) => {
         if (!term || term.length < 2) {
           this.showSearchDropdown = false;
           return of([]);
@@ -88,18 +75,9 @@ export class HeaderComponent implements OnInit {
     });
   }
 
-// Quand on clique sur un résultat de recherche
   onSearchResultClick(user: any) {
-    console.log('Navigation vers', user);
-    
-    // 1. On ferme le menu déroulant
     this.showSearchDropdown = false;
-    
-    // 2. On vide le champ de recherche (optionnel, pour faire propre)
     this.searchControl.setValue(''); 
-
-    // 3. LA REDIRECTION (C'est ici que ça se passe)
-    // On navigue vers /profil/15 par exemple
     this.router.navigate(['/profil', user.id]);
   }
 
@@ -107,15 +85,13 @@ export class HeaderComponent implements OnInit {
 
   /**
    * Charger les notifications depuis le backend
-   * GET /notifications
    */
-  private loadNotifications() {
+   loadNotifications() {
     this.http.get<HeaderNotification[]>(`${environment.apiUrl}/notifications`, { withCredentials: true }).subscribe({
         next: (notifs) => {
           this.notifications = notifs;
         },
         error: (err) => {
-          console.error('Erreur lors du chargement des notifications', err);
           this.notifications = [];
         }
       });
