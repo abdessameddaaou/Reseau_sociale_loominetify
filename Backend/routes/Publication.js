@@ -34,5 +34,9 @@ router.post('/addPost', upload.single('image'), PublicationController.createPubl
 router.get('/getAllPosts', PublicationController.getAllPublications);
 router.post('/likePost/:id', checkUser, PublicationController.likePublication);
 router.post('/addComment/:id', upload.single('image'),checkUser, PublicationController.addCommentToPublication);
+router.get('/getAllPostUserConnected', checkUser, PublicationController.getAllPublicationsUserConnecter);
+
+
+
 
 module.exports = router;

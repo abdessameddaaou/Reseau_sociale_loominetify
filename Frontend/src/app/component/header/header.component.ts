@@ -1,7 +1,11 @@
 import { Component, EventEmitter, Input, Output, ElementRef, HostListener, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment.dev';
+import { ReactiveFormsModule, FormControl } from '@angular/forms'; 
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 type HeaderTab = 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexion';
 type NotificationType = 'invite' | 'like' | 'comment' | 'share';
@@ -23,7 +27,7 @@ interface HeaderNotification {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './header.component.html'
 })
 export class HeaderComponent implements OnInit {
@@ -47,11 +51,59 @@ export class HeaderComponent implements OnInit {
    */
   notifications: HeaderNotification[] = [];
 
-  constructor(private http: HttpClient) {}
+  // --- AJOUT : Partie Recherche ---
+  searchControl = new FormControl('');
+  searchResults: any[] = [];  
+  showSearchDropdown = false;
+  @ViewChild('searchContainer') searchContainer?: ElementRef;
+
+  constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit(): void {
     this.loadNotifications();
+    this.setupSearch();
   }
+
+
+
+  // --- AJOUT : Logique de Recherche ---
+  private setupSearch() {
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((term: string | null) => {
+        if (!term || term.length < 2) {
+          this.showSearchDropdown = false;
+          return of([]);
+        }
+        this.showSearchDropdown = true;
+        return this.http.get<any>(`${environment.apiUrl}/users/search?term=${term}`, { withCredentials: true }).pipe(
+            catchError(error => {
+                return of({ user: [] });
+            })
+        );
+      })
+    ).subscribe((response: any) => {
+       this.searchResults = response.user || []; 
+    });
+  }
+
+// Quand on clique sur un résultat de recherche
+  onSearchResultClick(user: any) {
+    console.log('Navigation vers', user);
+    
+    // 1. On ferme le menu déroulant
+    this.showSearchDropdown = false;
+    
+    // 2. On vide le champ de recherche (optionnel, pour faire propre)
+    this.searchControl.setValue(''); 
+
+    // 3. LA REDIRECTION (C'est ici que ça se passe)
+    // On navigue vers /profil/15 par exemple
+    this.router.navigate(['/profil', user.id]);
+  }
+
+
 
   /**
    * Charger les notifications depuis le backend
@@ -183,18 +235,25 @@ export class HeaderComponent implements OnInit {
   /**
    * Fermer le dropdown si on clique à l’extérieur
    */
-  @HostListener('document:click', ['$event'])
+@HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (!this.showNotifications) return;
-
     const target = event.target as HTMLElement;
-    const dropdownEl = this.notificationsDropdown?.nativeElement;
-    const buttonEl = this.notificationsButton?.nativeElement;
 
-    if (dropdownEl?.contains(target) || buttonEl?.contains(target)) {
-      return;
+    // Gestion fermeture Notifications
+    if (this.showNotifications) {
+        const notifDropdown = this.notificationsDropdown?.nativeElement;
+        const notifButton = this.notificationsButton?.nativeElement;
+        if (!notifDropdown?.contains(target) && !notifButton?.contains(target)) {
+            this.showNotifications = false;
+        }
     }
 
-    this.showNotifications = false;
+    // AJOUT : Gestion fermeture Recherche
+    if (this.showSearchDropdown) {
+        const searchWrap = this.searchContainer?.nativeElement;
+        if (!searchWrap?.contains(target)) {
+            this.showSearchDropdown = false;
+        }
+    }
   }
 }

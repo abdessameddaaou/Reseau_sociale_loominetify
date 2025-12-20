@@ -21,22 +21,53 @@
         loominetfy
       </span>
 
-      <div
-        class="hidden md:flex items-center app-soft rounded-full px-4 py-2 text-sm"
+<div
+        #searchContainer
+        class="hidden md:flex items-center app-soft rounded-full px-4 py-2 text-sm relative"
         id="header-search-wrapper"
         data-testid="header-search-wrapper"
       >
         <span class="material-icons text-slate-400 text-base mr-1">
           <i class="fa-solid fa-magnifying-glass fa-sm"></i>
         </span>
+        
         <input
           type="text"
+          [formControl]="searchControl"
           placeholder="Rechercher"
           class="bg-transparent outline-none text-slate-600 w-xl ml-4"
           id="header-search-input"
           name="header-search-input"
           data-testid="header-search-input"
+          autocomplete="off"
         />
+
+        <div 
+            *ngIf="showSearchDropdown && searchControl.value!.length >= 2"
+            class="absolute top-full left-0 mt-2 w-full app-card rounded-xl shadow-lg z-50 overflow-hidden"
+        >
+            <ul *ngIf="searchResults.length > 0" class="py-2">
+                <li 
+                    *ngFor="let user of searchResults"
+                    (click)="onSearchResultClick(user)"
+                    class="px-4 py-2 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition-colors"
+                >
+                    <img 
+                        [src]="user.photo || 'assets/img/default-avatar.png'" 
+                        class="w-8 h-8 rounded-full object-cover" 
+                        alt="Avatar"
+                    >
+                    <div class="flex flex-col">
+                        <span class="text-sm font-medium text-slate-800">{{ user.prenom }} {{ user.nom }}</span>
+                    </div>
+                </li>
+            </ul>
+
+            <div *ngIf="searchResults.length === 0" class="px-4 py-3 text-center text-slate-500 text-xs">
+                Aucun utilisateur trouvé
+            </div>
+        </div>
+
       </div>
     </div>
 
