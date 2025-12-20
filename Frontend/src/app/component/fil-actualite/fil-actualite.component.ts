@@ -15,9 +15,16 @@ import { fr } from 'date-fns/locale';
  */
 interface PostComment {
   id: number;
-  author: string;
-  text: string;
+  user : {
+    id: number;
+    nom: string;
+    prenom: string;
+    photo?: string;
+  };
+  contenu: string;
   mine: boolean;
+  createdAt: string;
+
 }
 
 /**
@@ -45,6 +52,7 @@ interface Post {
   shares: number;
   likedByMe: boolean;
   comments: PostComment[];
+  showAllComments: boolean;
 }
 
 /**
@@ -93,7 +101,8 @@ export class FilActualiteComponent implements OnInit {
   hasMore = true;
   newCommentText: { [postId: number]: string } = {};
   selectedFriend: OnlineFriend | null = null;
-
+  selectedCommentImage: { [postId: number]: File | null } = {};
+  commentImagePreview: { [postId: number]: string | null } = {};
   defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
   private postsPage = 0;
   private readonly postsLimit = 5; // adapte à ton API
@@ -196,8 +205,12 @@ export class FilActualiteComponent implements OnInit {
       }).subscribe({
         next: (posts) => {
           console.log('Posts chargés depuis le backend', posts);
-          this.allPosts = posts;
-          this.visiblePosts = posts;
+          const postsWithUIState = posts.map(post => ({
+        ...post,
+        showAllComments: false   // 👈 INITIALISATION ICI
+      }))
+          this.allPosts = postsWithUIState;
+          this.visiblePosts = postsWithUIState;
           this.hasMore = posts.length === this.postsLimit;
           this.isInitialLoading = false;
         },
@@ -347,12 +360,17 @@ export class FilActualiteComponent implements OnInit {
   /**
    * Like via backend
    */
-  toggleLike(post: Post) {
-    const likeValue = !post.likedByMe;
-    this.http.post<Post>(`${environment.apiUrl}/posts/${post.id}/like`, { like: likeValue }, { withCredentials: true }).subscribe({
+  toggleLike(event: MouseEvent, postId: number) {
+    const btn = event.currentTarget as HTMLButtonElement;
+    const styles = window.getComputedStyle(btn);
+    const color = styles.color;
+    console.log('Styles du bouton :', color);
+
+    const valueLike = true
+    this.http.post<Post>(`${environment.apiUrl}/posts/${postId}/like`, { like: valueLike }, { withCredentials: true }).subscribe({
         next: (updatedPost) => {
-          post.likedByMe = updatedPost.likedByMe;
-          post.likes = updatedPost.likes;
+          // post.likedByMe = updatedPost.likedByMe;
+          // post.likes = updatedPost.likes;
         },
         error: (err) => {
           console.error('Erreur lors du like', err);
@@ -365,9 +383,18 @@ export class FilActualiteComponent implements OnInit {
    */
   addComment(post: Post) {
     const text = this.newCommentText[post.id]?.trim();
-    if (!text) return;
-    this.http.post<PostComment>( `${environment.apiUrl}/posts/${post.id}/comments`, { text }, { withCredentials: true }).subscribe({
+    const image = this.selectedCommentImage[post.id];
+
+    if (!text && !image) return;
+    const formData = new FormData();
+    if (text) formData.append('text', text);
+    if (image) formData.append('image', image);
+    console.log('FormData pour le commentaire :', formData);
+    this.http.post<PostComment>( `${environment.apiUrl}/publications/addComment/${post.id}`, formData, { withCredentials: true }).subscribe({
         next: (createdComment) => {
+          console.log('Created Comment:', createdComment);
+          this.loadInitialPosts();
+          console.log('Commentaire ajouté avec succès', createdComment);
           post.comments.push(createdComment);
           post.commentsCount += 1;
           this.newCommentText[post.id] = '';
@@ -427,5 +454,32 @@ srcImage(imagePath?: string | null): string {
 
   const api = environment.apiUrl.replace(/\/$/, ''); // enlève le / final si présent
   return `${api}/media/${encodeURIComponent(imagePath)}`;
+}
+
+toggleComments(post: Post) {
+
+    post.showAllComments = !post.showAllComments;
+
+ }
+onCommentImageSelected(event: Event, postId: number) {
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0) return;
+
+  const file = input.files[0];
+  this.selectedCommentImage[postId] = file;
+
+  // Preview
+  const reader = new FileReader();
+  reader.onload = () => {
+    this.commentImagePreview[postId] = reader.result as string;
+  };
+  reader.readAsDataURL(file);
+}
+removeCommentImage(postId: number, input: HTMLInputElement) {
+  this.selectedCommentImage[postId] = null;
+  this.commentImagePreview[postId] = null;
+
+  // 🔥 clé de la solution
+  input.value = '';
 }
 }

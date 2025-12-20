@@ -65,7 +65,7 @@ module.exports.createUser = async (req, res) => {
     if (isNaN(birthDate.getTime())) {
       return res.status(400).json({ error: 'Date de naissance invalide.' });
     }
-
+   
     const now = new Date();
     if (birthDate > now) {
       return res.status(400).json({ error: 'La date de naissance ne peut pas être dans le futur.' });
@@ -84,7 +84,7 @@ module.exports.createUser = async (req, res) => {
 
     const tokenConfirmation = createToken(email);
     const verificationLink = `${config.frontendBaseUrl}/activation-compte/${tokenConfirmation}`;
-
+     
     const htmlEmail = `<!DOCTYPE html>
 <html lang="fr">
   <head>
@@ -184,12 +184,14 @@ module.exports.createUser = async (req, res) => {
       subject: 'Bienvenue sur Loominetify - Confirmez votre compte',
       html: htmlEmail
     };
-
+    
     await Users.create({ nom, prenom, email, password: cryptPassword, telephone, dateNaissance: birthDate, question, reponse, ville, pays, isAdmin });
+    
         await transport.sendMail(mailOptions);
+        
     return res.status(201).json({ message: 'Compte créé avec succès. Veuillez vérifier votre email.' });
   } catch (error) {
-    return res.status(500).json({ error: "Une erreur est survenue lors de la création de l'utilisateur." });
+    return res.status(500).json({ error: error.message });
   }
 };
 

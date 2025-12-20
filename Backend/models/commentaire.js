@@ -26,6 +26,6 @@ const Commentaire = db.define('Commentaires', {
 
 // Relations
 Users.hasMany(Commentaire, {foreignKey: 'userId', onDelete: 'CASCADE'});
-Commentaire.belongsTo(Users, {foreignKey: 'userId'});
+Commentaire.belongsTo(Users, {foreignKey: 'userId', as: 'user'});
 
 module.exports = Commentaire;

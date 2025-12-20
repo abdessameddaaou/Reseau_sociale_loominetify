@@ -14,5 +14,16 @@ const Interactions = db.define('Interactions', {
     type : {
         type: DataTypes.ENUM('like','love', 'angry', 'sad', 'haha'),
         allowNull: false,
+        defaultValue: 'like',
     }
 })
+
+
+// Relation entre Users et Interactions et publications
+
+Users.hasMany(Interactions, {foreignKey: 'userId', as: 'interactions', onDelete: 'CASCADE'});
+Interactions.belongsTo(Users, {foreignKey: 'userId', as: 'user'});
+Publication.hasMany(Interactions, {foreignKey: 'publicationId', as: 'interactions', onDelete: 'CASCADE'});
+Interactions.belongsTo(Publication, {foreignKey: 'publicationId', as: 'publication'});
+
+module.exports = Interactions;
