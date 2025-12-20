@@ -36,12 +36,13 @@ Users.hasMany(Publication, {foreignKey: 'userId', as: 'publications', onDelete: 
   
 Publication.belongsTo(Users, {foreignKey: 'userId', as: 'user'});
 
-Publication.hasMany(Commentaire, {foreignKey: 'publicationId', onDelete: 'CASCADE'});
+Publication.hasMany(Commentaire, {foreignKey: 'publicationId', as: 'comments', onDelete: 'CASCADE'});
 
 // Relation partage : un utilisateur peut partager plusieurs publications et une publication peut être partagée par plusieurs utilisateurs avec le nombre de like dans la table de jointure
 
 Users.belongsToMany(Publication, { through: 'Partages', as: 'Partageurs', foreignKey: 'userId', otherKey: 'publicationId' });
 Publication.belongsToMany(Users, { through: 'Partages', as: 'PublicationsPartagees', foreignKey: 'publicationId', otherKey: 'userId' });
+
 
 
 // 

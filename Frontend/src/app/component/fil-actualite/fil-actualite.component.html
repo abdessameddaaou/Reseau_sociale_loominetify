@@ -94,9 +94,10 @@
                [attr.data-testid]="'feed-post-actions-' + post.id">
             <div class="flex items-center gap-4">
               <!-- Like -->
+
               <button class="flex items-center gap-1"
                       [ngClass]="post.likedByMe ? 'text-rose-600' : 'text-slate-500'"
-                      (click)="toggleLike(post)"
+                      (click)="toggleLike($event,post.id)"
                       type="button"
                       [attr.data-testid]="'feed-post-like-button-' + post.id">
                 <span class="material-icons text-base">
@@ -132,23 +133,27 @@
               </button>
             </div>
           </div>
-
           <!-- Commentaires -->
           <div class="pt-2 border-t border-slate-100 space-y-2"
+          [class.max-h-60]="post.showAllComments"
+          [class.overflow-y-auto]="post.showAllComments"
                [attr.data-testid]="'feed-post-comments-section-' + post.id">
-            <div *ngFor="let comment of post.comments"
+            <div *ngFor="let comment of (post.showAllComments ? post.comments : (post.comments | slice:0:3))"
                  class="flex items-start gap-2"
                  [attr.data-testid]="'feed-post-comment-' + post.id + '-' + comment.id">
-              <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] text-slate-500"
-                   [attr.data-testid]="'feed-comment-avatar-' + post.id + '-' + comment.id">
-                {{ comment.author[0] | uppercase }}
-              </div>
+              <img [src]="comment.user.photo || defaultAvatar"
+                 alt="avatar"
+                 class="w-10 h-10 rounded-full object-cover"
+                 [attr.data-testid]="'feed-post-avatar-' + post.id" />
               <div class="comment-bubble rounded-2xl px-3 py-2 text-xs flex-1"
                    [attr.data-testid]="'feed-comment-card-' + post.id + '-' + comment.id">
                 <div class="flex justify-between gap-2">
                   <span class="font-semibold text-slate-700"
                         [attr.data-testid]="'feed-comment-author-' + post.id + '-' + comment.id">
-                    {{ comment.author }}
+                    {{ comment.user.nom + ' ' + comment.user.prenom }} <span class="text-[10px] text-slate-400 ml-2"
+                      [attr.data-testid]="'feed-comment-meta-' + post.id + '-' + comment.id">
+                  {{ timeAgo(comment.createdAt) }}
+                </span>
                   </span>
                   <button *ngIf="comment.mine"
                           class="text-[10px] text-slate-400 hover:text-red-500"
@@ -160,30 +165,61 @@
                 </div>
                 <p class="text-slate-700 mt-0.5"
                    [attr.data-testid]="'feed-comment-text-' + post.id + '-' + comment.id">
-                  {{ comment.text }}
+                  {{ comment.contenu }}
                 </p>
+                <br/>
               </div>
             </div>
+              <button
+                *ngIf="post.comments.length > 3"
+                (click)="toggleComments(post)"
+                class="text-xs text-blue-500 hover:underline text-center w-full"
+                type="button"
+              >
+                <p *ngIf="post.showAllComments">Masquer les commentaires</p>
+                <p *ngIf="!post.showAllComments">Voir tous les commentaires</p>
 
+              </button>
+              <p class="text-red-500 text-xs"></p>
             <!-- Ajouter un commentaire -->
             <div class="flex items-start gap-2 mt-1"
                  [attr.data-testid]="'feed-post-add-comment-' + post.id">
               <div class="w-7 h-7 rounded-full bg-slate-300 flex items-center justify-center text-[10px] text-white">
                 T
               </div>
+              <div *ngIf="commentImagePreview[post.id]"
+                  class="relative w-24 h-24 mb-2">
+                <img [src]="commentImagePreview[post.id]"
+                    class="w-full h-full object-cover rounded-lg border border-slate-200" />
+                <button type="button"
+                      (click)="removeCommentImage(post.id, commentImageInput)"
+                        class="absolute -top-2 -right-2 bg-white rounded-full text-red-500 text-xs shadow px-1">
+                  ✕
+                </button>
+              </div>
               <div class="flex-1 flex items-center gap-2">
+
                 <input type="text"
                        [(ngModel)]="newCommentText[post.id]"
                        placeholder="Écrire un commentaire..."
                        class="flex-1 text-xs border border-slate-200 rounded-full px-3 py-2 outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10"
                        [attr.data-testid]="'feed-post-comment-input-' + post.id" />
-                <button type="button"
+                        <label class="cursor-pointer text-slate-400 hover:text-slate-600">
+                        <i class="fa-regular fa-image"></i>
+                        <input type="file"
+                              #commentImageInput
+                              accept="image/*"
+                              class="hidden"
+                              (change)="onCommentImageSelected($event, post.id)">
+                      </label>
+                       <button type="button"
                         class="text-xs text-accent font-semibold"
                         (click)="addComment(post)"
                         [attr.data-testid]="'feed-post-comment-submit-' + post.id">
                   Publier
                 </button>
               </div>
+
             </div>
           </div>
         </article>
