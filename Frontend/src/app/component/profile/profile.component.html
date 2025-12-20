@@ -1,64 +1,41 @@
 <div class="min-h-screen app-bg flex flex-col" id="profile-page" data-testid="profile-page">
   <!-- HEADER -->
-  <app-header
-    [activeTab]="activeTab"
-    (tabChange)="setActiveTab($event)"
-    id="profile-header"
+  <app-header [activeTab]="activeTab" (tabChange)="setActiveTab($event)" id="profile-header"
     data-testid="profile-header">
   </app-header>
 
   <!-- BODY -->
   <main class="flex-1" id="profile-main" data-testid="profile-main">
-    <div
-      class="max-w-6xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6"
-      id="profile-layout"
+    <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6" id="profile-layout"
       data-testid="profile-layout">
 
       <!-- COLONNE GAUCHE : résumé + amis + groupes -->
-      <aside
-        class="w-full lg:w-72 space-y-4"
-        id="profile-sidebar"
-        data-testid="profile-sidebar">
+      <aside class="w-full lg:w-72 space-y-4" id="profile-sidebar" data-testid="profile-sidebar">
 
         <!-- Carte profil principale -->
-        <section
-          class="app-card rounded-2xl shadow-sm overflow-hidden"
-          id="profile-hero-card"
+        <section class="app-card rounded-2xl shadow-sm overflow-hidden" id="profile-hero-card"
           data-testid="profile-hero-card">
           <div class="h-20 accent-gradient"></div>
 
           <div class="p-4 -mt-10 flex flex-col items-center text-center">
-            <img
-              [src]="currentUser?.photo || defaultAvatar"
-              alt="avatar"
-              class="w-20 h-20 rounded-full border-4 border-white object-cover shadow"
-              id="profile-avatar"
+            <img [src]="currentUser?.photo || defaultAvatar" alt="avatar"
+              class="w-20 h-20 rounded-full border-4 border-white object-cover shadow" id="profile-avatar"
               data-testid="profile-avatar" />
 
-            <h1
-              class="mt-2 text-base font-semibold text-slate-900"
-              id="profile-name"
-              data-testid="profile-name">
+            <h1 class="mt-2 text-base font-semibold text-slate-900" id="profile-name" data-testid="profile-name">
               {{ currentUser?.nom }} {{ currentUser?.prenom }}
             </h1>
 
-            <p
-              class="text-[12px] text-slate-400"
-              id="profile-handle"
-              data-testid="profile-handle">
+            <p class="text-[12px] text-slate-400" id="profile-handle" data-testid="profile-handle">
               @{{ currentUser?.nom }}{{ currentUser?.prenom }}
             </p>
 
-            <p
-              class="mt-1 text-[11px] text-slate-500 flex items-center gap-1"
-              id="profile-location">
+            <p class="mt-1 text-[11px] text-slate-500 flex items-center gap-1" id="profile-location">
               <i class="fa-solid fa-location-dot text-[10px]"></i>
               <span>{{ currentUser?.ville || 'Non renseigné' }}</span>
             </p>
 
-            <div
-              class="mt-4 flex justify-between w-full text-xs text-slate-700"
-              id="profile-header-stats"
+            <div class="mt-4 flex justify-between w-full text-xs text-slate-700" id="profile-header-stats"
               data-testid="profile-header-stats">
               <div class="flex-1 text-center">
                 <p class="font-semibold">{{ followers }}</p>
@@ -75,56 +52,38 @@
             </div>
 
             <div class="mt-4 flex gap-2 w-full">
-              <button
-                type="button"
+              <button type="button"
                 class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md"
-                (click)="goToEditProfile()"
-                id="profile-edit-button"
-                data-testid="profile-edit-button">
+                (click)="goToEditProfile()" id="profile-edit-button" data-testid="profile-edit-button">
                 Modifier mon profil
               </button>
             </div>
 
-            <p
-              class="mt-3 text-[11px] text-slate-400"
-              id="profile-member-since"
-              data-testid="profile-member-since">
+            <p class="mt-3 text-[11px] text-slate-400" id="profile-member-since" data-testid="profile-member-since">
               Membre depuis {{ joinedDate }}
             </p>
           </div>
         </section>
 
         <!-- Amis proches -->
-        <section
-          class="app-card rounded-2xl shadow-sm p-4 space-y-3"
-          id="profile-friends-card"
+        <section class="app-card rounded-2xl shadow-sm p-4 space-y-3" id="profile-friends-card"
           data-testid="profile-friends-card">
           <div class="flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-900">
               Amis
             </h2>
-            <span
-              class="text-[11px] text-slate-400"
-              id="profile-friends-count"
-              data-testid="profile-friends-count">
+            <span class="text-[11px] text-slate-400" id="profile-friends-count" data-testid="profile-friends-count">
               {{ Friends.length }}
             </span>
           </div>
 
           <div class="space-y-2">
-            <button
-              type="button"
-              *ngFor="let friend of Friends"
+            <button type="button" *ngFor="let friend of Friends"
               class="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-slate-50 transition"
-              (click)="openFriend(friend)"
-              [attr.data-testid]="'profile-friend-' + friend.id">
+              (click)="openFriend(friend)" [attr.data-testid]="'profile-friend-' + friend.id">
               <div class="relative">
-                <img
-                  [src]="friend.avatar"
-                  [alt]="friend.name"
-                  class="w-8 h-8 rounded-full object-cover" />
-                <span
-                  class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white"
+                <img [src]="friend.avatar" [alt]="friend.name" class="w-8 h-8 rounded-full object-cover" />
+                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white"
                   [ngClass]="friend.online ? 'bg-emerald-400' : 'bg-slate-300'">
                 </span>
               </div>
@@ -141,33 +100,22 @@
         </section>
 
         <!-- Groupes -->
-        <section
-          class="app-card rounded-2xl shadow-sm p-4 space-y-3"
-          id="profile-groups-card"
+        <section class="app-card rounded-2xl shadow-sm p-4 space-y-3" id="profile-groups-card"
           data-testid="profile-groups-card">
           <div class="flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-900">
               Groupes
             </h2>
-            <span
-              class="text-[11px] text-slate-400"
-              id="profile-groups-count"
-              data-testid="profile-groups-count">
+            <span class="text-[11px] text-slate-400" id="profile-groups-count" data-testid="profile-groups-count">
               {{ groups.length }}
             </span>
           </div>
 
           <div class="space-y-2">
-            <button
-              type="button"
-              *ngFor="let group of groups"
+            <button type="button" *ngFor="let group of groups"
               class="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-slate-50 transition"
-              (click)="openGroup(group)"
-              [attr.data-testid]="'profile-group-' + group.id">
-              <img
-                [src]="group.avatar"
-                [alt]="group.name"
-                class="w-8 h-8 rounded-xl object-cover" />
+              (click)="openGroup(group)" [attr.data-testid]="'profile-group-' + group.id">
+              <img [src]="group.avatar" [alt]="group.name" class="w-8 h-8 rounded-xl object-cover" />
               <div class="flex-1 text-left">
                 <p class="text-xs font-semibold text-slate-800 truncate">
                   {{ group.name }}
@@ -185,15 +133,10 @@
       </aside>
 
       <!-- COLONNE DROITE : contenu principal -->
-      <section
-        class="flex-1 space-y-4"
-        id="profile-content"
-        data-testid="profile-content">
+      <section class="flex-1 space-y-4" id="profile-content" data-testid="profile-content">
 
         <!-- Bio / résumé -->
-        <section
-          class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-3"
-          id="profile-bio-card"
+        <section class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-3" id="profile-bio-card"
           data-testid="profile-bio-card">
           <div class="flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-900">
@@ -211,15 +154,10 @@
         </section>
 
         <!-- Coordonnées + infos compte -->
-        <section
-          class="grid md:grid-cols-2 gap-4"
-          id="profile-details-grid"
-          data-testid="profile-details-grid">
+        <section class="grid md:grid-cols-2 gap-4" id="profile-details-grid" data-testid="profile-details-grid">
 
           <!-- Coordonnées -->
-          <div
-            class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-2 text-[13px]"
-            id="profile-contact-card"
+          <div class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-2 text-[13px]" id="profile-contact-card"
             data-testid="profile-contact-card">
             <h2 class="text-sm font-semibold text-slate-900 mb-1">
               Coordonnées
@@ -253,9 +191,7 @@
           </div>
 
           <!-- Infos compte / perso -->
-          <div
-            class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-2 text-[13px]"
-            id="profile-account-card"
+          <div class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-2 text-[13px]" id="profile-account-card"
             data-testid="profile-account-card">
             <h2 class="text-sm font-semibold text-slate-900 mb-1">
               Infos personnelles
@@ -294,10 +230,7 @@
                 </span>
                 <br />
                 <ng-container *ngIf="currentUser?.siteweb; else nositeweb">
-                  <a
-                    [href]="currentUser?.siteweb"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <a [href]="currentUser?.siteweb" target="_blank" rel="noopener noreferrer"
                     class="text-[#5b7cff] hover:text-[#8b5cf6] hover:underline break-all">
                     {{ currentUser?.siteweb || 'Non renseigné' }}
                   </a>
@@ -311,39 +244,27 @@
         </section>
 
         <!-- Activité + Stats -->
-        <section
-          class="grid lg:grid-cols-[1.4fr,1fr] gap-4"
-          id="profile-activity-grid"
+        <section class="grid lg:grid-cols-[1.4fr,1fr] gap-4" id="profile-activity-grid"
           data-testid="profile-activity-grid">
 
           <!-- Activité récente -->
-          <div
-            class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-3 text-[13px]"
-            id="profile-activity-card"
+          <div class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-3 text-[13px]" id="profile-activity-card"
             data-testid="profile-activity-card">
             <div class="flex items-center justify-between">
               <h2 class="text-sm font-semibold text-slate-900">
                 Dernières activités
               </h2>
-              <button
-                type="button"
-                class="text-[11px] text-[#5b7cff] hover:text-[#8b5cf6] hover:underline"
-                id="profile-activity-see-all"
-                data-testid="profile-activity-see-all">
+              <button type="button" class="text-[11px] text-[#5b7cff] hover:text-[#8b5cf6] hover:underline"
+                id="profile-activity-see-all" data-testid="profile-activity-see-all">
                 Voir tout
               </button>
             </div>
 
             <div class="space-y-2">
-              <div
-                *ngFor="let item of recentActivity"
-                class="flex items-start gap-3 text-slate-600"
+              <div *ngFor="let item of recentActivity" class="flex items-start gap-3 text-slate-600"
                 [attr.data-testid]="'profile-activity-item-' + item.id">
-                <div
-                  class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                  <i
-                    class="fa-solid"
-                    [ngClass]="{
+                <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fa-solid" [ngClass]="{
                       'fa-comment-dots': item.icon === 'comment',
                       'fa-star': item.icon === 'star',
                       'fa-user-group': item.icon === 'group'
@@ -361,17 +282,14 @@
           </div>
 
           <!-- Stats & badges -->
-          <div
-            class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-4"
-            id="profile-stats-card"
+          <div class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-4" id="profile-stats-card"
             data-testid="profile-stats-card">
             <h2 class="text-sm font-semibold text-slate-900">
               Statistiques & centres d’intérêt
             </h2>
 
             <div class="grid grid-cols-3 gap-2 text-xs">
-              <div
-                class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
                 <p class="text-slate-900 font-semibold">
                   {{ stats.activityScore }}
                 </p>
@@ -379,8 +297,7 @@
                   Score d’activité
                 </p>
               </div>
-              <div
-                class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
                 <p class="text-slate-900 font-semibold">
                   {{ stats.daysStreak }}
                 </p>
@@ -388,8 +305,7 @@
                   Jours consécutifs
                 </p>
               </div>
-              <div
-                class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
                 <p class="text-slate-900 font-semibold">
                   {{ stats.groupsJoined }}
                 </p>
@@ -400,8 +316,7 @@
             </div>
 
             <div class="flex flex-wrap gap-2 text-[11px]">
-              <span
-                *ngFor="let tag of badges"
+              <span *ngFor="let tag of badges"
                 class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200"
                 [attr.data-testid]="'profile-badge-' + tag">
                 #{{ tag }}
@@ -411,9 +326,7 @@
         </section>
 
         <!-- Photos récentes -->
-        <section
-          class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-4"
-          id="profile-photos-card"
+        <section class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-4" id="profile-photos-card"
           data-testid="profile-photos-card">
           <div class="flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-900">
@@ -425,26 +338,18 @@
           </div>
 
           <div class="grid grid-cols-3 md:grid-cols-4 gap-2">
-            <button
-              *ngFor="let photo of Photos; let i = index"
-              type="button"
-              class="relative group rounded-xl overflow-hidden aspect-square bg-slate-100"
-              (click)="openPhoto(photo)"
+            <button *ngFor="let photo of Photos; let i = index" type="button"
+              class="relative group rounded-xl overflow-hidden aspect-square bg-slate-100" (click)="openPhoto(photo)"
               [attr.data-testid]="'profile-photo-' + i">
-              <img
-                [src]="photo"
-                alt="photo"
+              <img [src]="photo" alt="photo"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              <div
-                class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
             </button>
           </div>
         </section>
 
         <!-- Dernières publications -->
-        <section
-          class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-4"
-          id="profile-posts-card"
+        <section class="app-card rounded-2xl shadow-sm p-4 md:p-5 space-y-4" id="profile-posts-card"
           data-testid="profile-posts-card">
 
           <div class="flex items-center justify-between">
@@ -454,8 +359,7 @@
           </div>
 
           <div class="space-y-3">
-            <article
-              *ngFor="let post of Publications"
+            <article *ngFor="let post of Publications"
               class="rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.04)] hover:-translate-y-[1px] hover:shadow-md transition flex gap-3 items-start"
               [attr.data-testid]="'profile-post-item-' + post.id">
 
@@ -477,25 +381,20 @@
                     </p>
                   </div>
 
-                  <button
-                    type="button"
+                  <button type="button"
                     class="px-3 py-1 rounded-full border border-slate-200 text-[11px] text-slate-600 bg-slate-50 hover:bg-slate-100 hover:text-slate-800 transition"
-                    (click)="openPost(post)"
-                    [attr.data-testid]="'profile-post-open-' + post.id">
+                    (click)="openPost(post)" [attr.data-testid]="'profile-post-open-' + post.id">
                     Aperçu
                   </button>
                 </div>
 
                 <p class="mt-1 text-[13px] text-slate-700">
-                  {{ post.description }}
+                  {{ post.description || '' }}
                 </p>
                 <div *ngIf="post.image" class="mt-2">
-                <img
-                  [src]="srcImage(post.image)"
-                  class="w-[100px] h-[100px] rounded-xl border border-slate-200 object-cover"
-                  alt="post image"
-                />
-              </div>
+                  <img [src]="srcImage(post.image)"
+                    class="w-[100px] h-[100px] rounded-xl border border-slate-200 object-cover" alt="post image" />
+                </div>
 
                 <div class="mt-2 flex items-center gap-4 text-[11px] text-slate-500">
                   <span class="inline-flex items-center gap-1">
@@ -510,9 +409,7 @@
               </div>
             </article>
 
-            <p
-              *ngIf="Publications.length === 0"
-              class="text-[12px] text-slate-500 text-center py-2">
+            <p *ngIf="Publications.length === 0" class="text-[12px] text-slate-500 text-center py-2">
               Aucune publication récente.
             </p>
           </div>
@@ -520,23 +417,148 @@
       </section>
     </div>
   </main>
-  <div 
-  *ngIf="selectedPhoto" 
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity"
-  (click)="closePhotoModal()"
->
-  <button 
-    class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
-    (click)="closePhotoModal()"
-  >
-    <i class="fa-solid fa-xmark fa-2xl"></i>
-  </button>
+  <div *ngIf="selectedPhoto"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity"
+    (click)="closePhotoModal()">
+    <button class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors" (click)="closePhotoModal()">
+      <i class="fa-solid fa-xmark fa-2xl"></i>
+    </button>
 
-  <img 
-    [src]="selectedPhoto" 
-    alt="Photo agrandie" 
-    class="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl animate-in fade-in zoom-in duration-300"
-    (click)="$event.stopPropagation()"
-  />
-</div>
+    <img [src]="selectedPhoto" alt="Photo agrandie"
+      class="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl animate-in fade-in zoom-in duration-300"
+      (click)="$event.stopPropagation()" />
+  </div>
+
+  <!-- ===================== MODAL APERÇU POST ===================== -->
+  <div *ngIf="selectedPost" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+    (click)="closePostModal()">
+    <div class="w-[92vw] max-w-2xl max-h-[88vh] overflow-hidden rounded-2xl bg-white shadow-2xl"
+      (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+        <div>
+          <p class="text-sm font-semibold text-slate-900">
+            {{ currentUser?.nom }} {{ currentUser?.prenom }}
+          </p>
+          <p class="text-[11px] text-slate-400">
+            @{{ currentUser?.nom }} · {{ selectedPost.timeAgo }}
+          </p>
+        </div>
+
+        <button class="text-slate-500 hover:text-slate-800" (click)="closePostModal()">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-4 overflow-auto max-h-[calc(88vh-56px)]">
+        <p class="text-[13px] text-slate-700">
+          {{ selectedPost.description || '' }}
+        </p>
+
+        <div *ngIf="selectedPost.image" class="mt-3">
+          <img [src]="srcImage(selectedPost.image)"
+            class="w-full max-h-[360px] rounded-xl border border-slate-200 object-contain bg-slate-50"
+            alt="post image" />
+        </div>
+
+        <div class="mt-4 flex items-center gap-3 text-[12px] text-slate-600">
+          <button type="button"
+            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 hover:bg-slate-50"
+            (click)="toggleLikeSelectedPost()" [disabled]="likeLoading">
+            <i class="fa-solid fa-heart text-[#e11d48]"></i>
+            <span>{{ selectedPost.likes }}</span>
+          </button>
+
+          <span class="inline-flex items-center gap-2">
+            <i class="fa-solid fa-comment text-[#0ea5e9]"></i>
+            <span>{{ selectedPost.commentaires }}</span>
+          </span>
+        </div>
+        <div class="pt-3 mt-4 border-t border-slate-100 space-y-2" [class.max-h-60]="selectedPost.showAllComments"
+          [class.overflow-y-auto]="selectedPost.showAllComments">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-900">Commentaires</h3>
+
+            <button *ngIf="selectedPostComments.length > 3" (click)="toggleComments(selectedPost)"
+              class="text-[11px] text-blue-500 hover:underline" type="button">
+              {{ selectedPost.showAllComments ? 'Masquer' : 'Voir tout' }}
+            </button>
+          </div>
+          <div
+            *ngFor="let comment of (selectedPost.showAllComments ? selectedPostComments : (selectedPostComments | slice:0:3))"
+            class="flex items-start gap-2">
+            <img [src]="comment.user?.photo || defaultAvatar" alt="avatar"
+              class="w-10 h-10 rounded-full object-cover" />
+
+            <div class="comment-bubble rounded-2xl px-3 py-2 text-xs flex-1 border border-slate-200 bg-slate-50">
+              <div class="flex justify-between gap-2">
+                <span class="font-semibold text-slate-700">
+                  {{ comment.user?.nom }} {{ comment.user?.prenom }}
+                  <span class="text-[10px] text-slate-400 ml-2">
+                    {{ timeAgo(comment.createdAt) }}
+                  </span>
+                </span>
+
+                <button *ngIf="comment.mine" class="text-[10px] text-slate-400 hover:text-red-500"
+                  (click)="deleteComment(selectedPost, comment)" type="button">
+                  Supprimer
+                </button>
+              </div>
+
+              <p class="text-slate-700 mt-0.5">
+                {{ comment.contenu }}
+              </p>
+              <div *ngIf="comment.image" class="mt-2">
+                <img [src]="srcImage(comment.image)"
+                  class="w-40 max-w-full rounded-xl border border-slate-200 object-cover" alt="comment image"
+                  (click)="srcImage(comment.image)" />
+              </div>
+
+              <div class="mt-1 text-[11px] text-slate-500 inline-flex items-center gap-2">
+                <i class="fa-solid fa-heart text-[#e11d48]"></i>
+                <span>{{ comment.nombreLikes }}</span>
+              </div>
+            </div>
+          </div>
+
+          <p *ngIf="selectedPostComments.length === 0" class="text-[12px] text-slate-500">
+            Aucun commentaire pour le moment.
+          </p>
+          <div class="flex items-start gap-2 mt-2">
+            <img [src]="currentUser?.photo || defaultAvatar" alt="me" class="w-10 h-10 rounded-full object-cover" />
+
+            <div class="flex-1">
+              <div *ngIf="commentImagePreview[selectedPost.id]" class="relative w-24 h-24 mb-2">
+                <img [src]="commentImagePreview[selectedPost.id]"
+                  class="w-full h-full object-cover rounded-lg border border-slate-200" alt="preview" />
+                <button type="button" (click)="removeCommentImage(selectedPost.id, commentImageInput)"
+                  class="absolute -top-2 -right-2 bg-white rounded-full text-red-500 text-xs shadow px-1">
+                  ✕
+                </button>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <input type="text" [(ngModel)]="newCommentText[selectedPost.id]" placeholder="Écrire un commentaire..."
+                  class="flex-1 text-xs border border-slate-200 rounded-full px-3 py-2 outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10"
+                  (keydown.enter)="addCommentSelectedPost()" />
+
+                <label class="cursor-pointer text-slate-400 hover:text-slate-600">
+                  <i class="fa-regular fa-image"></i>
+                  <input type="file" #commentImageInput accept="image/*" class="hidden"
+                    (change)="onCommentImageSelected($event, selectedPost.id)" />
+                </label>
+
+                <button type="button" class="text-xs text-accent font-semibold disabled:opacity-60"
+                  (click)="addCommentSelectedPost()" [disabled]="commentLoading">
+                  Publier
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
 </div>

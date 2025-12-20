@@ -164,11 +164,25 @@ module.exports.getAllPublicationsUserConnecter = async(req, res) => {
       include: [{
         model: Commentaire,
         as: 'comments',
-        attributes: ['id', 'contenu', 'image', 'nombreLikes']
+        attributes: ['id', 'contenu', 'image', 'nombreLikes', 'createdAt', 'userId'],
+          include: [{
+            model: Users,
+            as: 'user',
+            attributes: ['id', 'nom', 'prenom', 'photo']
+          }]
       }] 
     });
-    return res.status(200).json(publications);
+    const data = publications.map((p) => {
+      const pub = p.toJSON();
+      pub.comments = (pub.comments || []).map((c) => ({
+        ...c,
+        mine: c.userId === user,
+      }));
+      return pub;
+    });
+
+    return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-}
+};
