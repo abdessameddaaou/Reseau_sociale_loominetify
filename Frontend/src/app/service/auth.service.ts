@@ -20,7 +20,5 @@ constructor(private http: HttpClient) {}
         map(res => res.authenticated),
         catchError(() => of(false))
       );
-}
-
-
+  }
 }

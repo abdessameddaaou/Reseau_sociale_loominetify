@@ -1,4 +1,5 @@
 const http = require('http');
+const { Server } = require('socket.io');
 const app = require('./app');
 const config = require('./config');
 
@@ -10,7 +11,27 @@ const normalizePort = (val) => {
 };
 
 const port = normalizePort(config.port);
+
 app.set('port', port);
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: config.frontendBaseUrl,
+    credentials: true,
+  },
+});
+
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  console.log('Socket connected:', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('Socket disconnected:', socket.id);
+  });
+});
 
 const errorHandler = (error) => {
   if (error.syscall !== 'listen') throw error;
@@ -24,7 +45,7 @@ const errorHandler = (error) => {
   }
 };
 
-const server = http.createServer(app);
+
 server.on('error', errorHandler);
 server.on('listening', () => {
   console.log(`[${config.env}] Listening on port ${port} — ${config.baseUrl}`);
