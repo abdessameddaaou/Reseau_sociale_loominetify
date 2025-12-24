@@ -9,7 +9,8 @@ import { PostCreatorComponent } from '../post-creator/post-creator.component';
 import { environment } from '../../../environments/environment.dev';
 import { ThemeService } from '../../service/theme.service';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { de, fr } from 'date-fns/locale';
+import sweetalert2 from 'sweetalert2';
 /**
  * Interface pour les commentaires
  */
@@ -22,9 +23,19 @@ interface PostComment {
     photo?: string;
   };
   contenu: string;
+  image?: string;
+  nombreLikes: number;
   mine: boolean;
   createdAt: string;
 
+}
+/**
+ * Interface pour les interactions sur les publications
+ */
+interface PostInteraction {
+  id: number;
+  userId: number;
+  publicationId: number;
 }
 
 /**
@@ -53,6 +64,9 @@ interface Post {
   likedByMe: boolean;
   comments: PostComment[];
   showAllComments: boolean;
+  interactions : PostInteraction[] | null;
+  sharedPublication : Post | null;
+  commentairePartage?: string | null;
 }
 
 /**
@@ -70,6 +84,7 @@ interface OnlineFriend {
  */
 export interface CurrentUser {
   nom: string;
+  id: number;
   prenom: string;
   isAdmin: boolean;
   photo?: string;
@@ -106,7 +121,12 @@ export class FilActualiteComponent implements OnInit {
   defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
   private postsPage = 0;
   private readonly postsLimit = 5; // adapte à ton API
-
+  likedUsers: CurrentUser[] = [];
+  showLikesModal = false;
+  isShareModalOpen = false;
+  postToShare: Post | null = null;
+  shareDescription = '';
+  isSharing = false;
   constructor( private fb: FormBuilder, private router: Router, private http: HttpClient, private themeService: ThemeService) {
     this.postForm = this.fb.group({
       text: ['', [Validators.maxLength(1000)]],
@@ -207,7 +227,10 @@ export class FilActualiteComponent implements OnInit {
           console.log('Posts chargés depuis le backend', posts);
           const postsWithUIState = posts.map(post => ({
         ...post,
-        showAllComments: false   // 👈 INITIALISATION ICI
+        showAllComments: false,
+      likedByMe: Array.isArray(post.interactions) ? post.interactions.some(i => i.userId === this.currentUser?.id) : false,
+      commentsCount: post.comments.length,
+// 👈 INITIALISATION ICI
       }))
           this.allPosts = postsWithUIState;
           this.visiblePosts = postsWithUIState;
@@ -360,23 +383,27 @@ export class FilActualiteComponent implements OnInit {
   /**
    * Like via backend
    */
-  toggleLike(event: MouseEvent, postId: number) {
-    const btn = event.currentTarget as HTMLButtonElement;
-    const styles = window.getComputedStyle(btn);
-    const color = styles.color;
-    console.log('Styles du bouton :', color);
+toggleLike(event: Event, post: Post) {
+  event.stopPropagation();
 
-    const valueLike = true
-    this.http.post<Post>(`${environment.apiUrl}/posts/${postId}/like`, { like: valueLike }, { withCredentials: true }).subscribe({
-        next: (updatedPost) => {
-          // post.likedByMe = updatedPost.likedByMe;
-          // post.likes = updatedPost.likes;
-        },
-        error: (err) => {
-          console.error('Erreur lors du like', err);
-        }
-      });
-  }
+  const newLikeState = !post.likedByMe;
+
+  // Optimistic UI
+  post.likedByMe = newLikeState;
+  post.nombreLikes += newLikeState ? 1 : -1;
+
+  this.http.post(
+    `${environment.apiUrl}/publications/likePost/${post.id}`,
+    { like: newLikeState }, // ✅ IMPORTANT
+    { withCredentials: true }
+  ).subscribe({
+    error: () => {
+      // rollback si erreur backend
+      post.likedByMe = !newLikeState;
+      post.nombreLikes += newLikeState ? 1 : -1;
+    }
+  });
+}
 
   /**
    * Ajouter un commentaire via backend
@@ -398,6 +425,8 @@ export class FilActualiteComponent implements OnInit {
           post.comments.push(createdComment);
           post.commentsCount += 1;
           this.newCommentText[post.id] = '';
+          this.selectedCommentImage[post.id] = null;
+          this.commentImagePreview[post.id] = null;
         },
         error: (err) => {
           console.error('Erreur lors de l’ajout du commentaire', err);
@@ -409,10 +438,19 @@ export class FilActualiteComponent implements OnInit {
    * Supprimer un commentaire via backend
    */
   deleteComment(post: Post, comment: PostComment) {
-    if (!comment.mine) return;
-
-    this.http.delete(`${environment.apiUrl}/posts/${post.id}/comments/${comment.id}`,{ withCredentials: true }).subscribe({
-        next: () => {
+   // if (!comment.mine) return;
+   sweetalert2.fire({
+    title: 'Confirmer la suppression',
+    text: 'Êtes-vous sûr de vouloir supprimer ce commentaire ?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Oui, supprimer',
+    cancelButtonText: 'Annuler'
+  }).then((result) => {
+    if (result.isConfirmed) {
+         this.http.delete(`${environment.apiUrl}/publications/deleteComment/${comment.id}`,{ withCredentials: true }).subscribe({
+        next: (res) => {
+          console.log('Commentaire supprimé avec succès', res);
           post.comments = post.comments.filter((c) => c.id !== comment.id);
           post.commentsCount = Math.max(0, post.commentsCount - 1);
         },
@@ -420,21 +458,27 @@ export class FilActualiteComponent implements OnInit {
           console.error('Erreur lors de la suppression du commentaire', err);
         }
       });
+    }
+  });
   }
+
 
   /**
    * Partager un post via backend
    */
-  sharePost(post: Post) {
+  sharePost() {
+    if(!this.postToShare) return;
+    this.isSharing = true;
     this.http
       .post<Post>(
-        `${environment.apiUrl}/posts/${post.id}/share`,
-        {},
+        `${environment.apiUrl}/publications/sharePublication/${this.postToShare.id}`,
+        {commentairePartage: this.shareDescription},
         { withCredentials: true }
       )
       .subscribe({
         next: (sharedPost) => {
-          post.shares += 1;
+          console.log('Post partagé avec succès', sharedPost);
+          this.postToShare!.shares += 1;
           this.allPosts = [sharedPost, ...this.allPosts];
           this.visiblePosts = [sharedPost, ...this.visiblePosts];
         },
@@ -455,7 +499,11 @@ srcImage(imagePath?: string | null): string {
   const api = environment.apiUrl.replace(/\/$/, ''); // enlève le / final si présent
   return `${api}/media/${encodeURIComponent(imagePath)}`;
 }
-
+srcImageComments(imagePath?: string | null): string {
+  if (!imagePath) return '';
+  const api = environment.apiUrl.replace(/\/$/, ''); // enlève le / final si présent
+  return `${api}/media/comments/${encodeURIComponent(imagePath)}`;
+}
 toggleComments(post: Post) {
 
     post.showAllComments = !post.showAllComments;
@@ -481,5 +529,50 @@ removeCommentImage(postId: number, input: HTMLInputElement) {
 
   // 🔥 clé de la solution
   input.value = '';
+}
+
+likeComment(commentId: number) {
+    this.http.post<{ nombreLikes: number }>(`${environment.apiUrl}/publications/likeComment/${commentId}`, {}, { withCredentials: true }).subscribe({
+        next: (res) => {
+          console.log('Commentaire liké avec succès', res);
+          // Met à jour le nombre de likes du commentaire dans le feed
+          this.allPosts.forEach(post => {
+            post.comments.forEach(comment => {
+              if (comment.id === commentId) {
+                comment.nombreLikes = res.nombreLikes;
+              }
+            });
+          });
+        },
+        error: (err) => {
+          console.error('Erreur lors du like du commentaire', err);
+        }
+      });
+}
+
+affichePersonneLike(post: Post) {
+  this.http.get<{ users: CurrentUser[] }>(
+    `${environment.apiUrl}/publications/getUsersWhoLikedPost/${post.id}`,
+    { withCredentials: true }
+  ).subscribe({
+    next: (res) => {
+      this.likedUsers = res.users;
+      this.showLikesModal = true;
+    },
+    error: (err) => {
+      console.error('Erreur lors de la récupération des likes', err);
+    }
+  });
+}
+
+openShareModal(post: Post) {
+  this.postToShare = post;
+  this.shareDescription = '';
+  this.isShareModalOpen = true;
+}
+
+closeShareModal() {
+  this.isShareModalOpen = false;
+  this.postToShare = null;
 }
 }

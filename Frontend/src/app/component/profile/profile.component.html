@@ -520,21 +520,21 @@
       </section>
     </div>
   </main>
-  <div 
-  *ngIf="selectedPhoto" 
+  <div
+  *ngIf="selectedPhoto"
   class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity"
   (click)="closePhotoModal()"
 >
-  <button 
+  <button
     class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
     (click)="closePhotoModal()"
   >
     <i class="fa-solid fa-xmark fa-2xl"></i>
   </button>
 
-  <img 
-    [src]="selectedPhoto" 
-    alt="Photo agrandie" 
+  <img
+    [src]="selectedPhoto"
+    alt="Photo agrandie"
     class="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl animate-in fade-in zoom-in duration-300"
     (click)="$event.stopPropagation()"
   />

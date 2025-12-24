@@ -29,7 +29,16 @@ const Publication = db.define('Publications', {
     nombrePartages : {
         type: DataTypes.INTEGER,
         defaultValue: 0,
+    },
+    sharedPublicationId: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: true,
+    },
+    commentairePartage: {
+        type: DataTypes.TEXT,
+        allowNull: true,
     }
+
 })
 
 Users.hasMany(Publication, {foreignKey: 'userId', as: 'publications', onDelete: 'CASCADE'});
@@ -38,12 +47,13 @@ Publication.belongsTo(Users, {foreignKey: 'userId', as: 'user'});
 
 Publication.hasMany(Commentaire, {foreignKey: 'publicationId', as: 'comments', onDelete: 'CASCADE'});
 
-// Relation partage : un utilisateur peut partager plusieurs publications et une publication peut être partagée par plusieurs utilisateurs avec le nombre de like dans la table de jointure
 
-Users.belongsToMany(Publication, { through: 'Partages', as: 'Partageurs', foreignKey: 'userId', otherKey: 'publicationId' });
-Publication.belongsToMany(Users, { through: 'Partages', as: 'PublicationsPartagees', foreignKey: 'publicationId', otherKey: 'userId' });
+// Relation partage : un utilisateur peut partager plusieurs publications et une publication peut être partagée par plusieurs utilisateurs
 
-
+Publication.belongsTo(Publication, {
+  as: 'sharedPublication',
+  foreignKey: 'sharedPublicationId'
+});
 
 // 
 module.exports = Publication;
