@@ -27,6 +27,15 @@ const createToken = (id) => jwt.sign({ id }, "RANDOM_TOKEN_SECRET", { expiresIn:
     }
 );
 
+/***
+ * Fonction permet de générer le username
+ */
+const generateUsername = (prenom, nom) => {
+  const cleanPrenom = prenom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
+  const cleanNom = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
+  const randomSuffix = Math.floor(1000 + Math.random() * 9000); 
+  return `@${cleanPrenom}.${cleanNom}${randomSuffix}`;
+};
 
 /**
  * Récupération de tous les utilisateurs
@@ -55,7 +64,13 @@ module.exports.createUser = async (req, res) => {
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
     const { nom, prenom, email, telephone, dateNaissance, question, reponse, ville, pays, isAdmin, password } = req.body;
+    let username = generateUsername(prenom, nom);
+    let checkUsername = await Users.findOne({ where: { username } });
 
+      while (checkUsername) {
+        username = generateUsername(prenom, nom);
+       checkUsername = await Users.findOne({ where: { username } });
+    }
     const userExists = await Users.findOne({ where: { email } });
     if (userExists) {
       return res.status(400).json({ error: 'Un utilisateur avec cet email existe déjà.' });
@@ -185,7 +200,7 @@ module.exports.createUser = async (req, res) => {
       html: htmlEmail
     };
     
-    await Users.create({ nom, prenom, email, password: cryptPassword, telephone, dateNaissance: birthDate, question, reponse, ville, pays, isAdmin });
+    await Users.create({ nom, prenom, username, email, password: cryptPassword, telephone, dateNaissance: birthDate, question, reponse, ville, pays, isAdmin });
     
         await transport.sendMail(mailOptions);
         
@@ -374,6 +389,8 @@ module.exports.UpdateInformationsUser = async(req, res) =>{
     return res.status(500).json({error: "Un problème est servenu lors de la modification des informations de l'utilisateur "})
   }
 }
+
+
 
 /**
  * Récupération de tout les utilisateurs avec la recherche 

@@ -92,6 +92,11 @@ const Users = db.define("Users", {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  username: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: { msg: "Ce nom d'utilisateur est déjà pris" },
+  },
 });
 
 module.exports = Users;

@@ -26,9 +26,9 @@
               {{ currentUser?.nom }} {{ currentUser?.prenom }}
             </h1>
 
-            <p class="text-[12px] text-slate-400" id="profile-handle" data-testid="profile-handle">
-              @{{ currentUser?.nom }}{{ currentUser?.prenom }}
-            </p>
+              <p class="text-[12px] text-slate-400" id="profile-handle" data-testid="profile-handle">
+                {{ currentUser?.username }}
+              </p>
 
             <p class="mt-1 text-[11px] text-slate-500 flex items-center gap-1" id="profile-location">
               <i class="fa-solid fa-location-dot text-[10px]"></i>
@@ -92,7 +92,7 @@
                   {{ friend.name }}
                 </p>
                 <p class="text-[11px] text-slate-400">
-                  @{{ friend.handle }} · {{ friend.mutual }} amis en commun
+                  {{ friend.handle }} · {{ friend.mutual }} amis en commun
                 </p>
               </div>
             </button>
@@ -377,7 +377,7 @@
                       {{ currentUser?.nom }} {{ currentUser?.prenom }}
                     </p>
                     <p class="text-[11px] text-slate-400">
-                      @{{ currentUser?.nom }} · {{ post.timeAgo }}
+                      {{ currentUser?.nom }} · {{ post.timeAgo }}
                     </p>
                   </div>
 
@@ -440,7 +440,7 @@
             {{ currentUser?.nom }} {{ currentUser?.prenom }}
           </p>
           <p class="text-[11px] text-slate-400">
-            @{{ currentUser?.nom }} · {{ selectedPost.timeAgo }}
+            {{ currentUser?.nom }} · {{ selectedPost.timeAgo }}
           </p>
         </div>
 

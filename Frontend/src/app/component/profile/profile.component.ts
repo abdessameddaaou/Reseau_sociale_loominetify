@@ -11,6 +11,7 @@ type HeaderTab = 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexi
 interface CurrentUser {
   nom: string;
   prenom: string;
+  username: string;
   email: string;
   telephone?: string;
   dateNaissance?: string;
