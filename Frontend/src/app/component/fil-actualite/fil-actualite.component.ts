@@ -8,8 +8,8 @@ import { HeaderComponent } from '../header/header.component';
 import { PostCreatorComponent } from '../post-creator/post-creator.component';
 import { environment } from '../../../environments/environment.dev';
 import { ThemeService } from '../../service/theme.service';
-import { formatDistanceToNow } from 'date-fns';
-import { de, fr } from 'date-fns/locale';
+import { differenceInHours, format, formatDistanceToNow } from 'date-fns';
+import { de, fr, th } from 'date-fns/locale';
 import sweetalert2 from 'sweetalert2';
 /**
  * Interface pour les commentaires
@@ -122,7 +122,11 @@ export class FilActualiteComponent implements OnInit {
   private postsPage = 0;
   private readonly postsLimit = 5; // adapte à ton API
   likedUsers: CurrentUser[] = [];
+  CommentsUsers: CurrentUser[] = [];
+  ShareUsers: CurrentUser[] = [];
   showLikesModal = false;
+  showCommentsModal = false;
+  showUsersShareModal = false;
   isShareModalOpen = false;
   postToShare: Post | null = null;
   shareDescription = '';
@@ -481,6 +485,11 @@ toggleLike(event: Event, post: Post) {
           this.postToShare!.shares += 1;
           this.allPosts = [sharedPost, ...this.allPosts];
           this.visiblePosts = [sharedPost, ...this.visiblePosts];
+          this.isSharing = false;
+          this.closeShareModal();
+          this.shareDescription = '';
+          // refresh posts
+          this.loadInitialPosts();
         },
         error: (err) => {
           console.error('Erreur lors du partage du post', err);
@@ -488,9 +497,20 @@ toggleLike(event: Event, post: Post) {
       });
   }
 
-  timeAgo(date: string | Date) {
-  return formatDistanceToNow(new Date(date), { addSuffix: true, locale: fr });
+timeAgo(date: string | Date): string {
+  const d = new Date(date);
+
+  const hoursDiff = differenceInHours(new Date(), d);
+
+  if (hoursDiff >= 24) {
+    return format(d, "dd/MM/yyyy 'à' HH:mm", { locale: fr });
   }
+
+  return formatDistanceToNow(d, {
+    addSuffix: true,
+    locale: fr
+  });
+}
 
 
 srcImage(imagePath?: string | null): string {
@@ -561,6 +581,37 @@ affichePersonneLike(post: Post) {
     },
     error: (err) => {
       console.error('Erreur lors de la récupération des likes', err);
+    }
+  });
+}
+
+affichePersonneComments(post: Post) {
+  this.http.get<{ users: CurrentUser[] }>(
+    `${environment.apiUrl}/publications/getUsersWhoCommentedPost/${post.id}`,
+    { withCredentials: true }
+  ).subscribe({
+    next: (res) => {
+      this.CommentsUsers = res.users;
+      this.showCommentsModal = true;
+    },
+    error: (err) => {
+      console.error('Erreur lors de la récupération des commentaires', err);
+    }
+  });
+}
+
+affichePersonnePartage(post: Post) {
+  this.http.get<{ users: CurrentUser[] }>(
+    `${environment.apiUrl}/publications/getUsersWhoSharedPost/${post.id}`,
+    { withCredentials: true }
+  ).subscribe({
+    next: (res) => {
+      console.log('Utilisateurs ayant commenté:', res.users);
+      this.ShareUsers = res.users;
+      this.showUsersShareModal = true;
+    },
+    error: (err) => {
+      console.error('Erreur lors de la récupération des commentaires', err);
     }
   });
 }

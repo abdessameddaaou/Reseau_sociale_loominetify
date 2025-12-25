@@ -38,6 +38,8 @@ router.get('/getAllPostUserConnected', checkUser, PublicationController.getAllPu
 router.post('/likeComment/:id', checkUser, PublicationController.likeComment);
 router.delete('/deleteComment/:id', checkUser, PublicationController.deleteComment);
 router.get('/getUsersWhoLikedPost/:id', checkUser, PublicationController.getUsersWhoLikedPost);
+router.get('/getUsersWhoCommentedPost/:id', checkUser, PublicationController.getUsersWhoCommentedPost);
+router.get('/getUsersWhoSharedPost/:id', checkUser, PublicationController.getUsersWhoSharedPost);
 router.post('/sharePublication/:id', checkUser, PublicationController.sharePublication);
 
 module.exports = router;

@@ -171,8 +171,12 @@
                 <span class="material-icons text-base">
                   <i class="fa-solid fa-comment fa-lg"></i>
                 </span>
-                <span class="font-semibold">{{ post.commentsCount }}</span>
+                <!-- <span class="font-semibold">{{ post.commentsCount }}</span> -->
               </div>
+               <span class="font-semibold text-sm cursor-pointer hover:underline -ml-3" (click)="affichePersonneComments(post)"
+                      [attr.data-testid]="'feed-post-comments-count-' + post.id">
+                  {{ post.commentsCount }}
+              </span>
 
               <!-- Share -->
               <button class="flex items-center gap-1 text-slate-500"
@@ -182,11 +186,15 @@
                 <span class="material-icons text-base">
                   <i class="fa-solid fa-retweet fa-lg"></i>
                 </span>
-                <span class="font-semibold"
+                <!-- <span class="font-semibold"
                       [attr.data-testid]="'feed-post-share-count-' + post.id">
                   {{ post.nombrePartages }}
-                </span>
+                </span> -->
               </button>
+               <span class="font-semibold text-sm cursor-pointer hover:underline -ml-3" (click)="affichePersonnePartage(post)"
+                      [attr.data-testid]="'feed-post-share-count-' + post.id">
+                  {{ post.nombrePartages }}
+              </span>
             </div>
           </div>
           <!-- Commentaires -->
@@ -597,7 +605,7 @@
     </div>
   </div>
 </div>
-<!-- MODAL -->
+<!-- MODAL Nombre de likes  -->
 <div *ngIf="showLikesModal"
      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
@@ -626,6 +634,72 @@
     <p *ngIf="likedUsers.length === 0"
        class="text-xs text-slate-400 text-center py-4">
       Aucun like pour le moment
+    </p>
+  </div>
+</div>
+
+<!-- MODAL Nombre de commentaires -->
+<div *ngIf="showCommentsModal"
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+  <div class="bg-white rounded-xl w-80 max-h-[70vh] overflow-y-auto p-4">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-semibold text-sm">Commenté par</h3>
+      <button class="text-slate-400 hover:text-black"
+              (click)="showCommentsModal = false">
+        ✕
+      </button>
+    </div>
+
+    <div *ngFor="let user of CommentsUsers"
+         class="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
+
+      <img
+        [src]="user.photo || defaultAvatar"
+        class="w-8 h-8 rounded-full object-cover"
+      />
+
+      <span class="text-sm text-slate-700">
+        {{ user.nom }} {{ user.prenom }}
+      </span>
+    </div>
+
+    <p *ngIf="CommentsUsers.length === 0"
+       class="text-xs text-slate-400 text-center py-4">
+      Aucun commentaire pour le moment
+    </p>
+  </div>
+</div>
+
+<!-- MODAL Nombre de partages -->
+<div *ngIf="showUsersShareModal"
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+  <div class="bg-white rounded-xl w-80 max-h-[70vh] overflow-y-auto p-4">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-semibold text-sm">Partagé par</h3>
+      <button class="text-slate-400 hover:text-black"
+              (click)="showUsersShareModal = false">
+        ✕
+      </button>
+    </div>
+
+    <div *ngFor="let user of ShareUsers"
+         class="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
+
+      <img
+        [src]="user.photo || defaultAvatar"
+        class="w-8 h-8 rounded-full object-cover"
+      />
+
+      <span class="text-sm text-slate-700">
+        {{ user.nom }} {{ user.prenom }}
+      </span>
+    </div>
+
+    <p *ngIf="ShareUsers.length === 0"
+       class="text-xs text-slate-400 text-center py-4">
+      Aucun partage pour le moment
     </p>
   </div>
 </div>

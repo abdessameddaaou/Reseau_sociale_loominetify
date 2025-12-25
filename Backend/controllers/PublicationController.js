@@ -243,6 +243,53 @@ module.exports.getUsersWhoLikedPost = async (req, res) => {
   }
 }
 
+/** * Récupérer les utilisateurs ayant commenté une publication
+ * @param {*} req 
+ * @param {*} res
+ */
+module.exports.getUsersWhoCommentedPost = async (req, res) => {
+  try {
+    const publicationId = req.params.id;
+
+    const commentaires = await Commentaire.findAll({
+      where: { publicationId },
+      include: [{
+        model: Users,
+        as: 'user',
+        attributes: ['id', 'nom', 'prenom', 'photo']
+      }]
+    });
+    const users = commentaires.map(commentaire => commentaire.user);
+    return res.status(200).json({ users });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+
+/** * Récupérer les utilisateurs ayant partagé une publication
+ * @param {*} req 
+ * @param {*} res
+ */
+module.exports.getUsersWhoSharedPost = async (req, res) => {
+  try {
+    const publicationId = req.params.id;
+
+    const sharedPublications = await Publications.findAll({
+      where: { sharedPublicationId: publicationId },
+      include: [{
+        model: Users,
+        as: 'user',
+        attributes: ['id', 'nom', 'prenom', 'photo']
+      }]
+    });
+    const users = sharedPublications.map(shared => shared.user);
+    return res.status(200).json({ users });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
+
 /** * Partager une publication 
 * @param {*} req 
 * @param {*} res   
