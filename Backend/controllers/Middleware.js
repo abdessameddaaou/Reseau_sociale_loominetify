@@ -20,6 +20,21 @@ module.exports.checkUser = (req, res, next) => {
       res.clearCookie("jwt");
       return res.status(401).json({ message: "Token invalide." });
     } else {
+      const now = Math.floor(Date.now() / 1000);
+      const timeLeft = decodedToken.exp - now;
+
+      if (timeLeft < 30 * 60) {
+        const newToken = jwt.sign(
+          { id: decodedToken.id },
+          "RANDOM_TOKEN_SECRET",
+          { expiresIn: "2h" }
+        );
+
+        res.cookie("jwt", newToken, {
+          httpOnly: true,
+          sameSite: 'Lax'
+        });
+      }
       req.userId = decodedToken.id;
       next();
     }
@@ -32,7 +47,7 @@ module.exports.checkUser = (req, res, next) => {
  * @param {*} res 
  * @returns 
  */
-module.exports.UserConnecte = (req, res) =>{
+module.exports.UserConnecte = (req, res) => {
   try {
     return res.status(200).json({ authenticated: true, userId: req.userId });
   } catch (error) {
