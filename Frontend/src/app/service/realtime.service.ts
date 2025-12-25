@@ -16,7 +16,7 @@ export class RealtimeService {
     if (this.socket?.connected) return;
     const api = environment.apiUrl.replace(/\/$/, '');
     const socketUrl = api.slice(0, -4);
-    this.socket = io(socketUrl, { withCredentials: true, transports: ['websocket']});
+    this.socket = io(socketUrl, { withCredentials: true, transports: ['polling', 'websocket']});
   }
 
   on<T>(event: string, cb: (payload: T) => void) {

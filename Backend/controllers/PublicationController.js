@@ -13,7 +13,12 @@ const Interactions = require('../models/interaction');
  */
 module.exports.createPublication = async (req, res) => {
   try {
-    let userId = req.userId;
+    let userId = null;
+
+    await checkUser(req, res, () => {
+      userId = req.userId;
+    });
+
     const description = req.body.text;        // texte du FormData
     const imagePath = req.file ? req.file.filename : null; // image reçue par multer
 
@@ -23,9 +28,6 @@ module.exports.createPublication = async (req, res) => {
       video: null,
       userId
     });
-
-    const io = req.app.get('io');
-    if (io) io.emit('post:created', newPublication);
 
     return res.status(201).json(newPublication);
 

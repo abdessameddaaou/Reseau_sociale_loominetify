@@ -53,27 +53,27 @@
                  class="app-card rounded-2xl shadow-sm p-4 space-y-3"
                  [attr.id]="'feed-post-' + post.id"
                  [attr.data-testid]="'feed-post-' + post.id">
-          <header class="flex items-start gap-3"
-                  [attr.data-testid]="'feed-post-header-' + post.id">
-            <img [src]="post.user.photo || defaultAvatar"
-                 alt="avatar"
-                 class="w-10 h-10 rounded-full object-cover"
-                 [attr.data-testid]="'feed-post-avatar-' + post.id" />
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm font-semibold text-slate-800"
-                     [attr.data-testid]="'feed-post-author-' + post.id">
-                    {{ post.user.nom }} {{ post.user.prenom }}
-                  </p>
-                  <p class="text-xs text-slate-400"
-                     [attr.data-testid]="'feed-post-meta-' + post.id">
-                    {{ post.user.nom }} {{ post.user.prenom }} · {{ timeAgo(post.createdAt) }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </header>
+<header class="flex items-start gap-3"
+        [attr.data-testid]="'feed-post-header-' + post.id">
+  <img [src]="post.user?.photo || defaultAvatar"
+       alt="avatar"
+       class="w-10 h-10 rounded-full object-cover"
+       [attr.data-testid]="'feed-post-avatar-' + post.id" />
+  <div class="flex-1">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-semibold text-slate-800"
+           [attr.data-testid]="'feed-post-author-' + post.id">
+           {{ post.user?.nom || 'Utilisateur' }} {{ post.user?.prenom || 'Inconnu' }}
+        </p>
+        <p class="text-xs text-slate-400"
+           [attr.data-testid]="'feed-post-meta-' + post.id">
+           {{ post.user?.nom || 'Utilisateur' }} {{ post.user?.prenom }} · {{ timeAgo(post.createdAt) }}
+        </p>
+      </div>
+    </div>
+  </div>
+</header>
 
           <p class="text-sm text-slate-700 whitespace-pre-line"
              [attr.data-testid]="'feed-post-text-' + post.id">
@@ -156,38 +156,26 @@
           [class.max-h-60]="post.showAllComments"
           [class.overflow-y-auto]="post.showAllComments"
                [attr.data-testid]="'feed-post-comments-section-' + post.id">
-            <div *ngFor="let comment of (post.showAllComments ? post.comments : (post.comments | slice:0:3))"
-                 class="flex items-start gap-2"
-                 [attr.data-testid]="'feed-post-comment-' + post.id + '-' + comment.id">
-              <img [src]="comment.user.photo || defaultAvatar"
-                 alt="avatar"
-                 class="w-10 h-10 rounded-full object-cover"
-                 [attr.data-testid]="'feed-post-avatar-' + post.id" />
-              <div class="comment-bubble rounded-2xl px-3 py-2 text-xs flex-1"
-                   [attr.data-testid]="'feed-comment-card-' + post.id + '-' + comment.id">
-                <div class="flex justify-between gap-2">
-                  <span class="font-semibold text-slate-700"
-                        [attr.data-testid]="'feed-comment-author-' + post.id + '-' + comment.id">
-                    {{ comment.user.nom + ' ' + comment.user.prenom }} <span class="text-[10px] text-slate-400 ml-2"
-                      [attr.data-testid]="'feed-comment-meta-' + post.id + '-' + comment.id">
-                  {{ timeAgo(comment.createdAt) }}
-                </span>
-                  </span>
-                  <button *ngIf="comment.mine"
-                          class="text-[10px] text-slate-400 hover:text-red-500"
-                          (click)="deleteComment(post, comment)"
-                          type="button"
-                          [attr.data-testid]="'feed-comment-delete-' + post.id + '-' + comment.id">
-                    Supprimer
-                  </button>
-                </div>
-                <p class="text-slate-700 mt-0.5"
-                   [attr.data-testid]="'feed-comment-text-' + post.id + '-' + comment.id">
-                  {{ comment.contenu }}
-                </p>
-                <br/>
-              </div>
-            </div>
+<div *ngFor="let comment of (post.showAllComments ? post.comments : (post.comments | slice:0:3))"
+     class="flex items-start gap-2"
+     [attr.data-testid]="'feed-post-comment-' + post.id + '-' + comment.id">
+  
+  <img [src]="comment.user?.photo || defaultAvatar"
+       alt="avatar"
+       class="w-10 h-10 rounded-full object-cover"
+       [attr.data-testid]="'feed-post-avatar-' + post.id" />
+       
+  <div class="comment-bubble rounded-2xl px-3 py-2 text-xs flex-1"
+       [attr.data-testid]="'feed-comment-card-' + post.id + '-' + comment.id">
+    <div class="flex justify-between gap-2">
+      <span class="font-semibold text-slate-700"
+            [attr.data-testid]="'feed-comment-author-' + post.id + '-' + comment.id">
+        {{ (comment.user?.nom || 'Utilisateur') + ' ' + (comment.user?.prenom || '') }} 
+        <span class="text-[10px] text-slate-400 ml-2"
+              [attr.data-testid]="'feed-comment-meta-' + post.id + '-' + comment.id">
+          {{ timeAgo(comment.createdAt) }}
+        </span>
+      </span>
               <button
                 *ngIf="post.comments.length > 3"
                 (click)="toggleComments(post)"

@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, OnDestroy  } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule  } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -8,7 +8,6 @@ import { HeaderComponent } from '../header/header.component';
 import { PostCreatorComponent } from '../post-creator/post-creator.component';
 import { environment } from '../../../environments/environment.dev';
 import { ThemeService } from '../../service/theme.service';
-import { RealtimeService } from '../../service/realtime.service';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 /**
@@ -83,7 +82,7 @@ export interface CurrentUser {
   imports: [ CommonModule, ReactiveFormsModule, FormsModule, FontAwesomeModule, HeaderComponent, PostCreatorComponent, RouterModule ],
   templateUrl: './fil-actualite.component.html',
 })
-export class FilActualiteComponent implements OnInit, OnDestroy {
+export class FilActualiteComponent implements OnInit {
 
   /**
    * Variables
@@ -109,7 +108,7 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
   private readonly postsLimit = 5; // adapte à ton API
   selectedPhoto: string | null = null;
 
-  constructor( private fb: FormBuilder, private router: Router, private http: HttpClient, private themeService: ThemeService, private realtime: RealtimeService) {
+  constructor( private fb: FormBuilder, private router: Router, private http: HttpClient, private themeService: ThemeService) {
     this.postForm = this.fb.group({
       text: ['', [Validators.maxLength(1000)]],
       image: [null]
@@ -123,60 +122,14 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
     this.loadCurrentUser();
     this.loadOnlineFriends();
     this.loadInitialPosts();
-
-    this.realtime.connect();
-    this.realtime.on<any>('post:created', (Post) => {
-    if (this.allPosts.some(p => p.id === Post.id)) return;
-
-    const mapped = this.mapSocketPost(Post);
-
-    this.allPosts = [mapped, ...this.allPosts];
-    this.visiblePosts = [mapped, ...this.visiblePosts];
-  });
   }
-
-  ngOnDestroy(): void {
-  this.realtime.off('post:created');
-}
-
-private mapSocketPost(resPost: any): Post {
-  const comments = Array.isArray(resPost.comments) ? resPost.comments : [];
-  const createdAt = resPost.createdAt ?? new Date().toISOString();
-
-  return {
-    id: resPost.id,
-    description: resPost.description ?? '',
-    image: resPost.image ?? undefined,
-
-    user: {
-      id: resPost.user.id,
-      nom: resPost.user.nom,
-      prenom: resPost.user.prenom,
-      photo: resPost.user.photo ?? this.defaultAvatar,
-    },
-
-    nombreLikes: resPost.nombreLikes ?? 0,
-    nombrePartages: resPost.nombrePartages ?? 0,
-    createdAt,
-
-    authorAvatar: resPost.user.photo ?? this.defaultAvatar,
-    timeAgo: this.timeAgo(createdAt),
-    text: resPost.description ?? '',
-    likes: resPost.likes ?? resPost.nombreLikes ?? 0,
-    commentsCount: resPost.commentsCount ?? comments.length,
-    shares: resPost.shares ?? resPost.nombrePartages ?? 0,
-    likedByMe: resPost.likedByMe ?? false,
-    comments,
-    showAllComments: false,
-  };
-}
-
 
   /**
    * Navigation
    */
   setActiveTab(tab: typeof this.activeTab) {
     this.activeTab = tab;
+
     if (tab === 'home') { this.router.navigate(['/fil-actualite']) }
     else if (tab === 'deconnexion') {
       this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
@@ -200,11 +153,14 @@ private mapSocketPost(resPost: any): Post {
    * Charger les informations de l'utilisateur
    */
   private loadCurrentUser() {
+    // this.isUserLoading = true;
     this.http.get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true }).subscribe({
         next: (res) => {
           this.currentUser = res.user;
+          // this.isUserLoading = false;
         },
         error: () => {
+          // this.isUserLoading = false;
           this.themeService.applyAuthTheme();
           this.router.navigate(['/auth']);
         }
@@ -252,7 +208,7 @@ private mapSocketPost(resPost: any): Post {
           console.log('Posts chargés depuis le backend', posts);
           const postsWithUIState = posts.map(post => ({
         ...post,
-        showAllComments: false
+        showAllComments: false   // 👈 INITIALISATION ICI
       }))
           this.allPosts = postsWithUIState;
           this.visiblePosts = postsWithUIState;
@@ -387,6 +343,10 @@ private mapSocketPost(resPost: any): Post {
     this.http.post<Post>(`${environment.apiUrl}/publications/addPost`, formData, { withCredentials: true }).subscribe({
         next: (createdPost) => {
           console.log('Post publié avec succès', createdPost);
+          // On insère le post renvoyé par l’API en haut du feed
+          //this.allPosts = [createdPost, ...this.allPosts];
+          //this.visiblePosts = [createdPost, ...this.visiblePosts];
+
           this.postForm.reset({ text: '', image: null });
           this.imagePreview = null;
           this.loadInitialPosts();
@@ -410,6 +370,8 @@ private mapSocketPost(resPost: any): Post {
     const valueLike = true
     this.http.post<Post>(`${environment.apiUrl}/posts/${postId}/like`, { like: valueLike }, { withCredentials: true }).subscribe({
         next: (updatedPost) => {
+          // post.likedByMe = updatedPost.likedByMe;
+          // post.likes = updatedPost.likes;
         },
         error: (err) => {
           console.error('Erreur lors du like', err);
@@ -491,7 +453,7 @@ private mapSocketPost(resPost: any): Post {
 srcImage(imagePath?: string | null): string {
   if (!imagePath) return this.defaultAvatar;
 
-  const api = environment.apiUrl.replace(/\/$/, '');
+  const api = environment.apiUrl.replace(/\/$/, ''); // enlève le / final si présent
   return `${api}/media/${encodeURIComponent(imagePath)}`;
 }
 
@@ -517,6 +479,8 @@ onCommentImageSelected(event: Event, postId: number) {
 removeCommentImage(postId: number, input: HTMLInputElement) {
   this.selectedCommentImage[postId] = null;
   this.commentImagePreview[postId] = null;
+
+  // 🔥 clé de la solution
   input.value = '';
 }
 
