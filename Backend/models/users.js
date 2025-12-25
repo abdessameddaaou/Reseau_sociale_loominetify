@@ -97,6 +97,25 @@ const Users = db.define("Users", {
     allowNull: false,
     unique: { msg: "Ce nom d'utilisateur est déjà pris" },
   },
+  hashtags: {
+    type: DataTypes.JSON, 
+    allowNull: true,
+    defaultValue: []
+  },
+relationStatus: {
+  type: DataTypes.ENUM(
+    'CELIBATAIRE',
+    'EN_COUPLE',
+    'MARIE',
+    'FIANCE',
+    'COMPLIQUE',
+    'DIVORCE',
+    'VEUF'
+  ),  
+  allowNull: true,
+  defaultValue: null
+}
+
 });
 
 module.exports = Users;

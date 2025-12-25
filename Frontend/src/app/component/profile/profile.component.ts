@@ -24,6 +24,7 @@ interface CurrentUser {
   relationStatus?: string;
   profession?: string;
   siteweb?: string;
+  hashtags?: string[];
 }
 
 interface ApiComment {
@@ -119,7 +120,6 @@ export class ProfileComponent implements OnInit {
   followers = 0;
   following = 0;
   postsCount = 0;
-  badges: string[] = ['WebDev'];
   Publications: ProfilePostPreview[] = [];
   Friends: FriendPreview[] = [];
   groups: GroupPreview[] = [];

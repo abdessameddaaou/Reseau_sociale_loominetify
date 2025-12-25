@@ -370,21 +370,22 @@ module.exports.getUser = async(req, res) =>{
  */
 module.exports.UpdateInformationsUser = async(req, res) =>{
   try {
-    
-      const user = await Users.findByPk(req.userId);
-        user.nom = req.body.nom || user.nom;
-        user.prenom = req.body.prenom || user.prenom;
-        user.telephone = req.body.telephone || user.telephone;
-        user.dateNaissance = req.body.dateNaissance || user.dateNaissance;
-        user.ville = req.body.ville || user.ville;
-        user.pays = req.body.pays || user.pays;
-        user.photo = req.body.photo || user.photo;
-        user.bio = req.body.bio || user.bio;
-        user.siteweb = req.body.siteweb;
-        user.profession = req.body.profession;
 
-        await user.save();
-        return res.status(201).json({ message: 'success', user });
+    const user = await Users.findByPk(req.userId);
+    const fields = [
+      'nom', 'prenom', 'telephone', 'dateNaissance', 
+      'ville', 'pays', 'photo', 'bio', 'siteweb', 
+      'profession', 'relationStatus', 'hashtags'
+    ];
+
+    fields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        user[field] = req.body[field];
+      }
+    });
+
+    await user.save();
+    return res.status(201).json({ message: 'success', user });
   } catch (error) {
     return res.status(500).json({error: "Un problème est servenu lors de la modification des informations de l'utilisateur "})
   }
@@ -405,11 +406,12 @@ module.exports.getAllUsersSearch = async(req, res) =>{
         return res.status(200).json({ users: [] });
     }
     const user = await Users.findAll({
-      attributes: ['id', 'nom', 'prenom', 'photo'],
+      attributes: ['id', 'nom', 'prenom', 'username', 'photo'],
       where: {
         [Op.or]: [
           { nom: { [Op.like]: `%${term}%` } },
-          { prenom: { [Op.like]: `%${term}%` } }
+          { prenom: { [Op.like]: `%${term}%` } },
+          { username: { [Op.like]: `%${term}%` } }
         ]
       },
       limit: 10

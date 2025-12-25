@@ -26,9 +26,9 @@
               {{ currentUser?.nom }} {{ currentUser?.prenom }}
             </h1>
 
-              <p class="text-[12px] text-slate-400" id="profile-handle" data-testid="profile-handle">
-                {{ currentUser?.username }}
-              </p>
+            <p class="text-[12px] text-slate-400" id="profile-handle" data-testid="profile-handle">
+              {{ currentUser?.username }}
+            </p>
 
             <p class="mt-1 text-[11px] text-slate-500 flex items-center gap-1" id="profile-location">
               <i class="fa-solid fa-location-dot text-[10px]"></i>
@@ -205,7 +205,7 @@
                   Statut relationnel
                 </span>
                 <br />
-                {{ currentUser?.relationStatus || 'Non renseigné' }}
+                {{ (currentUser?.relationStatus | lowercase) || 'Non renseigné' }}
               </p>
 
               <p>
@@ -316,10 +316,10 @@
             </div>
 
             <div class="flex flex-wrap gap-2 text-[11px]">
-              <span *ngFor="let tag of badges"
+              <span *ngFor="let tag of currentUser?.hashtags"
                 class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200"
                 [attr.data-testid]="'profile-badge-' + tag">
-                #{{ tag }}
+                {{ tag }}
               </span>
             </div>
           </div>
@@ -430,6 +430,7 @@
   </div>
 
   <!-- ===================== MODAL APERÇU POST ===================== -->
+   
   <div *ngIf="selectedPost" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
     (click)="closePostModal()">
     <div class="w-[92vw] max-w-2xl max-h-[88vh] overflow-hidden rounded-2xl bg-white shadow-2xl"
@@ -558,7 +559,4 @@
       </div>
     </div>
   </div>
-
-
-
 </div>

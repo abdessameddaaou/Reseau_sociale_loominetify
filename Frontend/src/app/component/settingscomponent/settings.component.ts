@@ -45,8 +45,10 @@ interface UserProfile {
   pays: string;
   photo?: string;
   bio?: string;
-  siteweb?: string;   // optionnels pour le backend actuel
+  siteweb?: string;
   profession?: string;
+  relationStatus?: string | null;
+  hashtags?: string[];
 }
 
 @Component({
@@ -177,10 +179,58 @@ export class SettingsComponent implements OnInit {
       bio: [''],
       siteweb: [''],
       profession: [''],
+      relationStatus: [null],
+      hashtags: [[]]
     });
   }
 
-  private loadProfile(): void {
+/**
+ * Méthode pour ajouter un hashtag individuellement
+ * @param input 
+ * @returns 
+ */
+addHashtag(input: HTMLInputElement): void {
+  const value = input.value.trim().replace(/\s/g, '');
+  if (!value) return;
+
+  const formatted = value.startsWith('#') ? value : '#' + value;
+  const currentTags = this.userForm.get('hashtags')?.value || [];
+
+  if (!currentTags.includes(formatted)) {
+    this.userForm.patchValue({ hashtags: [...currentTags, formatted] });
+  }
+  
+  input.value = '';
+}
+
+/**
+ * Méthode pour supprimer un hashtag
+ * @param tag 
+ */
+removeHashtag(tag: string): void {
+  const currentTags = this.userForm.get('hashtags')?.value || [];
+  this.userForm.patchValue({ 
+    hashtags: currentTags.filter((t: string) => t !== tag) 
+  });
+}
+
+/**
+ * 
+ */
+relationStatusOptions = [
+  { value: 'CELIBATAIRE', label: 'Célibataire' },
+  { value: 'EN_COUPLE', label: 'En couple' },
+  { value: 'MARIE', label: 'Marié(e)' },
+  { value: 'FIANCE', label: 'Fiancé(e)' },
+  { value: 'COMPLIQUE', label: "C'est compliqué" },
+  { value: 'DIVORCE', label: 'Divorcé(e)' },
+  { value: 'VEUF', label: 'Veuf(ve)' },
+];
+
+/**
+ * Méthode pour charger les information de l'utilisateur connecté
+ */
+  loadProfile(): void {
     this.http.get<{ user: UserProfile }>(`${environment.apiUrl}/users/getUserconnected`,{ withCredentials: true }).subscribe({
         next: (res) => {
           const u = res.user;
@@ -195,6 +245,8 @@ export class SettingsComponent implements OnInit {
             bio: u.bio ?? '',
             siteweb: u.siteweb ?? '',
             profession: u.profession ?? '',
+            hashtags: res.user.hashtags || [],
+            relationStatus: u.relationStatus ?? null, 
           });
         },
         error: () => {
@@ -204,6 +256,9 @@ export class SettingsComponent implements OnInit {
       });
   }
 
+  /**
+   * Appellée pour enregistré les informations de l'utilisateur
+   */
   saveProfile(): void {
     const raw = this.userForm.value as Partial<UserProfile>;
 
@@ -218,6 +273,8 @@ export class SettingsComponent implements OnInit {
       bio: raw.bio ?? '',
       siteweb: raw.siteweb ?? '',
       profession: raw.profession ?? '',
+      hashtags: raw.hashtags ?? [],
+      relationStatus: raw.relationStatus ?? null
     };
 
     this.http

@@ -1,263 +1,154 @@
-<header
-  class="app-card border-0 border-b shadow-sm"
-  id="main-header"
-  data-testid="main-header"
->
-  <div
-    class="max-w-6xl mx-auto flex items-center justify-between px-6 py-3"
-    id="header-inner"
-    data-testid="header-inner"
-  >
-    <div
-      class="flex items-center gap-4"
-      id="header-left"
-      data-testid="header-left"
-    >
-      <span
-        class="text-xl font-semibold text-accent lowercase"
-        id="header-logo"
-        data-testid="header-logo"
-      >
+<header class="app-card border-0 border-b shadow-sm" id="main-header" data-testid="main-header">
+  <div class="max-w-6xl mx-auto flex items-center justify-between px-6 py-3" id="header-inner"
+    data-testid="header-inner">
+    <div class="flex items-center gap-4" id="header-left" data-testid="header-left">
+      <span class="text-xl font-semibold text-accent lowercase" id="header-logo" data-testid="header-logo">
         loominetfy
       </span>
 
-<div
-        #searchContainer
-        class="hidden md:flex items-center app-soft rounded-full px-4 py-2 text-sm relative"
-        id="header-search-wrapper"
-        data-testid="header-search-wrapper"
-      >
+      <div #searchContainer class="hidden md:flex items-center app-soft rounded-full px-4 py-2 text-sm relative"
+        id="header-search-wrapper" data-testid="header-search-wrapper">
         <span class="material-icons text-slate-400 text-base mr-1">
           <i class="fa-solid fa-magnifying-glass fa-sm"></i>
         </span>
-        
-        <input
-          type="text"
-          [formControl]="searchControl"
-          placeholder="Rechercher"
-          class="bg-transparent outline-none text-slate-600 w-xl ml-4"
-          id="header-search-input"
-          name="header-search-input"
-          data-testid="header-search-input"
-          autocomplete="off"
-        />
 
-        <div 
-            *ngIf="showSearchDropdown && searchControl.value!.length >= 2"
-            class="absolute top-full left-0 mt-2 w-full app-card rounded-xl shadow-lg z-50 overflow-hidden"
-        >
-            <ul *ngIf="searchResults.length > 0" class="py-2">
-                <li 
-                    *ngFor="let user of searchResults"
-                    (click)="onSearchResultClick(user)"
-                    class="px-4 py-2 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition-colors"
-                >
-                    <img 
-                        [src]="user.photo || defaultAvatar" 
-                        class="w-8 h-8 rounded-full object-cover" 
-                        alt="Avatar"
-                    >
-                    <div class="flex flex-col">
-                        <span class="text-sm font-medium text-slate-800">{{ user.prenom }} {{ user.nom }}</span>
-                    </div>
-                </li>
-            </ul>
+        <input type="text" [formControl]="searchControl" placeholder="Rechercher"
+          class="bg-transparent outline-none text-slate-600 w-xl ml-4" id="header-search-input"
+          name="header-search-input" data-testid="header-search-input" autocomplete="off" />
 
-            <div *ngIf="searchResults.length === 0" class="px-4 py-3 text-center text-slate-500 text-xs">
-                Aucun utilisateur trouvé
-            </div>
+        <div *ngIf="showSearchDropdown && searchControl.value!.length >= 2"
+          class="absolute top-full left-0 mt-2 w-full app-card rounded-xl shadow-lg z-50 overflow-hidden">
+          <ul *ngIf="searchResults.length > 0" class="py-2">
+            <li *ngFor="let user of searchResults" (click)="onSearchResultClick(user)"
+              class="px-4 py-2 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition-colors">
+              <img [src]="user.photo || defaultAvatar" class="w-8 h-8 rounded-full object-cover" alt="Avatar">
+
+              <div class="flex flex-col leading-tight">
+                <span class="text-sm font-medium text-slate-800">
+                  {{ user.prenom }} {{ user.nom }}
+                </span>
+
+                <span class="text-[12px] text-slate-400">
+                  {{ user.username }}
+                </span>
+              </div>
+            </li>
+          </ul>
+
+
+          <div *ngIf="searchResults.length === 0" class="px-4 py-3 text-center text-slate-500 text-xs">
+            Aucun utilisateur trouvé
+          </div>
         </div>
 
       </div>
     </div>
 
-    <nav
-      class="flex items-center gap-x-5 text-sm"
-      id="header-nav"
-      data-testid="header-nav"
-    >
+    <nav class="flex items-center gap-x-5 text-sm" id="header-nav" data-testid="header-nav">
       <!-- HOME -->
-      <button
-        class="flex items-center gap-1 ml-4"
-        [ngClass]="
+      <button class="flex items-center gap-1 ml-4" [ngClass]="
           activeTab === 'home'
             ? 'text-accent font-semibold'
             : 'text-slate-500'
-        "
-        (click)="onTabClick('home')"
-        title="Home"
-        type="button"
-        id="nav-home-button"
-        data-testid="nav-home-button"
-      >
+        " (click)="onTabClick('home')" title="Home" type="button" id="nav-home-button" data-testid="nav-home-button">
         <span class="material-icons text-base">
           <i class="fa-solid fa-house-chimney fa-lg"></i>
         </span>
       </button>
 
       <!-- MESSAGES -->
-      <button
-        class="flex items-center gap-1"
-        [ngClass]="
+      <button class="flex items-center gap-1" [ngClass]="
           activeTab === 'messages'
             ? 'text-accent font-semibold'
             : 'text-slate-500'
-        "
-        (click)="onTabClick('messages')"
-        title="Messages"
-        type="button"
-        id="nav-messages-button"
-        data-testid="nav-messages-button"
-      >
+        " (click)="onTabClick('messages')" title="Messages" type="button" id="nav-messages-button"
+        data-testid="nav-messages-button">
         <span class="material-icons text-base">
           <i class="fa-sharp fa-solid fa-comment-dots fa-lg"></i>
         </span>
       </button>
 
       <!-- NOTIFICATIONS + DROPDOWN -->
-      <div
-        class="relative"
-        id="nav-notifications-wrapper"
-        data-testid="nav-notifications-wrapper"
-      >
-        <button
-          #notificationsButton
-          class="flex items-center gap-1"
+      <div class="relative" id="nav-notifications-wrapper" data-testid="nav-notifications-wrapper">
+        <button #notificationsButton class="flex items-center gap-1"
           [ngClass]="showNotifications ? 'text-accent font-semibold' : 'text-slate-500'"
-          (click)="toggleNotificationsDropdown($event)"
-          title="Notifications"
-          type="button"
-          id="nav-notifications-button"
-          data-testid="nav-notifications-button"
-        >
+          (click)="toggleNotificationsDropdown($event)" title="Notifications" type="button"
+          id="nav-notifications-button" data-testid="nav-notifications-button">
           <span class="material-icons text-base relative inline-block">
             <i class="fa-solid fa-bell fa-lg"></i>
-            <span
-              *ngIf="unreadCount > 0"
+            <span *ngIf="unreadCount > 0"
               class="absolute -top-1 -right-2 min-w-[16px] h-[16px] rounded-full bg-[#ef4444] text-[10px] text-white flex items-center justify-center px-1"
-              id="notifications-badge"
-              data-testid="notifications-badge"
-            >
+              id="notifications-badge" data-testid="notifications-badge">
               {{ unreadCount }}
             </span>
           </span>
         </button>
 
         <!-- DROPDOWN NOTIFS -->
-            <div
-              *ngIf="showNotifications"
-              #notificationsDropdown
-              class="absolute right-0 mt-3 w-80 app-card rounded-2xl z-50"
-              id="notifications-dropdown"
-              data-testid="notifications-dropdown"
-            >
+        <div *ngIf="showNotifications" #notificationsDropdown
+          class="absolute right-0 mt-3 w-80 app-card rounded-2xl z-50" id="notifications-dropdown"
+          data-testid="notifications-dropdown">
           <!-- Header dropdown -->
-          <div
-            class="flex items-center justify-between px-4 py-3 border-b border-slate-100"
-            id="notifications-dropdown-header"
-            data-testid="notifications-dropdown-header"
-          >
+          <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100"
+            id="notifications-dropdown-header" data-testid="notifications-dropdown-header">
             <p class="text-sm font-semibold text-slate-900">
               Notifications
             </p>
-            <button
-              type="button"
-              class="text-[11px] text-accent hover:underline"
-              (click)="markAllAsRead(); $event.stopPropagation()"
-              id="notifications-mark-all-read"
-              data-testid="notifications-mark-all-read"
-            >
+            <button type="button" class="text-[11px] text-accent hover:underline"
+              (click)="markAllAsRead(); $event.stopPropagation()" id="notifications-mark-all-read"
+              data-testid="notifications-mark-all-read">
               Tout marquer comme lu
             </button>
           </div>
 
           <!-- Filtres -->
           <div class="px-3 pt-2 pb-1">
-            <div
-              class="flex items-center gap-1 text-[11px] app-soft rounded-full p-1"
-              id="notifications-filter-switch"
-              data-testid="notifications-filter-switch"
-            >
-              <button
-                type="button"
-                (click)="setNotificationsFilter('all'); $event.stopPropagation()"
-                class="flex-1 px-2 py-1 rounded-full"
-                [ngClass]="
+            <div class="flex items-center gap-1 text-[11px] app-soft rounded-full p-1" id="notifications-filter-switch"
+              data-testid="notifications-filter-switch">
+              <button type="button" (click)="setNotificationsFilter('all'); $event.stopPropagation()"
+                class="flex-1 px-2 py-1 rounded-full" [ngClass]="
                   notificationsFilter === 'all'
                     ? 'bg-white shadow text-slate-900'
                     : 'text-slate-500'
-                "
-                id="notifications-filter-all"
-                data-testid="notifications-filter-all"
-              >
+                " id="notifications-filter-all" data-testid="notifications-filter-all">
                 Tous
               </button>
-              <button
-                type="button"
-                (click)="setNotificationsFilter('invites'); $event.stopPropagation()"
-                class="flex-1 px-2 py-1 rounded-full"
-                [ngClass]="
+              <button type="button" (click)="setNotificationsFilter('invites'); $event.stopPropagation()"
+                class="flex-1 px-2 py-1 rounded-full" [ngClass]="
                   notificationsFilter === 'invites'
                     ? 'bg-white shadow text-slate-900'
                     : 'text-slate-500'
-                "
-                id="notifications-filter-invites"
-                data-testid="notifications-filter-invites"
-              >
+                " id="notifications-filter-invites" data-testid="notifications-filter-invites">
                 Invitations
               </button>
-              <button
-                type="button"
-                (click)="setNotificationsFilter('activity'); $event.stopPropagation()"
-                class="flex-1 px-2 py-1 rounded-full"
-                [ngClass]="
+              <button type="button" (click)="setNotificationsFilter('activity'); $event.stopPropagation()"
+                class="flex-1 px-2 py-1 rounded-full" [ngClass]="
                   notificationsFilter === 'activity'
                     ? 'bg-white shadow text-slate-900'
                     : 'text-slate-500'
-                "
-                id="notifications-filter-activity"
-                data-testid="notifications-filter-activity"
-              >
+                " id="notifications-filter-activity" data-testid="notifications-filter-activity">
                 Activité
               </button>
             </div>
           </div>
 
           <!-- Liste des notifications -->
-          <div
-            class="max-h-80 overflow-y-auto px-2 pb-2"
-            id="notifications-list"
-            data-testid="notifications-list"
-          >
-            <p
-              *ngIf="filteredNotifications.length === 0"
-              class="text-center text-[12px] text-slate-400 py-6"
-              id="notifications-empty-state"
-              data-testid="notifications-empty-state"
-            >
+          <div class="max-h-80 overflow-y-auto px-2 pb-2" id="notifications-list" data-testid="notifications-list">
+            <p *ngIf="filteredNotifications.length === 0" class="text-center text-[12px] text-slate-400 py-6"
+              id="notifications-empty-state" data-testid="notifications-empty-state">
               Aucune notification pour le moment 🎉
             </p>
 
-            <button
-              *ngFor="let notif of filteredNotifications"
-              type="button"
+            <button *ngFor="let notif of filteredNotifications" type="button"
               class="notif-item w-full flex gap-3 px-2 py-2 rounded-xl text-left"
               [ngClass]="{ 'notif-item-unread': !notif.read }"
               (click)="handleNotificationClick(notif); $event.stopPropagation()"
-              [attr.id]="'notification-item-' + notif.id"
-              [attr.data-testid]="'notification-item-' + notif.id"
-            >
+              [attr.id]="'notification-item-' + notif.id" [attr.data-testid]="'notification-item-' + notif.id">
               <div class="relative flex-shrink-0">
-                <img
-                  [src]="notif.userAvatar"
-                  [alt]="notif.userName"
-                  class="w-8 h-8 rounded-full object-cover"
-                />
-                <span
-                  *ngIf="notif.type === 'invite'"
+                <img [src]="notif.userAvatar" [alt]="notif.userName" class="w-8 h-8 rounded-full object-cover" />
+                <span *ngIf="notif.type === 'invite'"
                   class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full toggle-accent-on text-[9px] text-white flex items-center justify-center"
-                  [attr.data-testid]="'notification-invite-badge-' + notif.id"
-                >
+                  [attr.data-testid]="'notification-invite-badge-' + notif.id">
                   +
                 </span>
               </div>
@@ -273,39 +164,26 @@
               </div>
 
               <div class="flex flex-col items-end gap-1">
-                <span
-                  *ngIf="!notif.read"
-                  class="w-2 h-2 rounded-full toggle-accent-on"
-                  [attr.data-testid]="'notification-unread-dot-' + notif.id"
-                ></span>
+                <span *ngIf="!notif.read" class="w-2 h-2 rounded-full toggle-accent-on"
+                  [attr.data-testid]="'notification-unread-dot-' + notif.id"></span>
 
-                <div
-                  *ngIf="notif.type === 'invite'"
-                  class="flex gap-1"
-                  [attr.data-testid]="'notification-invite-actions-' + notif.id"
-                >
-                  <span
-                    class="px-2 py-0.5 rounded-full text-[10px] btn-primary-gradient text-white"
+                <div *ngIf="notif.type === 'invite'" class="flex gap-1"
+                  [attr.data-testid]="'notification-invite-actions-' + notif.id">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] btn-primary-gradient text-white"
                     (click)="acceptInvite(notif); $event.stopPropagation()"
-                    [attr.data-testid]="'notification-accept-' + notif.id"
-                  >
+                    [attr.data-testid]="'notification-accept-' + notif.id">
                     Accepter
                   </span>
-                  <span
-                    class="px-2 py-0.5 rounded-full text-[10px] app-soft text-slate-500"
+                  <span class="px-2 py-0.5 rounded-full text-[10px] app-soft text-slate-500"
                     (click)="declineInvite(notif); $event.stopPropagation()"
-                    [attr.data-testid]="'notification-decline-' + notif.id"
-                  >
+                    [attr.data-testid]="'notification-decline-' + notif.id">
                     Ignorer
                   </span>
                 </div>
 
-                <button
-                  *ngIf="notif.type !== 'invite'"
-                  type="button"
+                <button *ngIf="notif.type !== 'invite'" type="button"
                   class="px-2 py-0.5 rounded-full text-[10px] app-soft text-slate-500"
-                  [attr.data-testid]="'notification-view-' + notif.id"
-                >
+                  [attr.data-testid]="'notification-view-' + notif.id">
                   Voir
                 </button>
               </div>
@@ -316,38 +194,24 @@
       </div>
 
       <!-- SETTINGS -->
-      <button
-        class="hidden md:flex items-center gap-1"
-        [ngClass]="
+      <button class="hidden md:flex items-center gap-1" [ngClass]="
           activeTab === 'settings'
             ? 'text-accent font-semibold'
             : 'text-slate-500'
-        "
-        (click)="onTabClick('settings')"
-        title="Paramètre"
-        type="button"
-        id="nav-settings-button"
-        data-testid="nav-settings-button"
-      >
+        " (click)="onTabClick('settings')" title="Paramètre" type="button" id="nav-settings-button"
+        data-testid="nav-settings-button">
         <span class="material-icons text-base">
           <i class="fa-solid fa-gear fa-lg"></i>
         </span>
       </button>
 
       <!-- LOGOUT -->
-      <button
-        class="flex items-center gap-1"
-        [ngClass]="
+      <button class="flex items-center gap-1" [ngClass]="
           activeTab === 'deconnexion'
             ? 'text-rose-500 font-semibold'
             : 'text-slate-500'
-        "
-        (click)="onTabClick('deconnexion')"
-        title="Se déconnecter"
-        type="button"
-        id="nav-logout-button"
-        data-testid="nav-logout-button"
-      >
+        " (click)="onTabClick('deconnexion')" title="Se déconnecter" type="button" id="nav-logout-button"
+        data-testid="nav-logout-button">
         <span class="material-icons text-base">
           <i class="fa-solid fa-arrow-right-from-bracket fa-lg text-rose-500"></i>
         </span>

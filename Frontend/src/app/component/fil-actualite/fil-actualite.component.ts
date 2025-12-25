@@ -105,7 +105,7 @@ export class FilActualiteComponent implements OnInit {
   commentImagePreview: { [postId: number]: string | null } = {};
   defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
   private postsPage = 0;
-  private readonly postsLimit = 5; // adapte à ton API
+  private readonly postsLimit = 5;
   selectedPhoto: string | null = null;
 
   constructor( private fb: FormBuilder, private router: Router, private http: HttpClient, private themeService: ThemeService) {
@@ -153,14 +153,12 @@ export class FilActualiteComponent implements OnInit {
    * Charger les informations de l'utilisateur
    */
   private loadCurrentUser() {
-    // this.isUserLoading = true;
+
     this.http.get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true }).subscribe({
         next: (res) => {
           this.currentUser = res.user;
-          // this.isUserLoading = false;
         },
         error: () => {
-          // this.isUserLoading = false;
           this.themeService.applyAuthTheme();
           this.router.navigate(['/auth']);
         }
@@ -342,11 +340,6 @@ export class FilActualiteComponent implements OnInit {
 
     this.http.post<Post>(`${environment.apiUrl}/publications/addPost`, formData, { withCredentials: true }).subscribe({
         next: (createdPost) => {
-          console.log('Post publié avec succès', createdPost);
-          // On insère le post renvoyé par l’API en haut du feed
-          //this.allPosts = [createdPost, ...this.allPosts];
-          //this.visiblePosts = [createdPost, ...this.visiblePosts];
-
           this.postForm.reset({ text: '', image: null });
           this.imagePreview = null;
           this.loadInitialPosts();
@@ -369,10 +362,7 @@ export class FilActualiteComponent implements OnInit {
 
     const valueLike = true
     this.http.post<Post>(`${environment.apiUrl}/posts/${postId}/like`, { like: valueLike }, { withCredentials: true }).subscribe({
-        next: (updatedPost) => {
-          // post.likedByMe = updatedPost.likedByMe;
-          // post.likes = updatedPost.likes;
-        },
+        next: (updatedPost) => {},
         error: (err) => {
           console.error('Erreur lors du like', err);
         }
@@ -453,7 +443,7 @@ export class FilActualiteComponent implements OnInit {
 srcImage(imagePath?: string | null): string {
   if (!imagePath) return this.defaultAvatar;
 
-  const api = environment.apiUrl.replace(/\/$/, ''); // enlève le / final si présent
+  const api = environment.apiUrl.replace(/\/$/, '');
   return `${api}/media/${encodeURIComponent(imagePath)}`;
 }
 
@@ -479,8 +469,6 @@ onCommentImageSelected(event: Event, postId: number) {
 removeCommentImage(postId: number, input: HTMLInputElement) {
   this.selectedCommentImage[postId] = null;
   this.commentImagePreview[postId] = null;
-
-  // 🔥 clé de la solution
   input.value = '';
 }
 
