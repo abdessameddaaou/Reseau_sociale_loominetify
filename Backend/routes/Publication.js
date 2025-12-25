@@ -35,8 +35,11 @@ router.get('/getAllPosts', PublicationController.getAllPublications);
 router.post('/likePost/:id', checkUser, PublicationController.likePublication);
 router.post('/addComment/:id', upload.single('image'),checkUser, PublicationController.addCommentToPublication);
 router.get('/getAllPostUserConnected', checkUser, PublicationController.getAllPublicationsUserConnecter);
-
-
-
+router.post('/likeComment/:id', checkUser, PublicationController.likeComment);
+router.delete('/deleteComment/:id', checkUser, PublicationController.deleteComment);
+router.get('/getUsersWhoLikedPost/:id', checkUser, PublicationController.getUsersWhoLikedPost);
+router.get('/getUsersWhoCommentedPost/:id', checkUser, PublicationController.getUsersWhoCommentedPost);
+router.get('/getUsersWhoSharedPost/:id', checkUser, PublicationController.getUsersWhoSharedPost);
+router.post('/sharePublication/:id', checkUser, PublicationController.sharePublication);
 
 module.exports = router;

@@ -33,6 +33,7 @@ const Users = db.define("Users", {
   },
   telephone: {
     type: DataTypes.INTEGER,
+    allowNull: true,
     unique: false,
   },
   dateNaissance: {

@@ -58,7 +58,11 @@
                 <div>
                   <p class="text-sm font-semibold text-slate-800"
                      [attr.data-testid]="'feed-post-author-' + post.id">
-                    {{ post.user?.nom || 'Utilisateur' }} {{ post.user?.prenom || 'Inconnu' }}
+                    {{ post.user.nom }} {{ post.user.prenom }}
+                    <span *ngIf="post.sharedPublication"
+                        class="text-xs font-normal text-slate-500 ml-1">
+                    a repartagé
+                  </span>
                   </p>
                   <p class="text-xs text-slate-400"
                      [attr.data-testid]="'feed-post-meta-' + post.id">
@@ -69,14 +73,18 @@
             </div>
           </header>
 
-          <p class="text-sm text-slate-700 whitespace-pre-line"
+          <p *ngIf="!post.sharedPublication" class="text-sm text-slate-700 whitespace-pre-line"
              [attr.data-testid]="'feed-post-text-' + post.id">
             {{ post.description }}
           </p>
+          <p *ngIf="post.sharedPublication" class="text-sm text-slate-700 whitespace-pre-line"
+             [attr.data-testid]="'feed-post-text-' + post.id">
+            {{ post.commentairePartage }}
+          </p>
 
-          <div *ngIf="post.image"
-               class="rounded-2xl overflow-hidden border border-slate-100 bg-black/5">
-            <div class="relative w-full aspect-square sm:aspect-[4/5] max-h-[560px]">
+<div *ngIf="post.image && !post.sharedPublication"
+     class="rounded-2xl overflow-hidden border border-slate-100 bg-black/5">
+  <div class="relative w-full aspect-square sm:aspect-[4/5] max-h-[560px]">
 
               <img
                 [src]="srcImage(post.image)"
@@ -94,46 +102,91 @@
                 (click)="openPhoto(post.image)"
               />
 
-            </div>
-          </div>
+  </div>
+</div>
+          <!-- Publication partagée -->
+           <!-- Publication originale (si partage) -->
+<div *ngIf="post.sharedPublication"
+     class="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-2">
 
+  <!-- Header publication originale -->
+  <div class="flex items-center gap-2">
+    <img [src]="post.sharedPublication.user.photo || defaultAvatar"
+         class="w-8 h-8 rounded-full object-cover" />
+
+    <div>
+      <p class="text-xs font-semibold text-slate-700">
+        {{ post.sharedPublication.user.nom }}
+        {{ post.sharedPublication.user.prenom }}
+      </p>
+      <p class="text-[10px] text-slate-400">
+        {{ timeAgo(post.sharedPublication.createdAt) }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Texte original -->
+  <p class="text-sm text-slate-700 whitespace-pre-line">
+    {{ post.sharedPublication.description }}
+  </p>
+
+  <!-- Image originale -->
+  <div *ngIf="post.sharedPublication.image"
+       class="rounded-xl overflow-hidden border border-slate-100 bg-black/5">
+    <img [src]="srcImage(post.sharedPublication.image)"
+         class="w-full object-contain max-h-96" />
+  </div>
+
+</div>
+
+          <!-- Interactions -->
           <div class="flex items-center justify-between text-xs text-slate-500 mt-1"
                [attr.data-testid]="'feed-post-actions-' + post.id">
             <div class="flex items-center gap-4">
-              <button class="flex items-center gap-1"
+              <!-- Like -->
+              <button class="flex items-center gap-1 transition-colors"
                       [ngClass]="post.likedByMe ? 'text-rose-600' : 'text-slate-500'"
-                      (click)="toggleLike($event,post.id)"
+                      (click)="toggleLike($event,post)"
                       type="button"
                       [attr.data-testid]="'feed-post-like-button-' + post.id">
                 <span class="material-icons text-base">
                   <i class="fa-solid fa-heart fa-lg"></i>
                 </span>
-                <span class="font-semibold"
-                      [attr.data-testid]="'feed-post-like-count-' + post.id">
-                  {{ post.likes }}
-                </span>
               </button>
+              <span [ngClass]="post.likedByMe ? 'text-rose-600' : 'text-slate-500'" class="font-semibold text-sm cursor-pointer hover:underline -ml-3" (click)="affichePersonneLike(post)"
+                      [attr.data-testid]="'feed-post-like-count-' + post.id">
+                  {{ post.nombreLikes }}
+              </span>
+
 
               <div class="flex items-center gap-1 text-slate-500"
                    [attr.data-testid]="'feed-post-comments-count-' + post.id">
                 <span class="material-icons text-base">
                   <i class="fa-solid fa-comment fa-lg"></i>
                 </span>
-                <span class="font-semibold">{{ post.commentsCount }}</span>
+                <!-- <span class="font-semibold">{{ post.commentsCount }}</span> -->
               </div>
+               <span class="font-semibold text-sm cursor-pointer hover:underline -ml-3" (click)="affichePersonneComments(post)"
+                      [attr.data-testid]="'feed-post-comments-count-' + post.id">
+                  {{ post.commentsCount }}
+              </span>
 
               <button class="flex items-center gap-1 text-slate-500"
-                      (click)="sharePost(post)"
+                      (click)="openShareModal(post)"
                       type="button"
                       [attr.data-testid]="'feed-post-share-button-' + post.id">
                 <span class="material-icons text-base">
                   <i class="fa-solid fa-retweet fa-lg"></i>
                 </span>
-                <span class="font-semibold"
+                <!-- <span class="font-semibold"
                       [attr.data-testid]="'feed-post-share-count-' + post.id">
-                  {{ post.shares }}
-                </span>
+                  {{ post.nombrePartages }}
+                </span> -->
               </button>
+               <span class="font-semibold text-sm cursor-pointer hover:underline -ml-3" (click)="affichePersonnePartage(post)"
+                      [attr.data-testid]="'feed-post-share-count-' + post.id">
+                  {{ post.nombrePartages }}
+              </span>
             </div>
           </div>
           
@@ -161,7 +214,8 @@
                       {{ timeAgo(comment.createdAt) }}
                     </span>
                   </span>
-                  <button *ngIf="comment.mine"
+                  <button
+                          *ngIf="comment.user.id === currentUser?.id || currentUser?.isAdmin"
                           class="text-[10px] text-slate-400 hover:text-red-500"
                           (click)="deleteComment(post, comment)"
                           type="button"
@@ -172,6 +226,14 @@
                 <p class="text-slate-700 mt-0.5"
                    [attr.data-testid]="'feed-comment-text-' + post.id + '-' + comment.id">
                   {{ comment.contenu }}
+                  <img *ngIf="comment.image" [src]="srcImageComments(comment.image)" class="w-24 h-24 object-cover rounded-lg border border-slate-200 ml-2 mt-1" />
+                </p>
+                <p class="text-[10px] text-slate-400 mt-1"
+                   [attr.data-testid]="'feed-comment-likes-' + post.id + '-' + comment.id">
+                  {{ comment.nombreLikes }}
+                  <button class="text-[10px] text-slate-400 hover:text-rose-600"
+                    type="button"
+                    [attr.data-testid]="'feed-comment-like-button-' + post.id + '-' + comment.id" (click)="likeComment(comment.id)">❤️ Aimer</button>
                 </p>
                 <br/>
               </div>
@@ -532,4 +594,165 @@
     </button>
   </div>
 
+</div>
+<!-- MODAL Nombre de likes  -->
+<div *ngIf="showLikesModal"
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+  <div class="bg-white rounded-xl w-80 max-h-[70vh] overflow-y-auto p-4">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-semibold text-sm">Aimé par</h3>
+      <button class="text-slate-400 hover:text-black"
+              (click)="showLikesModal = false">
+        ✕
+      </button>
+    </div>
+
+    <div *ngFor="let user of likedUsers"
+         class="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
+
+      <img
+        [src]="user.photo || defaultAvatar"
+        class="w-8 h-8 rounded-full object-cover"
+      />
+
+      <span class="text-sm text-slate-700">
+        {{ user.nom }} {{ user.prenom }}
+      </span>
+    </div>
+
+    <p *ngIf="likedUsers.length === 0"
+       class="text-xs text-slate-400 text-center py-4">
+      Aucun like pour le moment
+    </p>
+  </div>
+</div>
+
+<!-- MODAL Nombre de commentaires -->
+<div *ngIf="showCommentsModal"
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+  <div class="bg-white rounded-xl w-80 max-h-[70vh] overflow-y-auto p-4">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-semibold text-sm">Commenté par</h3>
+      <button class="text-slate-400 hover:text-black"
+              (click)="showCommentsModal = false">
+        ✕
+      </button>
+    </div>
+
+    <div *ngFor="let user of CommentsUsers"
+         class="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
+
+      <img
+        [src]="user.photo || defaultAvatar"
+        class="w-8 h-8 rounded-full object-cover"
+      />
+
+      <span class="text-sm text-slate-700">
+        {{ user.nom }} {{ user.prenom }}
+      </span>
+    </div>
+
+    <p *ngIf="CommentsUsers.length === 0"
+       class="text-xs text-slate-400 text-center py-4">
+      Aucun commentaire pour le moment
+    </p>
+  </div>
+</div>
+
+<!-- MODAL Nombre de partages -->
+<div *ngIf="showUsersShareModal"
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+  <div class="bg-white rounded-xl w-80 max-h-[70vh] overflow-y-auto p-4">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-semibold text-sm">Partagé par</h3>
+      <button class="text-slate-400 hover:text-black"
+              (click)="showUsersShareModal = false">
+        ✕
+      </button>
+    </div>
+
+    <div *ngFor="let user of ShareUsers"
+         class="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
+
+      <img
+        [src]="user.photo || defaultAvatar"
+        class="w-8 h-8 rounded-full object-cover"
+      />
+
+      <span class="text-sm text-slate-700">
+        {{ user.nom }} {{ user.prenom }}
+      </span>
+    </div>
+
+    <p *ngIf="ShareUsers.length === 0"
+       class="text-xs text-slate-400 text-center py-4">
+      Aucun partage pour le moment
+    </p>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div *ngIf="isShareModalOpen"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+
+  <div class="bg-white w-full max-w-lg rounded-2xl shadow-lg p-4 space-y-4">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+      <h2 class="text-sm font-semibold text-slate-800">
+        Partager la publication
+      </h2>
+      <button (click)="closeShareModal()"
+              class="text-slate-400 hover:text-slate-600">
+        ✕
+      </button>
+    </div>
+
+    <!-- Textarea -->
+    <textarea
+      [(ngModel)]="shareDescription"
+      rows="3"
+      placeholder="Ajouter un commentaire…"
+      class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2
+             outline-none focus:border-[#5b7cff]
+             focus:ring-2 focus:ring-[#5b7cff]/10">
+    </textarea>
+
+    <!-- Preview du post original -->
+    <div *ngIf="postToShare"
+         class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+
+      <p class="text-xs font-semibold text-slate-700">
+        {{ postToShare.user.nom }} {{ postToShare.user.prenom }}
+      </p>
+
+      <p class="text-xs text-slate-600 mt-1 line-clamp-3">
+        {{ postToShare.description }}
+      </p>
+
+      <img *ngIf="postToShare.image"
+           [src]="srcImage(postToShare.image)"
+           class="mt-2 rounded-lg max-h-48 object-contain" />
+    </div>
+
+    <!-- Actions -->
+    <div class="flex justify-end gap-2">
+      <button (click)="closeShareModal()"
+              class="text-sm text-slate-500 hover:text-slate-700">
+        Annuler
+      </button>
+
+      <button (click)="sharePost()"
+              [disabled]="isSharing"
+              class="bg-[#5b7cff] text-white text-sm font-semibold
+                     px-4 py-1.5 rounded-full hover:bg-[#4a6afc]
+                     disabled:opacity-50">
+        Publier
+      </button>
+    </div>
+
+  </div>
 </div>
