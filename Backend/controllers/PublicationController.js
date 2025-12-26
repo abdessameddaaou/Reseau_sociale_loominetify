@@ -7,29 +7,43 @@ const Commentaire = require('../models/commentaire');
 const checkUser = require('../controllers/Middleware').checkUser;
 const Interactions = require('../models/interaction');
 
-/** * Création d'une publication
+/** 
+ * Création d'une publication
  * @param {*} req 
  * @param {*} res   
  */
 module.exports.createPublication = async (req, res) => {
   try {
-    let userId = null;
 
-    await checkUser(req, res, () => {
-      userId = req.userId;
-    });
-
-    const description = req.body.text;        // texte du FormData
-    const imagePath = req.file ? req.file.filename : null; // image reçue par multer
-
+    /**
+     * Création de la publication
+     */
     const newPublication = await Publications.create({
-      description,
-      image: imagePath,
+      description: req.body.text,
+      image: req.file ? req.file.filename : null,
       video: null,
-      userId
+      userId: req.userId
     });
 
-    return res.status(201).json(newPublication);
+    /**
+     * Récupération ds informations pour envoyer au websocket
+     */
+    const completePub = await Publications.findByPk(newPublication.id, {
+      include: [
+        { model: Users, as: 'user', attributes: ['id', 'nom', 'prenom', 'photo'] },
+        { model: Commentaire, as: 'comments' }, 
+        { model: Interactions, as: 'interactions' }
+      ]
+    });
+
+    /**
+     * Enoyer la publication au websocket avec l'event ' new_publication '
+     */
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("new_publication", completePub);
+    }
+    return res.status(201).json(completePub);
 
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -93,7 +107,7 @@ module.exports.likePublication = async (req, res) => {
   try {
     const publicationId = req.params.id;
     const userId = req.userId;
-    const { like } = req.body; // true / false
+    const { like } = req.body;
 
     if (typeof like !== 'boolean') {
       return res.status(400).json({ error: "Valeur 'like' invalide" });
@@ -149,28 +163,36 @@ module.exports.likePublication = async (req, res) => {
  */
 module.exports.addCommentToPublication = async (req, res) => {
   try {
-    const publicationId = req.params.id;
-    const userId = req.userId;
     const commentText = req.body.text;
 
     if(!commentText && !req.file) {
-      return res.status(400).json({ error: "le commentaire doit contenir du texte ou une image" });
+      return res.status(400).json({ error: "Le commentaire doit contenir du texte ou une image" });
     }
-    const publication = await Publications.findByPk(publicationId);
+
+    const publication = await Publications.findByPk(req.params.id);
     if (!publication) {
       return res.status(404).json({ error: "Publication non trouvée." });
     }
 
-    const imagePath = req.file ? req.file.filename : null;
-
-    await Commentaire.create({
+     const newCommentaire = await Commentaire.create({
       contenu: commentText,
-      userId: userId,
-      publicationId: publicationId,
-      image: imagePath
+      userId: req.userId,
+      publicationId: req.params.id,
+      image:  req.file ? req.file.filename : null
     });
 
-    return res.status(201).json({ message: "Commentaire ajouté avec succès." });
+    const commentaireComplet= await Commentaire.findByPk(newCommentaire.id,{
+      include: [{ model: Users, as: 'user', attributes: ['id', 'nom', 'prenom', 'photo'] }]
+    })
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("new_comment", {
+        publicationId: Number(req.params.id),
+        comment: commentaireComplet
+      });
+    }
+    return res.status(201).json(commentaireComplet);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
