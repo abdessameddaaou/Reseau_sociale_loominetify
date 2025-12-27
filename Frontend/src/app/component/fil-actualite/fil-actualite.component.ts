@@ -119,6 +119,12 @@ type PostShareEvent = {
  sharesCount: number
 };
 
+
+type CommentDeleteEvent ={
+  publicationId: number,
+  commentId: number,
+}
+
 @Component({
   selector: 'app-fil-actualite',
   standalone: true,
@@ -226,10 +232,24 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
       this.addNewShareToPost(data.publicationId, data.sharesCount);
     });
 
+    
+    /**
+     * Vérifier s'il un commentaire a été supprimé pour une publication
+     */
+    // this.realtimeService.on<PostShareEvent>('post_share_updated', (data) => {
+    //   console.log(' Connexion à Socekt réussi pour la supression d\'un commentaire d\'une publication :', data.publicationId, data.sharesCount);
+    //   this.addNewShareToPost(data.publicationId, data.sharesCount);
+    // });
+
+
+    /**
+     * Vérifier s'il y a nouveaux likes pour la publication
+     */
+    this.realtimeService.on<CommentDeleteEvent>('delete_comment', (data) => {
+      console.log('Connexion à Socekt réussi pour la supression d\'un commentaire d\'une publication :', data.publicationId, data.commentId);
+      this.deleteCommentToPost(data.publicationId, data.commentId);
+    });
   }
-
-
-
   /**
    * Se déconnecter de websocekt afin de s'arrêter d'écouter
    */
@@ -334,6 +354,24 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
     this.visiblePosts = [...this.allPosts];
   }
 
+/**
+ * Gestion des commentaires pour les publications
+ * @param publicationId 
+ * @param commentId 
+ * @returns 
+ */
+deleteCommentToPost(publicationId: number, commentId: number) {
+  const post = this.allPosts.find(p => p.id === publicationId);
+  if (!post) return;
+  const before = (post.comments ?? []).length;
+  post.comments = (post.comments ?? []).filter(c => Number(c.id) !== Number(commentId));
+  const after = post.comments.length;
+  if (after < before) {
+    post.commentsCount = Math.max(0, (post.commentsCount ?? 0) - 1);
+  }
+
+  this.visiblePosts = [...this.allPosts];
+}
 
 
   /**

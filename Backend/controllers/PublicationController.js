@@ -118,7 +118,6 @@ module.exports.likePublication = async (req, res) => {
     }
 
     if (like === true) {
-      // éviter doublon
       const alreadyLiked = await Interactions.findOne({
         where: { userId, publicationId, type: 'like' }
       });
@@ -283,7 +282,17 @@ module.exports.deleteComment = async (req, res) => {
     if (!comment) {
       return res.status(404).json({ error: "Commentaire non trouvé." });
     }
+    const publicationId = comment.publicationId;
     await comment.destroy();
+    const io = req.app.get("io");
+    if(io){
+      io.emit("delete_comment", {
+        commentId,
+        publicationId,
+    
+      })
+    }
+
     return res.status(200).json({ message: "Commentaire supprimé avec succès." });
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -391,8 +400,6 @@ module.exports.sharePublication = async (req, res) => {
         { model: Users, as: 'user', attributes: ['id', 'nom', 'prenom', 'photo'] },
         { model: Commentaire, as: 'comments', include: [{ model: Users, as: 'user', attributes: ['id','nom','prenom','photo'] }] },
         { model: Interactions, as: 'interactions' },
-
-        // ✅ la publication originale partagée
         {
           model: Publications,
           as: 'sharedPublication',
