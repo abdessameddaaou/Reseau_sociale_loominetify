@@ -289,12 +289,12 @@
           </div>
         </article>
 
-        <div *ngIf="isLoadingMore"
+        <!-- <div *ngIf="isLoadingMore"
              class="text-center text-xs text-slate-400 py-4"
              id="feed-loader-more"
              data-testid="feed-loader-more">
           Chargement de nouvelles publications...
-        </div>
+        </div> -->
 
         <div *ngIf="!hasMore && visiblePosts.length > 0"
              class="text-center text-[11px] text-slate-400 py-4"
@@ -327,7 +327,7 @@
                id="sidebar-profile-handle"
                data-testid="sidebar-profile-handle"
                [routerLink]="['/profile']">
-              @{{ currentUser?.nom }}{{ currentUser?.prenom }}
+              {{ currentUser?.username }}
             </p>
 
             <div class="flex justify-between w-full mt-4 text-xs text-slate-600"
@@ -619,6 +619,7 @@
       <span class="text-sm text-slate-700">
         {{ user.nom }} {{ user.prenom }}
       </span>
+
     </div>
 
     <p *ngIf="likedUsers.length === 0"
@@ -652,6 +653,8 @@
       <span class="text-sm text-slate-700">
         {{ user.nom }} {{ user.prenom }}
       </span>
+      
+      
     </div>
 
     <p *ngIf="CommentsUsers.length === 0"

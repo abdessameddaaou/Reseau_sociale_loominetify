@@ -30,10 +30,10 @@ const upload = multer({
   }
 });
 
-router.post('/addPost', upload.single('image'), PublicationController.createPublication);
-router.get('/getAllPosts', PublicationController.getAllPublications);
+router.post('/addPost', checkUser, upload.single('image'), PublicationController.createPublication);
+router.get('/getAllPosts', checkUser, PublicationController.getAllPublications);
 router.post('/likePost/:id', checkUser, PublicationController.likePublication);
-router.post('/addComment/:id', upload.single('image'),checkUser, PublicationController.addCommentToPublication);
+router.post('/addComment/:id', checkUser, upload.single('image'),checkUser, PublicationController.addCommentToPublication);
 router.get('/getAllPostUserConnected', checkUser, PublicationController.getAllPublicationsUserConnecter);
 router.post('/likeComment/:id', checkUser, PublicationController.likeComment);
 router.delete('/deleteComment/:id', checkUser, PublicationController.deleteComment);

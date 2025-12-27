@@ -18,7 +18,7 @@ import { RealtimeService } from '../../service/realtime.service';
  */
 interface PostComment {
   id: number;
-  user: { id: number; nom: string; prenom: string; photo?: string };
+  user: { id: number; nom: string; prenom: string; photo?: string; username?: string };
   contenu: string;
   image?: string;
   nombreLikes: number;
@@ -42,7 +42,7 @@ interface Post {
   id: number;
   description: string;
   image?: string;
-  user: { id: number; nom: string; prenom: string; photo?: string };
+  user: { id: number; nom: string; prenom: string; photo?: string; username?: string };
   nombreLikes: number;
   nombrePartages: number;
   createdAt: string;
@@ -79,14 +79,44 @@ export interface CurrentUser {
   prenom: string;
   isAdmin: boolean;
   photo?: string;
+  username?: string;
 }
 
 /**
- * Type pour l'utiliser dans websocekt
+ * Type pour écouter sur les commentaires
  */
 type NewCommentEvent = {
   publicationId: number;
   comment: PostComment;
+};
+
+/**
+ * Type pour écouter sur les likes des commentaires
+ */
+type CommentLikeEvent = {
+  commentId: number;
+  publicationId: number;
+  likesCount: number;
+  userId?: number;
+};
+
+/**
+ * Type pour écouter sur les likes des publications
+ */
+type PostLikeEvent = {
+  publicationId: number;
+  likesCount: number;
+  userId: number;
+  liked: boolean;
+};
+
+
+/**
+ * Type pour écouter sur les partages des publications
+ */
+type PostShareEvent = {
+ publicationId: number,
+ sharesCount: number
 };
 
 @Component({
@@ -170,10 +200,36 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
     });
 
 
+    /**
+     * Vérifier s'il y a nouveaux likes pour le commentaire
+     */
+    this.realtimeService.on<CommentLikeEvent>('comment_like_updated', (data) => {
+      console.log(' Connexion à Socekt réussi pour les likes :', data.publicationId, data.commentId, data.likesCount);
+      this.addNewLikeToComment(data.publicationId, data.commentId, data.likesCount);
+    });
 
 
+    /**
+     * Vérifier s'il y a nouveaux likes pour la publication
+     */
+    this.realtimeService.on<PostLikeEvent>('post_like_updated', (data) => {
+      console.log(' Connexion à Socekt réussi pour les likes publication :', data.publicationId, data.likesCount, data.liked, data.userId);
+      this.addNewLikeToPost(data.publicationId, data.likesCount, data.liked, data.userId);
+    });
+
+
+    /**
+     * Vérifier s'il y a nouveaux likes pour la publication
+     */
+    this.realtimeService.on<PostShareEvent>('post_share_updated', (data) => {
+      console.log(' Connexion à Socekt réussi pour les shares publication :', data.publicationId, data.sharesCount);
+      this.addNewShareToPost(data.publicationId, data.sharesCount);
+    });
 
   }
+
+
+
   /**
    * Se déconnecter de websocekt afin de s'arrêter d'écouter
    */
@@ -221,6 +277,61 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
       post.commentsCount = (post.commentsCount ?? 0) + 1;
 
       this.visiblePosts = [...this.allPosts];
+  }
+
+
+  /**
+   * Gestion des likes pour le commentaire
+   * @param publicationId 
+   * @param commentId 
+   * @param likesCount 
+   * @returns 
+   */
+  addNewLikeToComment(publicationId: number, commentId: number, likesCount: number) {
+    const post = this.allPosts.find(p => p.id === publicationId);
+    if (!post) return;
+
+    const comment = post.comments?.find(c => c.id === commentId);
+    if (!comment) return;
+
+    comment.nombreLikes = likesCount;
+    this.visiblePosts = [...this.allPosts];
+  }
+
+
+  /**
+   * Gestion des likes pour la publication
+   * @param publicationId 
+   * @param likesCount 
+   * @param liked 
+   * @param userId 
+   * @returns 
+   */
+  addNewLikeToPost(publicationId: number, likesCount: number, liked: boolean, userId: number) {
+    const post = this.allPosts.find(p => p.id === publicationId);
+      if (!post) return;
+
+      post.nombreLikes = likesCount
+      if(userId == this.currentUser?.id)
+      {
+        post.likedByMe = liked
+      }
+    this.visiblePosts = [...this.allPosts];
+  }
+
+
+  /**
+   * Gestion des shares pour les publications
+   * @param publicationId 
+   * @param sharesCount 
+   * @returns 
+   */
+  addNewShareToPost(publicationId: number, sharesCount: number){
+
+    const post = this.allPosts.find(p => p.id === publicationId);
+      if (!post) return;
+      post.nombrePartages  = sharesCount;
+    this.visiblePosts = [...this.allPosts];
   }
 
 
@@ -346,7 +457,18 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
       })
       .subscribe({
         next: (posts) => {
-          const formattedPosts = posts.map((post) => ({
+
+          const uniqueNewPosts = posts.filter(newPost => 
+            !this.allPosts.some(existingPost => existingPost.id === newPost.id)
+          );
+
+          if (posts.length < this.postsLimit) {
+             this.hasMore = false;
+          }
+
+
+          if (uniqueNewPosts.length > 0) {
+          const formattedPosts = uniqueNewPosts.map((post) => ({
             ...post,
             showAllComments: false,
             likedByMe: Array.isArray(post.interactions)
@@ -359,6 +481,7 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
           this.visiblePosts = this.allPosts;
           this.hasMore = posts.length === this.postsLimit;
           this.isLoadingMore = false;
+          }
         },
         error: (err) => {
           this.isLoadingMore = false;
