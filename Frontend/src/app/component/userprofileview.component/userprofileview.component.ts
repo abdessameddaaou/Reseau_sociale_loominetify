@@ -59,7 +59,7 @@ interface GroupPreview {
   lastActivity: string;
 }
 
-type FollowStatus = 'unknown' | 'following' | 'not-following' | 'requested';
+type FollowStatus = 'unknown' | 'following' | 'not-following' | 'requested' | 'received';
 
 @Component({
   selector: 'app-userprofileview',
@@ -89,7 +89,6 @@ export class UserprofileviewComponent implements OnInit {
   groups: GroupPreview[] = [];
   Photos: string[] = [];
   selectedPhoto: string | null = null;
-
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -118,13 +117,17 @@ export class UserprofileviewComponent implements OnInit {
 
   /**
    * Charger l'utilisateur cherché
-   * @param id 
+   * @param id
    */
   loadUserProfile(id: string) {
     this.isLoading = true;
     this.http.get<any>(`${environment.apiUrl}/users/getUser/${id}`, { withCredentials: true }).subscribe({
         next: (response) => {
           this.profileUser = response.user
+           this.http.get<any>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true })
+          .subscribe((meRes) => {
+            this.resolveFollowStatus(meRes.user, String(this.profileUser?.id));
+          });
           this.isLoading = false;
         },
         error: (err) => {
@@ -155,7 +158,7 @@ export class UserprofileviewComponent implements OnInit {
 
   /**
    * Header nav
-   * @param tab 
+   * @param tab
    */
   setActiveTab(tab: HeaderTab) {
     this.activeTab = tab;
@@ -168,15 +171,15 @@ export class UserprofileviewComponent implements OnInit {
 
   /**
    * Suivre le profile
-   * @returns 
+   * @returns
    */
   toggleFollow() {
 
   /**
-   * Récupérer les amies graçe à l'id de l'utilisateur connecté récupér 
+   * Récupérer les amies graçe à l'id de l'utilisateur connecté récupér
    * Récupérer les posts d'un amie lorsque je fais follow
-   *  
-   * */ 
+   *
+   * */
 
     if (this.followStatus === 'not-following') {
       this.followStatus = 'following';
@@ -189,7 +192,7 @@ export class UserprofileviewComponent implements OnInit {
 
   /**
    * Ouvrir une conversation
-   * @returns 
+   * @returns
    */
   openConversationWithUser() {
     if (!this.profileUser) return;
@@ -198,8 +201,8 @@ export class UserprofileviewComponent implements OnInit {
   }
 
   /**
-   * 
-   * @param post 
+   *
+   * @param post
    */
   openPost(post: ProfilePostPreview) {
     console.log('Ouvrir la publication', post.id);
@@ -218,4 +221,97 @@ export class UserprofileviewComponent implements OnInit {
   closePhotoModal() {
     this.selectedPhoto = null;
   }
+
+sendInvitation() {
+      this.http.post<any>(`${environment.apiUrl}/amis/sendInvitation`, {
+        friendId: this.profileUser?.id}, { withCredentials: true }).subscribe({
+        next: (response) => {
+          console.log('Invitation envoyée avec succès :', response);
+          this.followStatus = 'requested';
+        },
+        error: (err) => {
+          console.error('Erreur lors de l\'envoi de l\'invitation :', err);
+        },
+      });
+  }
+
+
+acceptInvitation() {
+    this.http.post<any>(`${environment.apiUrl}/amis/acceptInvitation`, {
+      requesterId: this.profileUser?.id}, { withCredentials: true }).subscribe({
+      next: (response) => {
+        console.log('Invitation acceptée avec succès :', response);
+        this.followStatus = 'following';
+        this.followers++;
+      },
+      error: (err) => {
+        console.error('Erreur lors de l\'acceptation de l\'invitation :', err);
+      },
+    });
+}
+
+rejectInvitation() {
+    this.http.post<any>(`${environment.apiUrl}/amis/refuseInvitation`, {
+      requesterId: this.profileUser?.id}, { withCredentials: true }).subscribe({
+      next: (response) => {
+        console.log('Invitation refusée avec succès :', response);
+        this.followStatus = 'not-following';
+      },
+      error: (err) => {
+        console.error('Erreur lors du refus de l\'invitation :', err);
+      },
+    });
+}
+
+private resolveFollowStatus(
+  me: any,
+  profileId: string
+) {
+  const myId = String(me.id);
+
+  // 1️⃣ Amis (accepté dans les deux sens)
+  const isFriend =
+    me.sentRelations?.some(
+      (r: any) =>
+        String(r.addresseeId) === profileId &&
+        r.status === 'accepté'
+    ) ||
+    me.receivedRelations?.some(
+      (r: any) =>
+        String(r.requesterId) === profileId &&
+        r.status === 'accepté'
+    );
+
+  if (isFriend) {
+    this.followStatus = 'following';
+    return;
+  }
+
+  // 2️⃣ Invitation envoyée par moi
+  const sentRequest = me.sentRelations?.some(
+    (r: any) =>
+      String(r.addresseeId) === profileId &&
+      r.status === 'envoyée'
+  );
+
+  if (sentRequest) {
+    this.followStatus = 'requested';
+    return;
+  }
+
+  // 3️⃣ Invitation reçue par moi
+  const receivedRequest = me.receivedRelations?.some(
+    (r: any) =>
+      String(r.requesterId) === profileId &&
+      r.status === 'envoyée'
+  );
+
+  if (receivedRequest) {
+    this.followStatus = 'received';
+    return;
+  }
+
+  // 4️⃣ Aucune relation
+  this.followStatus = 'not-following';
+}
 }

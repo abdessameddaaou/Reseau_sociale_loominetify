@@ -6,7 +6,7 @@ const nodemailer = require("nodemailer");
 const config = require('../config');
 const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
-
+const UsersRelation = require("../models/userRelation");
 
 /**
  * Création d'un token 
@@ -335,7 +335,17 @@ module.exports.activerCompteUser = async( req, res ) =>{
 module.exports.getUserConnecte = async (req, res) => {
   try {
     const user = await Users.findByPk(req.userId, {
-      attributes: { exclude: ['password', 'reponse', 'question'] }
+      attributes: { exclude: ['password', 'reponse', 'question'] },
+      include: [
+        {
+          model: UsersRelation,
+          as: 'sentRelations',
+        },
+        {
+          model: UsersRelation,
+          as: 'receivedRelations',
+        },
+      ],
     });
     return res.status(200).json({ user });
 
@@ -353,7 +363,17 @@ module.exports.getUserConnecte = async (req, res) => {
 module.exports.getUser = async(req, res) =>{
   try {
     const user = await Users.findByPk(req.params.id, {
-      attributes: { exclude: ['password', 'reponse', 'question'] }
+      attributes: { exclude: ['password', 'reponse', 'question'] },
+      include: [
+        {
+          model: UsersRelation,
+          as: 'sentRelations',
+        },
+        {
+          model: UsersRelation,
+          as: 'receivedRelations',
+        },
+      ],
     })
     return res.status(200).json({user: user});
     

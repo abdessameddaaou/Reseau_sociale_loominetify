@@ -82,7 +82,71 @@
                         S’abonner
                       </span>
                     </ng-container>
+
                   </button>
+
+                  <!-- <button
+                      type="button"
+                      class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md disabled:opacity-60"
+                      [disabled]="followStatus === 'requested' || followStatus === 'following'"
+                      (click)="onRelationAction()"
+                    >
+                      <ng-container [ngSwitch]="followStatus">
+                        <span *ngSwitchCase="'not-following'">Envoyer une invitation</span>
+                        <span *ngSwitchCase="'requested'">Invitation envoyée</span>
+                        <span *ngSwitchCase="'received'">Accepter l’invitation</span>
+                        <span *ngSwitchCase="'received'">Refuser l’invitation</span>
+                        <span *ngSwitchCase="'following'">Ami(e)</span>
+                      </ng-container>
+                    </button> -->
+                  <!-- CAS : aucune relation -->
+              <button
+                *ngIf="followStatus === 'not-following'"
+                type="button"
+                class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md"
+                (click)="sendInvitation()"
+              >
+                Envoyer une invitation
+              </button>
+
+              <!-- CAS : invitation envoyée -->
+              <button
+                *ngIf="followStatus === 'requested'"
+                type="button"
+                class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md opacity-60"
+                disabled
+              >
+                Invitation envoyée
+              </button>
+
+              <!-- CAS : invitation reçue -->
+              <div *ngIf="followStatus === 'received'" class="flex gap-2">
+                <button
+                  type="button"
+                  class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md"
+                  (click)="acceptInvitation()"
+                >
+                  Accepter
+                </button>
+                <button
+                  type="button"
+                  class="flex-1 rounded-full border border-red-300 bg-red-50 text-red-600 text-[11px] font-semibold py-1.5
+                        hover:bg-red-100 transition"
+                  (click)="rejectInvitation()"
+                >
+                  Refuser
+                </button>
+              </div>
+
+              <!-- CAS : amis -->
+              <button
+                *ngIf="followStatus === 'following'"
+                type="button"
+                class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md opacity-60"
+                disabled
+              >
+                Ami(e)
+              </button>
 
                   <button *ngIf="followStatus === 'following'" type="button"
                     class="flex-1 rounded-full border border-slate-200 bg-white text-[11px] font-semibold py-1.5 hover:bg-slate-50 transition"

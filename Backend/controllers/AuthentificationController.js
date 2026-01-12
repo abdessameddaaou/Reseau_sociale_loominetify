@@ -53,7 +53,7 @@ module.exports.loginUser = async (req, res) => {
       return res.status(401).json({ error: "Le mot de passe ou l'adresse email est incorrect." });
     }
   } catch (error) {
-    return res.status(500).json({ error: "Une erreur est survenue lors de la connexion." });
+    return res.status(500).json({ error: error.message });
   }
 }
 

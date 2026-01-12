@@ -22,7 +22,7 @@ const UserRelation = db.define("UserRelations", {
   status: {
     type: DataTypes.ENUM(
       "envoyée",   // invitation envoyée
-      "accepté",  // amis
+      "acceptée",  // amis
       "refusée",   // invitation refusée
       "bloqué"    // bloqué
     ),
