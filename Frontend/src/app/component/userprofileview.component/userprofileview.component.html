@@ -66,7 +66,7 @@
               <div class="mt-4 flex gap-2 w-full">
                   <button type="button"
                     class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md disabled:opacity-60"
-                    (click)="toggleFollow()" [disabled]="followStatus === 'requested'" id="public-profile-follow-button"
+                    (click)="toggleFollow()"  id="public-profile-follow-button"
                     data-testid="public-profile-follow-button">
                     <ng-container [ngSwitch]="followStatus">
                       <span *ngSwitchCase="'not-following'">
@@ -74,9 +74,6 @@
                       </span>
                       <span *ngSwitchCase="'following'">
                         Abonné(e)
-                      </span>
-                      <span *ngSwitchCase="'requested'">
-                        ...
                       </span>
                       <span *ngSwitchDefault>
                         S’abonner
@@ -101,7 +98,7 @@
                     </button> -->
                   <!-- CAS : aucune relation -->
               <button
-                *ngIf="followStatus === 'not-following'"
+                *ngIf="followAmisStatus === 'not-following'"
                 type="button"
                 class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md"
                 (click)="sendInvitation()"
@@ -111,7 +108,7 @@
 
               <!-- CAS : invitation envoyée -->
               <button
-                *ngIf="followStatus === 'requested'"
+                *ngIf="followAmisStatus === 'requested'"
                 type="button"
                 class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md opacity-60"
                 disabled
@@ -120,7 +117,7 @@
               </button>
 
               <!-- CAS : invitation reçue -->
-              <div *ngIf="followStatus === 'received'" class="flex gap-2">
+              <div *ngIf="followAmisStatus === 'received'" class="flex gap-2">
                 <button
                   type="button"
                   class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md"
@@ -140,7 +137,7 @@
 
               <!-- CAS : amis -->
               <button
-                *ngIf="followStatus === 'following'"
+                *ngIf="followAmisStatus === 'following'"
                 type="button"
                 class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md opacity-60"
                 disabled
@@ -148,7 +145,7 @@
                 Ami(e)
               </button>
 
-                  <button *ngIf="followStatus === 'following'" type="button"
+                  <button *ngIf="followAmisStatus === 'following'" type="button"
                     class="flex-1 rounded-full border border-slate-200 bg-white text-[11px] font-semibold py-1.5 hover:bg-slate-50 transition"
                     (click)="openConversationWithUser()" id="public-profile-message-button"
                     data-testid="public-profile-message-button">
@@ -164,7 +161,7 @@
           </section>
 
           <!-- Amis -->
-          <section *ngIf="followStatus === 'following'" class="app-card rounded-2xl shadow-sm p-4 space-y-3"
+          <section *ngIf="followAmisStatus === 'following'" class="app-card rounded-2xl shadow-sm p-4 space-y-3"
             id="public-profile-friends-card" data-testid="public-profile-friends-card">
             <div class="flex items-center justify-between">
               <h2 class="text-sm font-semibold text-slate-900">
