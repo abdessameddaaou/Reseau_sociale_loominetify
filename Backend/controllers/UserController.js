@@ -5,6 +5,8 @@ const config = require('../config');
 const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
 const UsersRelation = require("../models/userRelation");
+const UserFollow = require("../models/userFollows");
+const e = require("express");
 
 /**
  * Création d'un token 
@@ -343,12 +345,24 @@ module.exports.getUserConnecte = async (req, res) => {
           model: UsersRelation,
           as: 'receivedRelations',
         },
+        {
+          model: Users,
+          as: 'followers', // 👈 abonnés
+          attributes: ['id', 'nom', 'prenom', 'email'],
+          through: { attributes: [] }, // pas besoin de UserFollow dans la réponse
+        },
+        {
+          model: Users,
+          as: 'following', // 👈 abonnés
+          attributes: ['id', 'nom', 'prenom', 'email'],
+          through: { attributes: [] }, // pas besoin de UserFollow dans la réponse
+        },
       ],
     });
     return res.status(200).json({ user });
 
   } catch (error) {
-    return res.status(500).json({ error: "Une erreur est survenue lors de la récupération de l'utilisateur." });
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -370,6 +384,18 @@ module.exports.getUser = async(req, res) =>{
         {
           model: UsersRelation,
           as: 'receivedRelations',
+        },
+        {
+          model: Users,
+          as: 'followers', // 👈 abonnés
+          attributes: ['id', 'nom', 'prenom', 'email'],
+          through: { attributes: [] }, // pas besoin de UserFollow dans la réponse
+        },
+        {
+          model: Users,
+          as: 'following', // 👈 abonnés
+          attributes: ['id', 'nom', 'prenom', 'email'],
+          through: { attributes: [] }, // pas besoin de UserFollow dans la réponse
         },
       ],
     })

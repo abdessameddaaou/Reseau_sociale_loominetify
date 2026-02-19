@@ -10,6 +10,7 @@ const Interactions = require("./interaction");
 const Conversation = require("./conversation");
 const Message = require("./message");
 const ConversationParticipant = require("./conversationParticipant");
+const Notification = require("./notification");
 
 // 2. DÉFINITION DES RELATIONS
 
@@ -62,6 +63,12 @@ Message.belongsTo(Users, { foreignKey: "senderId", as: "sender" });
 
 Conversation.belongsTo(Users, { foreignKey: "creatorId", as: "creator" });
 
+// --- Relations Notifications ---
+Users.hasMany(Notification, { foreignKey: 'recipientId', as: 'notificationsReceived', onDelete: 'CASCADE' });
+Users.hasMany(Notification, { foreignKey: 'senderId', as: 'notificationsSent', onDelete: 'CASCADE' });
+Notification.belongsTo(Users, { foreignKey: 'recipientId', as: 'recipient' });
+Notification.belongsTo(Users, { foreignKey: 'senderId', as: 'sender' });
+
 // 3. EXPORTATION
 module.exports = {
   db,
@@ -73,5 +80,6 @@ module.exports = {
   Interactions,
   Conversation,
   Message,
-  ConversationParticipant
+  ConversationParticipant,
+  Notification
 };
