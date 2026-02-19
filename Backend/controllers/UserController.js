@@ -1,6 +1,4 @@
-const Users = require("../models/users");
-const Publications = require('../models/publication');
-const Commentaires = require('../models/commentaire');
+const { Users, Publications, Commentaires } = require('../models');
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const config = require('../config');

@@ -33,5 +33,6 @@ app.use('/api/users', routeUser);
 app.use('/api/auth', routeAuthentification);
 app.use('/api/db', routeResetBD);
 app.use('/api/amis', AmisRoute);
+app.use('/api/messages', require('./routes/messagerie'));
 
 module.exports = app;

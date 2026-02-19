@@ -70,7 +70,7 @@ server.on('error', errorHandler);
 /**
  * Connexion DB + Lancement Serveur
  */
-db.sync()
+db.sync({ alter: true })
     .then(() => {
         console.log('[DB] Connexion réussie');
         server.listen(port, () => {

@@ -1,8 +1,5 @@
-const {DataTypes, Model} = require('sequelize');
+const { DataTypes } = require('sequelize');
 const db = require('../db/db');
-const Users = require('./users');
-const Publication = require('./publication');
-const Commentaire = require('./commentaire');
 
 const Interactions = db.define('Interactions', {
     id: {
@@ -11,19 +8,28 @@ const Interactions = db.define('Interactions', {
         autoIncrement: true,
         allowNull: false,
     },
-    type : {
-        type: DataTypes.ENUM('like','love', 'angry', 'sad', 'haha'),
+    type: {
+        type: DataTypes.ENUM('like', 'love', 'angry', 'sad', 'haha'),
         allowNull: false,
         defaultValue: 'like',
+    },
+    // On ajoute explicitement les clés étrangères pour la propreté
+    userId: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false,
+    },
+    publicationId: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false,
     }
-})
-
-
-// Relation entre Users et Interactions et publications
-
-Users.hasMany(Interactions, {foreignKey: 'userId', as: 'interactions', onDelete: 'CASCADE'});
-Interactions.belongsTo(Users, {foreignKey: 'userId', as: 'user'});
-Publication.hasMany(Interactions, {foreignKey: 'publicationId', as: 'interactions', onDelete: 'CASCADE'});
-Interactions.belongsTo(Publication, {foreignKey: 'publicationId', as: 'publication'});
+}, {
+    // Optionnel : évite qu'un user like 2 fois la même publi
+    indexes: [
+        {
+            unique: true,
+            fields: ['userId', 'publicationId']
+        }
+    ]
+});
 
 module.exports = Interactions;
