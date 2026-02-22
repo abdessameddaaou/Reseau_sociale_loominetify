@@ -12,9 +12,33 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.set('trust proxy', 1);
 
+// Helper to parse multiple origins from ENV or dynamically add www. prefix
+const getAllowedOrigins = (baseUrl) => {
+    if (!baseUrl) return '*';
+    const origins = baseUrl.split(',').map(s => s.trim());
+    const extendedOrigins = new Set(origins);
+
+    origins.forEach(origin => {
+        if (origin.startsWith('https://') && !origin.startsWith('https://www.')) {
+            extendedOrigins.add(origin.replace('https://', 'https://www.'));
+        }
+    });
+    return Array.from(extendedOrigins);
+};
+
+const allowedOrigins = getAllowedOrigins(config.frontendBaseUrl);
+
 // Configuration CORS
 app.use(cors({
-    origin: config.frontendBaseUrl,
+    origin: function (origin, callback) {
+        // allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     credentials: true,
 }));
 

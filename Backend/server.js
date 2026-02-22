@@ -25,11 +25,29 @@ app.set('port', port);
 const server = http.createServer(app);
 
 /**
+ * Normalisation et extension des origines CORS (gestion du www. auto)
+ */
+const getAllowedOrigins = (baseUrl) => {
+    if (!baseUrl) return '*';
+    const origins = baseUrl.split(',').map(s => s.trim());
+    const extendedOrigins = new Set(origins);
+
+    origins.forEach(origin => {
+        if (origin.startsWith('https://') && !origin.startsWith('https://www.')) {
+            extendedOrigins.add(origin.replace('https://', 'https://www.'));
+        }
+    });
+    return Array.from(extendedOrigins);
+};
+
+const allowedOrigins = getAllowedOrigins(config.frontendBaseUrl);
+
+/**
  * Initialisation Socket.io
  */
 const io = socketio(server, {
     cors: {
-        origin: config.frontendBaseUrl,
+        origin: allowedOrigins,
         credentials: true,
         methods: ["GET", "POST"]
     },
