@@ -51,7 +51,6 @@ const routeAuthentification = require('./routes/Authentification');
 const routeResetBD = require('./routes/db');
 const PublicationRoute = require('./routes/Publication');
 const AmisRoute = require('./routes/Amis');
-const MessageRoute = require('./routes/Message');
 // Déclaration des Routes
 app.use('/api/publications', PublicationRoute);
 app.use('/api/users', routeUser);
