@@ -36,5 +36,6 @@ app.use('/api/db', routeResetBD);
 app.use('/api/amis', AmisRoute);
 app.use('/api/messages', require('./routes/messagerie'));
 app.use('/api/notifications', require('./routes/Notification'));
+app.use('/api/conversations', require('./routes/conversations'));
 
 module.exports = app;

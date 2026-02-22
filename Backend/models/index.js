@@ -11,6 +11,7 @@ const Conversation = require("./conversation");
 const Message = require("./message");
 const ConversationParticipant = require("./conversationParticipant");
 const Notification = require("./notification");
+const UserBlock = require("./UserBlock");
 
 // 2. DÉFINITION DES RELATIONS
 
@@ -69,6 +70,12 @@ Users.hasMany(Notification, { foreignKey: 'senderId', as: 'notificationsSent', o
 Notification.belongsTo(Users, { foreignKey: 'recipientId', as: 'recipient' });
 Notification.belongsTo(Users, { foreignKey: 'senderId', as: 'sender' });
 
+// --- Relations Blocage ---
+Users.hasMany(UserBlock, { foreignKey: 'blockerId', as: 'blocking' });
+Users.hasMany(UserBlock, { foreignKey: 'blockedId', as: 'blockedBy' });
+UserBlock.belongsTo(Users, { foreignKey: 'blockerId', as: 'blocker' });
+UserBlock.belongsTo(Users, { foreignKey: 'blockedId', as: 'blocked' });
+
 // 3. EXPORTATION
 module.exports = {
   db,
@@ -81,5 +88,6 @@ module.exports = {
   Conversation,
   Message,
   ConversationParticipant,
-  Notification
+  Notification,
+  UserBlock
 };

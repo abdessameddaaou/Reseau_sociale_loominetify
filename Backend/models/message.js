@@ -6,7 +6,7 @@ const Message = db.define("Messages", {
   conversationId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
   senderId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
   content: { type: DataTypes.TEXT, allowNull: true },
-  type: { type: DataTypes.ENUM("text", "image", "file"), defaultValue: "text" },
+  type: { type: DataTypes.ENUM("text", "image", "file", "audio", "call"), defaultValue: "text" },
   fileUrl: { type: DataTypes.STRING, allowNull: true },
   isDeleted: { type: DataTypes.BOOLEAN, defaultValue: false },
 }, { timestamps: true });

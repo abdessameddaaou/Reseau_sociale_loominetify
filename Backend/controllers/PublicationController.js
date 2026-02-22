@@ -18,8 +18,8 @@ module.exports.createPublication = async (req, res) => {
     const completePub = await Publication.findByPk(newPublication.id, {
       include: [
         { model: Users, as: 'user', attributes: ['id', 'nom', 'prenom', 'photo'] },
-        { model: Commentaire, as: 'comments' }, 
-        { model: Interactions, as: 'reactions' } 
+        { model: Commentaire, as: 'comments' },
+        { model: Interactions, as: 'reactions' }
       ]
     });
 
@@ -39,13 +39,28 @@ module.exports.createPublication = async (req, res) => {
 };
 
 /**
- * Récupération de toutes les publications
+ * Récupération des publications du feed (abonnements + amis + mes propres posts)
  */
 module.exports.getAllPublications = async (req, res) => {
   try {
-    const publications = await Publication.findAll({ 
-        order: [['createdAt', 'DESC']],
-        include: [
+    const userId = req.userId;
+    const { UserFollow } = require('../models');
+    const { Op } = require('sequelize');
+
+    // Récupérer les IDs des utilisateurs que je suis (abonnements)
+    const followRows = await UserFollow.findAll({
+      where: { followerId: userId },
+      attributes: ['followingId']
+    });
+    const followingIds = followRows.map(f => f.followingId);
+
+    // Mes abonnements + moi-même
+    const allIds = [userId, ...followingIds];
+
+    const publications = await Publication.findAll({
+      where: { userId: { [Op.in]: allIds } },
+      order: [['createdAt', 'DESC']],
+      include: [
         {
           model: Users,
           as: 'user',
@@ -75,7 +90,7 @@ module.exports.getAllPublications = async (req, res) => {
           }]
         }
       ]
-      });
+    });
     return res.status(200).json(publications);
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -153,7 +168,7 @@ module.exports.addCommentToPublication = async (req, res) => {
   try {
     const commentText = req.body.text;
 
-    if(!commentText && !req.file) {
+    if (!commentText && !req.file) {
       return res.status(400).json({ error: "Le commentaire doit contenir du texte ou une image" });
     }
 
@@ -162,14 +177,14 @@ module.exports.addCommentToPublication = async (req, res) => {
       return res.status(404).json({ error: "Publication non trouvée." });
     }
 
-     const newCommentaire = await Commentaire.create({
+    const newCommentaire = await Commentaire.create({
       contenu: commentText,
       userId: req.userId,
       publicationId: req.params.id,
-      image:  req.file ? req.file.filename : null
+      image: req.file ? req.file.filename : null
     });
 
-    const commentaireComplet = await Commentaire.findByPk(newCommentaire.id,{
+    const commentaireComplet = await Commentaire.findByPk(newCommentaire.id, {
       include: [{ model: Users, as: 'user', attributes: ['id', 'nom', 'prenom', 'photo'] }]
     })
 
@@ -189,23 +204,23 @@ module.exports.addCommentToPublication = async (req, res) => {
 /**
  * Récupération de mes publications et commentaires
  */
-module.exports.getAllPublicationsUserConnecter = async(req, res) => {
+module.exports.getAllPublicationsUserConnecter = async (req, res) => {
   try {
     const user = req.userId
     const publications = await Publication.findAll({
       where: { userId: user },
-      order: [['createdAt', 'DESC']], 
+      order: [['createdAt', 'DESC']],
       include: [{
         model: Commentaire,
         as: 'comments',
         include: [{
-            model: Users,
-            as: 'user',
-            attributes: ['id', 'nom', 'prenom', 'photo']
-          }]
-      }] 
+          model: Users,
+          as: 'user',
+          attributes: ['id', 'nom', 'prenom', 'photo']
+        }]
+      }]
     });
-    
+
     // Ajout d'un attribut "mine" pour le front
     const data = publications.map((p) => {
       const pub = p.toJSON();
@@ -230,9 +245,9 @@ module.exports.likeComment = async (req, res) => {
     if (!comment) {
       return res.status(404).json({ error: "Commentaire non trouvé." });
     }
-    
+
     comment.nombreLikes += 1;
-    const updatedComment = await comment.save();  
+    const updatedComment = await comment.save();
 
     const io = req.app.get("io");
     if (io) {
@@ -244,7 +259,7 @@ module.exports.likeComment = async (req, res) => {
       });
     }
 
-    return res.status(200).json({ message: "Commentaire liké avec succès.", nombreLikes: updatedComment.nombreLikes });   
+    return res.status(200).json({ message: "Commentaire liké avec succès.", nombreLikes: updatedComment.nombreLikes });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -261,16 +276,16 @@ module.exports.deleteComment = async (req, res) => {
       return res.status(404).json({ error: "Commentaire non trouvé." });
     }
     const publicationId = comment.publicationId;
-    
+
     if (comment.userId !== req.userId) {
-         // Tu peux activer ça si tu veux bloquer la suppression par les autres
-         // return res.status(403).json({ error: "Non autorisé" });
+      // Tu peux activer ça si tu veux bloquer la suppression par les autres
+      // return res.status(403).json({ error: "Non autorisé" });
     }
 
     await comment.destroy();
-    
+
     const io = req.app.get("io");
-    if(io){
+    if (io) {
       io.emit("delete_comment", {
         commentId,
         publicationId,
@@ -322,12 +337,12 @@ module.exports.getUsersWhoCommentedPost = async (req, res) => {
     const uniqueUsers = [];
     const map = new Map();
     for (const item of commentaires) {
-        if(!map.has(item.user.id)){
-            map.set(item.user.id, true);    
-            uniqueUsers.push(item.user);
-        }
+      if (!map.has(item.user.id)) {
+        map.set(item.user.id, true);
+        uniqueUsers.push(item.user);
+      }
     }
-    
+
     return res.status(200).json({ users: uniqueUsers });
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -382,10 +397,10 @@ module.exports.sharePublication = async (req, res) => {
     const completeShared = await Publication.findByPk(sharedPublication.id, {
       include: [
         { model: Users, as: 'user', attributes: ['id', 'nom', 'prenom', 'photo'] },
-        { 
-            model: Commentaire, 
-            as: 'comments', 
-            include: [{ model: Users, as: 'user', attributes: ['id','nom','prenom','photo'] }] 
+        {
+          model: Commentaire,
+          as: 'comments',
+          include: [{ model: Users, as: 'user', attributes: ['id', 'nom', 'prenom', 'photo'] }]
         },
         { model: Interactions, as: 'reactions' },
         {

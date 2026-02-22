@@ -1,4 +1,4 @@
-const { UserRelation, UserFollow, Users, Notification } = require("../models");
+const { UserRelation, UserFollow, Users, Notification, UserBlock } = require("../models");
 const { Op } = require("sequelize");
 
 /** * Envoyer une invitation d'ami
@@ -133,7 +133,7 @@ module.exports.acceptInvitation = async (req, res) => {
         const notif = await Notification.create({
             recipientId: requesterId,
             senderId: userId,
-            type: 'invite', // ou 'accept'
+            type: 'accept',
             message: `${userAccepter.prenom} ${userAccepter.nom} a accepté votre invitation`,
             relatedId: userId
         });
@@ -147,7 +147,7 @@ module.exports.acceptInvitation = async (req, res) => {
                 recipientId: requesterId,
                 notification: {
                     id: notif.id,
-                    type: 'invite',
+                    type: 'accept',
                     message: notif.message,
                     sender: {
                         id: userAccepter.id,
@@ -233,8 +233,8 @@ module.exports.refuseInvitation = async (req, res) => {
             return res.status(404).json({ message: "Invitation introuvable" });
         }
 
-        relation.status = "refusée";
-        await relation.save();
+        // Supprimer la relation pour permettre un renvoi ultérieur
+        await relation.destroy();
         return res.status(200).json({ message: "Invitation refusée avec succès" });
     } catch (error) {
         console.error(error);
@@ -246,28 +246,34 @@ module.exports.blockUser = async (req, res) => {
     try {
         const { friendId } = req.body;
         const userId = req.userId;
-        const relation = await UserRelation.findOne({
+
+        // Create block record
+        const [block, created] = await UserBlock.findOrCreate({
+            where: { blockerId: userId, blockedId: friendId },
+            defaults: { blockerId: userId, blockedId: friendId }
+        });
+
+        if (!created) {
+            return res.status(400).json({ message: "Utilisateur déjà bloqué" });
+        }
+
+        // Destroy friend relation if exists
+        await UserRelation.destroy({
             where: {
-                $or: [
-                    { requesterId: userId, addresseeId: friendId, status: "acceptée" },
-                    { requesterId: friendId, addresseeId: userId, status: "acceptée" }
+                [Op.or]: [
+                    { requesterId: userId, addresseeId: friendId },
+                    { requesterId: friendId, addresseeId: userId }
                 ]
             }
         });
-        if (!relation) {
-            return res.status(404).json({ message: "Relation d'ami non trouvée" });
-        }
-        await relation.destroy();
+
+        // Destroy follows
         await UserFollow.destroy({
             where: {
-                followerId: userId,
-                followingId: friendId
-            }
-        });
-        await UserFollow.destroy({
-            where: {
-                followerId: friendId,
-                followingId: userId
+                [Op.or]: [
+                    { followerId: userId, followingId: friendId },
+                    { followerId: friendId, followingId: userId }
+                ]
             }
         });
 
@@ -278,22 +284,29 @@ module.exports.blockUser = async (req, res) => {
             io.emit('unfollow', { followerId: friendId, followingId: userId });
         }
 
-        return res.status(200).json({ message: "Ami supprimé avec succès" });
+        return res.status(200).json({ message: "Utilisateur bloqué avec succès" });
     } catch (error) {
         return res.status(500).json({ message: "Erreur interne du serveur", error: error.message });
     }
 }
 
 /** 
- * Débloquer un utilisateur (A COMPLETER)
- * @param {*} req
- * @param {*} res
+ * Débloquer un utilisateur
  */
 module.exports.unblockUser = async (req, res) => {
     try {
         const { friendId } = req.body;
-        // Implémentation future
-        res.status(200).json({ message: "Non implémenté" });
+        const userId = req.userId;
+
+        const deleted = await UserBlock.destroy({
+            where: { blockerId: userId, blockedId: friendId }
+        });
+
+        if (!deleted) {
+            return res.status(404).json({ message: "Cet utilisateur n'est pas bloqué" });
+        }
+
+        return res.status(200).json({ message: "Utilisateur débloqué avec succès" });
     } catch (error) {
         return res.status(500).json({ message: "Erreur interne du serveur", error: error.message });
     }

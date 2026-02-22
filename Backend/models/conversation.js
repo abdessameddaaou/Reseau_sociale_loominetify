@@ -17,6 +17,10 @@ const Conversation = db.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    avatar: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     creatorId: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true,
