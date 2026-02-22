@@ -12,18 +12,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.set('trust proxy', 1);
 
-// Helper to parse multiple origins from ENV or dynamically add www. prefix
+// Helper to parse multiple origins from ENV
 const getAllowedOrigins = (baseUrl) => {
     if (!baseUrl) return '*';
-    const origins = baseUrl.split(',').map(s => s.trim().replace(/\/$/, ''));
-    const extendedOrigins = new Set(origins);
-
-    origins.forEach(origin => {
-        if (origin.startsWith('https://') && !origin.startsWith('https://www.')) {
-            extendedOrigins.add(origin.replace('https://', 'https://www.'));
-        }
-    });
-    return Array.from(extendedOrigins);
+    return baseUrl.split(',').map(s => s.trim().replace(/\/$/, ''));
 };
 
 const allowedOrigins = getAllowedOrigins(config.frontendBaseUrl);

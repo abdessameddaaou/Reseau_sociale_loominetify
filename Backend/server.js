@@ -25,19 +25,11 @@ app.set('port', port);
 const server = http.createServer(app);
 
 /**
- * Normalisation et extension des origines CORS (gestion du www. auto)
+ * Normalisation et extension des origines CORS (sans ajout auto de www.)
  */
 const getAllowedOrigins = (baseUrl) => {
     if (!baseUrl) return '*';
-    const origins = baseUrl.split(',').map(s => s.trim().replace(/\/$/, ''));
-    const extendedOrigins = new Set(origins);
-
-    origins.forEach(origin => {
-        if (origin.startsWith('https://') && !origin.startsWith('https://www.')) {
-            extendedOrigins.add(origin.replace('https://', 'https://www.'));
-        }
-    });
-    return Array.from(extendedOrigins);
+    return baseUrl.split(',').map(s => s.trim().replace(/\/$/, ''));
 };
 
 const allowedOrigins = getAllowedOrigins(config.frontendBaseUrl);
