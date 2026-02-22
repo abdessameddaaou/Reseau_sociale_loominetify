@@ -1,46 +1,49 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../environments/environment.dev';
 import Swal from 'sweetalert2';
+import { ThemeService } from '../../service/theme.service';
 
 @Component({
-selector: 'app-auth-user',
-standalone: true,
-imports: [CommonModule, ReactiveFormsModule, RouterModule, HttpClientModule],
-templateUrl: './auth-user.component.html'
+  selector: 'app-auth-user',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, HttpClientModule],
+  templateUrl: './auth-user.component.html'
 })
 export class AuthUserComponent implements OnInit {
-  countries: any[] = [];
-
-
-  pageRedirection: 'login' | 'signup' = 'login';
-  signupStep = 1;
-
-  loginForm: FormGroup;
-  signupForm: FormGroup;
-
-
-  dropdownOpen = false;
-  selectedCountry: any = null;
 
   /**
-   * Erreurs
+   * Variables 
    */
+  countries: any[] = [];
+  pageRedirection: 'login' | 'signup' = 'login';
+  signupStep = 1;
+  loginForm: FormGroup;
+  signupForm: FormGroup;
+  dropdownOpen = false;
+  selectedCountry: any = null;
   signupErrors: { [key: string]: string } = {};
   loginError = '';
   signupError = '';
-  constructor(private fb: FormBuilder, private router: Router, private http: HttpClient) {
+
+  /**
+   * Constructeur
+   * @param fb 
+   * @param router 
+   * @param http 
+   * @param themeService 
+   */
+  constructor(private fb: FormBuilder, private router: Router, private http: HttpClient, private themeService: ThemeService) {
     this.loginForm = this.buildLoginForm();
     this.signupForm = this.buildSignupForm();
   }
 
-  // ---------------------------------------------------------------------------
-  // Getters pour le template
-  // ---------------------------------------------------------------------------
+  /**
+   * Getters pour le template
+   */
 
   get LoginForm(): { [key: string]: AbstractControl } {
     return this.loginForm.controls;
@@ -50,10 +53,10 @@ export class AuthUserComponent implements OnInit {
     return this.signupForm.controls;
   }
 
-  // ---------------------------------------------------------------------------
-  // Initialisation des formulaires
-  // ---------------------------------------------------------------------------
-
+  /**
+   * 
+   * @returns Initialisation des formulaires
+   */
   private buildLoginForm(): FormGroup {
     return this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -68,10 +71,10 @@ export class AuthUserComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       confirmPassword: ['', Validators.required],
-      phone: [''],
+      telephone: [''],
       dateNaissance: ['', Validators.required],
       pays: [''],
-      city: [''],
+      ville: [''],
       question: ['', Validators.required],
       reponse: ['', Validators.required],
     });
@@ -81,26 +84,28 @@ export class AuthUserComponent implements OnInit {
    * ngOnInit()
    */
 
-ngOnInit() {
-  this.http.get<any[]>('https://restcountries.com/v3.1/all?fields=name,flags,cca2,translations').subscribe((data) => {
-    this.countries = data
-      .map((c) => ({
-        name: c.translations?.fra?.common || c.name.common,
-        code: c.cca2,
-        flag: c.flags.png,
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  });
-}
+  ngOnInit() {
+    this.http.get<any[]>('https://restcountries.com/v3.1/all?fields=name,flags,cca2,translations').subscribe((data) => {
+      this.countries = data
+        .map((c) => ({
+          name: c.translations?.fra?.common || c.name.common,
+          code: c.cca2,
+          flag: c.flags.png,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    });
 
-  toggleDropdown() {
-  this.dropdownOpen = !this.dropdownOpen;
+    this.themeService.applyAuthTheme();
   }
 
-/**
- * Fonction Choisir un pays 
- * @param country 
- */
+  toggleDropdown() {
+    this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  /**
+   * Fonction Choisir un pays 
+   * @param country 
+   */
   selectCountry(country: any) {
     this.selectedCountry = country;
     this.signupForm.get('pays')?.setValue(country.name);
@@ -108,10 +113,10 @@ ngOnInit() {
   }
 
 
-  // ---------------------------------------------------------------------------
-  // Gestion du mode login / signup ( pour la redirection )
-  // ---------------------------------------------------------------------------
-
+  /**
+   * Gestion du mode login / signup ( pour la redirection )
+   * @param modeChoisis 
+   */
   setMode(modeChoisis: 'login' | 'signup'): void {
     this.pageRedirection = modeChoisis;
     this.clearGlobalErrors();
@@ -122,10 +127,10 @@ ngOnInit() {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Connexion
-  // ---------------------------------------------------------------------------
-
+  /**
+   * Connexion
+   * @returns 
+   */
   onLogin(): void {
     this.clearGlobalErrors();
 
@@ -138,18 +143,25 @@ ngOnInit() {
       .post(`${environment.apiUrl}/auth/login`, this.loginForm.value, { withCredentials: true })
       .subscribe({
         next: () => {
+          // l’utilisateur est connecté → on remet son thème perso
+          this.themeService.reapplyUserTheme();
+
           this.router.navigate(['/fil-actualite']);
         },
         error: (err: any) => {
-          this.loginError = this.extractErrorMessage(err, 'Impossible de se connecter au serveur.');
+          this.loginError = this.extractErrorMessage(
+            err,
+            'Impossible de se connecter au serveur.'
+          );
         },
       });
   }
 
-  // ---------------------------------------------------------------------------
-  // Inscription – Navigation entre les étapes
-  // ---------------------------------------------------------------------------
 
+  /**
+   * Inscription – Navigation entre les étapes
+   * Step 1 => Inscription
+   */
   goFromStep1(): void {
     this.clearGlobalErrors();
     this.clearSignupFieldErrors(['nom', 'prenom', 'email']);
@@ -181,6 +193,9 @@ ngOnInit() {
     }
   }
 
+/**
+ * Step 2 => Inscription
+ */
   goFromStep2(): void {
     this.clearGlobalErrors();
     this.clearSignupFieldErrors(['password']);
@@ -197,7 +212,7 @@ ngOnInit() {
       this.signupErrors['password'] =
         'Le mot de passe ne respecte pas les critères de sécurité (8 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial).';
       isValid = false;
-    }else if (password !== confirmPassword) {
+    } else if (password !== confirmPassword) {
       this.signupErrors['confirmPassword'] = 'Les mots de passe ne correspondent pas';
       isValid = false;
     }
@@ -207,51 +222,54 @@ ngOnInit() {
     }
   }
 
+  /**
+   * Step 3 => Inscription
+   */
   goFromStep3(): void {
     this.clearGlobalErrors();
     this.clearSignupFieldErrors(['dateNaissance']);
 
     const dateNaissance = this.signupForm.get('dateNaissance')?.value;
-     const pays = this.signupForm.get('pays')?.value;
+    const pays = this.signupForm.get('pays')?.value;
     let isValid = true;
 
- if (!dateNaissance) {
-    this.signupErrors['dateNaissance'] = 'Le champ "Date de naissance" est obligatoire';
-    isValid = false;
-  } else {
-    const birth = new Date(dateNaissance);
-    if (isNaN(birth.getTime())) {
-      this.signupErrors['dateNaissance'] = 'La date de naissance est invalide';
+    if (!dateNaissance) {
+      this.signupErrors['dateNaissance'] = 'Le champ "Date de naissance" est obligatoire';
       isValid = false;
     } else {
-      const today = new Date();
-      if (birth > today) {
-        this.signupErrors['dateNaissance'] = 'La date de naissance ne peut pas être dans le futur';
+      const birth = new Date(dateNaissance);
+      if (isNaN(birth.getTime())) {
+        this.signupErrors['dateNaissance'] = 'La date de naissance est invalide';
         isValid = false;
       } else {
-        let age = today.getFullYear() - birth.getFullYear();
-        const m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-          age--;
-        }
-        if (age < 18) {
-          this.signupErrors['dateNaissance'] =
-            'Vous devez avoir au moins 18 ans pour vous inscrire';
+        const today = new Date();
+        if (birth > today) {
+          this.signupErrors['dateNaissance'] = 'La date de naissance ne peut pas être dans le futur';
           isValid = false;
+        } else {
+          let age = today.getFullYear() - birth.getFullYear();
+          const m = today.getMonth() - birth.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+            age--;
+          }
+          if (age < 18) {
+            this.signupErrors['dateNaissance'] =
+              'Vous devez avoir au moins 18 ans pour vous inscrire';
+            isValid = false;
+          }
         }
       }
     }
-  }
 
     if (isValid) {
       this.signupStep = 4;
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Inscription
-  // ---------------------------------------------------------------------------
-
+  /**
+   * Inscription
+   * @returns 
+   */
   onSignup(): void {
     this.clearGlobalErrors();
 
@@ -289,29 +307,26 @@ ngOnInit() {
       return;
     }
     this.http.post(`${environment.apiUrl}/users/newUser`, this.signupForm.value, { withCredentials: true }).subscribe({
-        next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Inscription réussie',
-            text: 'Vous pouvez maintenant vous connecter.',
-            timer: 1500,
-            showConfirmButton: false,
-          });
+      next: () => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Inscription réussie',
+          text: 'Vous pouvez maintenant vous connecter.',
+          timer: 1500,
+          showConfirmButton: false,
+        });
 
-          this.setMode('login');
-        },
-        error: (err: HttpErrorResponse) => {
-          this.signupError = this.extractErrorMessage(
-            err,
-            'Une erreur est survenue lors de la création du compte.'
-          );
-        },
-      });
+        this.setMode('login');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.signupError = this.extractErrorMessage(
+          err,
+          'Une erreur est survenue lors de la création du compte.'
+        );
+      },
+    });
   }
 
-  // ---------------------------------------------------------------------------
-  // Validation & Erreurs
-  // ---------------------------------------------------------------------------
 
   /**
    * Valide les critères du mot de passe :
@@ -347,6 +362,7 @@ ngOnInit() {
     }
     return defaultMessage;
   }
+
 
   private clearGlobalErrors(): void {
     this.loginError = '';

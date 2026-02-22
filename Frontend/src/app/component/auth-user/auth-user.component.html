@@ -1,24 +1,14 @@
-<!-- AuthComponent template -->
-<div
-  class="relative min-h-screen bg-[#f5f7fa] flex items-center justify-center p-5 overflow-hidden"
->
+<div class="relative min-h-screen bg-[#f5f7fa] flex items-center justify-center p-5 overflow-hidden">
   <!-- halos de fond -->
-  <div
-    class="pointer-events-none absolute -top-[200px] -left-[200px] w-[500px] h-[500px] rounded-full"
-    style="background: radial-gradient(circle, rgba(91,124,255,0.08) 0%, transparent 70%);"
-  ></div>
-  <div
-    class="pointer-events-none absolute -bottom-[150px] -right-[150px] w-[400px] h-[400px] rounded-full"
-    style="background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);"
-  ></div>
+  <div class="pointer-events-none absolute -top-[200px] -left-[200px] w-[500px] h-[500px] rounded-full"
+    style="background: radial-gradient(circle, rgba(91,124,255,0.08) 0%, transparent 70%);"></div>
+  <div class="pointer-events-none absolute -bottom-[150px] -right-[150px] w-[400px] h-[400px] rounded-full"
+    style="background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);"></div>
 
-  <div
-    class="relative z-10 flex w-full max-w-5xl min-h-[650px] bg-white rounded-[30px] shadow-2xl gap-5"
-  >
+  <div class="relative z-10 flex w-full max-w-5xl min-h-[650px] bg-white rounded-[30px] shadow-2xl gap-5">
     <!-- GAUCHE -->
     <div
-      class="flex-1 flex items-center justify-center bg-gradient-to-br from-[#5b7cff] to-[#8b5cf6] rounded-[30px] m-5 px-10 py-16 relative overflow-hidden"
-    >
+      class="flex-1 flex items-center justify-center bg-gradient-to-br from-[#5b7cff] to-[#8b5cf6] rounded-[30px] m-5 px-10 py-16 relative overflow-hidden">
       <div class="w-full max-w-md text-white space-y-8">
         <div>
           <h2 class="text-3xl font-bold lowercase mb-2">loominetfy</h2>
@@ -29,9 +19,7 @@
 
         <div class="space-y-4">
           <div class="flex items-start gap-3">
-            <div
-              class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur"
-            >
+            <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur">
               <span class="text-lg">👥</span>
             </div>
             <div>
@@ -43,9 +31,7 @@
           </div>
 
           <div class="flex items-start gap-3">
-            <div
-              class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur"
-            >
+            <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur">
               <span class="text-lg">💬</span>
             </div>
             <div>
@@ -57,9 +43,7 @@
           </div>
 
           <div class="flex items-start gap-3">
-            <div
-              class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur"
-            >
+            <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur">
               <span class="text-lg">🔒</span>
             </div>
             <div>
@@ -74,83 +58,56 @@
     </div>
 
     <!-- DROITE -->
-    <div
-      [ngClass]="[
+    <div [ngClass]="[
         'flex flex-col justify-center bg-white rounded-[30px] my-5 mr-5 px-10 py-10 transition-all duration-500',
         pageRedirection === 'signup' ? 'basis-[60%]' : 'basis-1/2'
-      ]"
-    >
+      ]">
       <!-- Header -->
       <div class="mb-8">
-        <h1
-          class="text-3xl font-bold bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] bg-clip-text text-transparent mb-1"
-        >
+        <h1 class="text-3xl font-bold bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] bg-clip-text text-transparent mb-1">
           {{ pageRedirection === 'login' ? 'Bon retour !' : 'Créer un compte' }}
         </h1>
         <p class="text-sm text-slate-500">
           {{
-            pageRedirection === 'login'
-              ? 'Connectez-vous pour continuer'
-              : 'Rejoignez la communauté loominetfy.'
+          pageRedirection === 'login'
+          ? 'Connectez-vous pour continuer'
+          : 'Rejoignez la communauté loominetfy.'
           }}
         </p>
       </div>
 
       <!-- Toggle -->
       <div class="flex bg-slate-100 rounded-xl p-1 mb-7">
-        <button
-          class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all"
-          [ngClass]="
+        <button class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all" [ngClass]="
             pageRedirection === 'login'
               ? 'bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] text-white shadow-md'
               : 'text-slate-500'
-          "
-          type="button"
-          (click)="setMode('login')"
-        >
+          " type="button" (click)="setMode('login')">
           Connexion
         </button>
-        <button
-          class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all"
-          [ngClass]="
+        <button class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all" [ngClass]="
             pageRedirection === 'signup'
               ? 'bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] text-white shadow-md'
               : 'text-slate-500'
-          "
-          type="button"
-          (click)="setMode('signup')"
-        >
+          " type="button" (click)="setMode('signup')">
           Inscription
         </button>
       </div>
 
       <!-- Message d'erreur global LOGIN -->
-      <div
-        *ngIf="loginError"
-        class="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs text-red-600"
-      >
+      <div *ngIf="loginError" class="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs text-red-600">
         {{ loginError }}
       </div>
-
-      <!-- FORMULAIRE CONNEXION -->
-      <form
-        *ngIf="pageRedirection === 'login'"
-        [formGroup]="loginForm"
-        (ngSubmit)="onLogin()"
-        class="flex flex-col gap-5"
-      >
+      <!------------------------------------------------------- FORMULAIRE CONNEXION -------------------------------------------------------------->
+      <!--  -->
+      <form *ngIf="pageRedirection === 'login'" [formGroup]="loginForm" (ngSubmit)="onLogin()"
+        class="flex flex-col gap-5">
         <div>
           <label class="block text-xs font-medium text-slate-800 mb-1">Adresse email</label>
-          <input
-            type="email"
-            formControlName="email"
-            placeholder="votre@email.com"
-            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-          />
-          <span
-            *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
-            class="block mt-1 text-xs text-red-600"
-          >
+          <input type="email" formControlName="email" placeholder="votre@email.com"
+            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
+          <span *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+            class="block mt-1 text-xs text-red-600">
             Email invalide
           </span>
         </div>
@@ -158,92 +115,38 @@
 
         <div>
           <label class="block text-xs font-medium text-slate-800 mb-1">Mot de passe</label>
-          <input
-            type="password"
-            formControlName="password"
-            placeholder="••••••••"
-            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-          />
+          <input type="password" formControlName="password" placeholder="********"
+            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
         </div>
 
         <div class="text-right -mt-1 mb-1">
-          <a
-            routerLink="/reset-password"
-            class="text-xs text-[#5b7cff] hover:text-[#8b5cf6] hover:underline"
-            >Mot de passe oublié ?</a
-          >
+          <a routerLink="/reset-password" class="text-xs text-[#5b7cff] hover:text-[#8b5cf6] hover:underline">Mot de
+            passe oublié ?</a>
         </div>
 
-        <button
-          type="submit"
-          class="relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition"
-        >
+        <button type="submit"
+          class="relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition">
           Se connecter
         </button>
-
-        <!-- <div class="relative text-center text-xs text-slate-400 my-2">
-          <span class="px-3 bg-white relative z-10">OU</span>
-          <div class="absolute inset-x-0 top-1/2 h-px bg-slate-200 -z-0"></div>
-        </div>
-
-        <button
-          type="button"
-          class="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-[#5b7cff] hover:-translate-y-[1px] transition"
-        >
-
-          <span class="w-4 h-4">
-            <svg viewBox="0 0 18 18">
-              <path
-                fill="#4285F4"
-                d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
-              />
-              <path
-                fill="#34A853"
-                d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"
-              />
-              <path
-                fill="#EA4335"
-                d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
-              />
-            </svg>
-          </span>
-          <span>Continuer avec Google</span>
-        </button> -->
       </form>
 
       <!------------------------------------------------------- FORMULAIRE INSCRIPTION multi-étapes --------------------------------------------------------->
       <!-- Message d'erreur global SIGNUP -->
-      <div
-        *ngIf="signupError && pageRedirection === 'signup'"
-        class="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs text-red-600"
-      >
+      <div *ngIf="signupError && pageRedirection === 'signup'"
+        class="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs text-red-600">
         {{ signupError }}
       </div>
 
       <!-- FORMULAIRE INSCRIPTION multi-étapes -->
-      <form
-        *ngIf="pageRedirection === 'signup'"
-        [formGroup]="signupForm"
-        (ngSubmit)="onSignup()"
-        class="flex flex-col "
-      >
+      <form *ngIf="pageRedirection === 'signup'" [formGroup]="signupForm" (ngSubmit)="onSignup()"
+        class="flex flex-col ">
         <!-- STEP 1 -->
         <ng-container *ngIf="signupStep === 1">
 
           <div>
-            <label class="block text-xs font-medium text-slate-800 mb-1"
-              >Nom</label
-            >
-            <input
-              type="text"
-              formControlName="nom"
-              placeholder="Jean Dupont"
-              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-            />
+            <label class="block text-xs font-medium text-slate-800 mb-1">Nom</label>
+            <input type="text" formControlName="nom" placeholder="Jean Dupont"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
               {{ signupErrors['nom'] }}
             </span>
@@ -251,48 +154,33 @@
 
           <div>
             <label class="block text-xs font-medium text-slate-800 mb-1">Prénom</label>
-            <input
-              type="text"
-              formControlName="prenom"
-              placeholder="Jean"
-              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-            />
+            <input type="text" formControlName="prenom" placeholder="Jean"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
               {{ signupErrors['prenom'] }}
             </span>
           </div>
-                    <div>
+          <div>
             <label class="block text-xs font-medium text-slate-800 mb-1">Adresse email</label>
-            <input
-              type="email"
-              formControlName="email"
-              placeholder="votre@email.com"
-              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-            />
+            <input type="email" formControlName="email" placeholder="votre@email.com"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
               {{ signupErrors['email'] }}
             </span>
           </div>
 
-          <button
-            type="button"
-            (click)="goFromStep1()"
-            class="mt-3 relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition"
-          >
+          <button type="button" (click)="goFromStep1()"
+            class="mt-3 relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition">
             Suivant
           </button>
         </ng-container>
 
         <!-- STEP 2 -->
-        <ng-container *ngIf="signupStep === 2" >
+        <ng-container *ngIf="signupStep === 2">
           <div>
             <label class="block text-xs font-medium text-slate-800 mb-1">Mot de passe</label>
-            <input
-              type="password"
-              formControlName="password"
-              placeholder="••••••••"
-              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-            />
+            <input type="password" formControlName="password" placeholder="********"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
               {{ signupErrors['password'] }}
             </span>
@@ -303,155 +191,110 @@
 
           <div>
             <label class="block text-xs font-medium text-slate-800 mb-1">Confirmation du mot de passe</label>
-            <input
-              type="password"
-              formControlName="confirmPassword"
-              placeholder="••••••••"
-              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-            />
+            <input type="password" formControlName="confirmPassword" placeholder="********"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
               {{ signupErrors['confirmPassword'] }}
             </span>
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-slate-800 mb-1"
-              >Numéro de téléphone (facultatif)</label
-            >
-            <input
-              type="tel"
-              formControlName="phone"
-              placeholder="+33 6 12 34 56 78"
-              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-            />
+            <label class="block text-xs font-medium text-slate-800 mb-1">Numéro de téléphone (facultatif)</label>
+            <input type="tel" formControlName="telephone" placeholder="+33 6 12 34 56 78"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
           </div>
 
           <div class="flex gap-3 mt-5">
-            <button
-              type="button"
-              (click)="signupStep = 1; signupErrors = {}"
-              class="flex-1 rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition"
-            >
+            <button type="button" (click)="signupStep = 1; signupErrors = {}"
+              class="flex-1 rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition">
               Retour
             </button>
-            <button
-              type="button"
-              (click)="goFromStep2()"
-              class="flex-1 rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition"
-            >
+            <button type="button" (click)="goFromStep2()"
+              class="flex-1 rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition">
               Suivant
             </button>
           </div>
         </ng-container>
 
         <!-- STEP 3 -->
-<!-- STEP 3 -->
-<ng-container *ngIf="signupStep === 3">
-  <div>
+        <ng-container *ngIf="signupStep === 3">
+          <div>
 
-    <label class="block text-xs font-medium text-slate-800 mb-1">
-      Date de naissance
-    </label>
-    <input
-      type="date"
-      formControlName="dateNaissance"
-      class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-    />
-    <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
-      {{ signupErrors['dateNaissance'] }}
-    </span>
-  </div>
+            <label class="block text-xs font-medium text-slate-800 mb-1">
+              Date de naissance
+            </label>
+            <input type="date" formControlName="dateNaissance"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
+            <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
+              {{ signupErrors['dateNaissance'] }}
+            </span>
+          </div>
 
-  <div>
-    <label class="block text-xs font-medium text-slate-800 mb-1">
-      Pays de résidence
-    </label>
-    <div class="relative w-full">
-  <div
-class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm flex items-center justify-between cursor-pointer transition focus-within:border-[#5b7cff] focus-within:ring-4 focus-within:ring-[#5b7cff]/10"
-      (click)="toggleDropdown()"
-      tabindex="0"
-  >
-    <div class="flex items-center gap-2">
-      <img
-        *ngIf="selectedCountry?.flag"
-        [src]="selectedCountry.flag"
-        class="w-6 h-4 border"
-      />
-      <span class="text-slate-700">{{ selectedCountry?.name || 'Select a country' }}</span>
-    </div>
-    <span class="text-slate-400">▼</span>
-  </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-800 mb-1">
+              Pays de résidence
+            </label>
+            <div class="relative w-full">
+              <div
+                class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm flex items-center justify-between cursor-pointer transition focus-within:border-[#5b7cff] focus-within:ring-4 focus-within:ring-[#5b7cff]/10"
+                (click)="toggleDropdown()" tabindex="0">
+                <div class="flex items-center gap-2">
+                  <img *ngIf="selectedCountry?.flag" [src]="selectedCountry.flag" class="w-6 h-4 border" />
+                  <span class="text-slate-700">{{ selectedCountry?.name || 'Select a country' }}</span>
+                </div>
+                <span class="text-slate-400">▼</span>
+              </div>
 
-  <ul
-    *ngIf="dropdownOpen"
-    class="absolute z-10 bg-white border w-full mt-1 max-h-60 overflow-y-auto rounded shadow"
-  >
-    <li
-      *ngFor="let country of countries"
-      class="px-3 py-2 flex items-center gap-2 hover:bg-gray-100 cursor-pointer"
-      (click)="selectCountry(country)"
-    >
-      <img [src]="country.flag" class="w-6 h-4 border" />
-      <span>{{ country.name }}</span>
-    </li>
-  </ul>
-</div>
-    <!-- liste des pays via ng-country-select -->
-    <!-- <ng-country-select
-      formControlName="pays"
-      class="w-full rounded-xl border-2 border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-    >
-    </ng-country-select> -->
+              <ul *ngIf="dropdownOpen"
+                class="absolute z-10 bg-white border w-full mt-1 max-h-60 overflow-y-auto rounded shadow">
+                <li *ngFor="let country of countries"
+                  class="px-3 py-2 flex items-center gap-2 hover:bg-gray-100 cursor-pointer"
+                  (click)="selectCountry(country)">
+                  <img [src]="country.flag" class="w-6 h-4 border" />
+                  <span>{{ country.name }}</span>
+                </li>
+              </ul>
+            </div>
 
-    <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
-      {{ signupErrors['pays'] }}
-    </span>
-  </div>
 
-  <div>
-    <label class="block text-xs font-medium text-slate-800 mb-1">
-      Ville de résidence (facultatif)
-    </label>
-    <input
-      type="text"
-      formControlName="city"
-      placeholder="Paris"
-      class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-    />
-  </div>
+            <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
+              {{ signupErrors['pays'] }}
+            </span>
+          </div>
 
-  <div class="flex gap-3 mt-5">
-    <button
-      type="button"
-      (click)="signupStep = 2; signupErrors = {};"
-      class="flex-1 rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition"
-    >
-      Retour
-    </button>
-    <button
-      type="button"
-      (click)="goFromStep3()"
-      class="flex-1 rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition"
-    >
-      Suivant
-    </button>
-  </div>
-</ng-container>
+          <div>
+            <label class="block text-xs font-medium text-slate-800 mb-1">
+              Ville de résidence (facultatif)
+            </label>
+            <input type="text" formControlName="ville" placeholder="Paris"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
+          </div>
+
+          <div class="flex gap-3 mt-5">
+            <button type="button" (click)="signupStep = 2; signupErrors = {};"
+              class="flex-1 rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition">
+              Retour
+            </button>
+            <button type="button" (click)="goFromStep3()"
+              class="flex-1 rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition">
+              Suivant
+            </button>
+          </div>
+        </ng-container>
 
 
         <!-- STEP 4 -->
         <ng-container *ngIf="signupStep === 4">
           <div>
             <label class="block text-xs font-medium text-slate-800 mb-1">Question secrète</label>
-            <select
-              formControlName="question"
-              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-            >
+            <select formControlName="question"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10">
               <option value="">Choisissez une question</option>
-              <option value="Quel est le nom de votre premier animal de compagnie ?">Quel est le nom de votre premier animal de compagnie ?</option>
+              <option value="Quel est le nom de votre premier animal de compagnie ?">Quel est le nom de votre premier
+                animal de compagnie ?</option>
               <option value="Dans quelle ville êtes-vous né(e) ?">Dans quelle ville êtes-vous né(e) ?</option>
-              <option value="Quel est le nom de votre école primaire ?">Quel est le nom de votre école primaire ?</option>
+              <option value="Quel est le nom de votre école primaire ?">Quel est le nom de votre école primaire ?
+              </option>
               <option value="Quel est votre plat préféré ?">Quel est votre plat préféré ?</option>
             </select>
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
@@ -461,64 +304,23 @@ class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm flex items-
 
           <div>
             <label class="block text-xs font-medium text-slate-800 mb-1">Réponse secrète</label>
-            <input
-              type="text"
-              formControlName="reponse"
-              placeholder="Votre réponse"
-              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"
-            />
+            <input type="text" formControlName="reponse" placeholder="Votre réponse"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
             <span class="block mt-1 text-xs text-red-600 min-h-[1rem]">
               {{ signupErrors['reponse'] }}
             </span>
           </div>
 
           <div class="flex gap-3">
-            <button
-              type="button"
-              (click)="signupStep = 3; signupErrors = {}"
-              class="flex-1 rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition"
-            >
+            <button type="button" (click)="signupStep = 3; signupErrors = {}"
+              class="flex-1 rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition">
               Retour
             </button>
-            <button
-              type="submit"
-              class="flex-1 rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition"
-            >
+            <button type="submit"
+              class="flex-1 rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition">
               S'inscrire
             </button>
           </div>
-
-          <!-- <div class="relative text-center text-xs text-slate-400 my-3">
-            <span class="px-3 bg-white relative z-10">OU</span>
-            <div class="absolute inset-x-0 top-1/2 h-px bg-slate-200 -z-0"></div>
-          </div> -->
-
-          <!-- <button
-            type="button"
-            class="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-[#5b7cff] hover:-translate-y-[1px] transition"
-          >
-            <span class="w-4 h-4">
-              <svg viewBox="0 0 18 18">
-                <path
-                  fill="#4285F4"
-                  d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
-                />
-              </svg>
-            </span>
-            <span>Continuer avec Google</span>
-          </button> -->
         </ng-container>
       </form>
     </div>

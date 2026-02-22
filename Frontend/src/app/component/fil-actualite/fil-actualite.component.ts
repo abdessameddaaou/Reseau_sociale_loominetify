@@ -1,35 +1,68 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule , Validators, FormsModule  } from '@angular/forms';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { HeaderComponent } from '../header/header.component'
-import { PostCreatorComponent } from '../post-creator/post-creator.component';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { HeaderComponent } from '../header/header.component';
+import { PostCreatorComponent } from '../post-creator/post-creator.component';
 import { environment } from '../../../environments/environment.dev';
+import { ThemeService } from '../../service/theme.service';
+import { differenceInHours, format, formatDistanceToNow } from 'date-fns';
+import { de, fr, th } from 'date-fns/locale';
+import sweetalert2 from 'sweetalert2';
+import { RealtimeService } from '../../service/realtime.service';
 
+/**
+ * Interface Commentaires
+ */
 interface PostComment {
   id: number;
-  author: string;
-  text: string;
+  user: { id: number; nom: string; prenom: string; photo?: string; username?: string };
+  contenu: string;
+  image?: string;
+  nombreLikes: number;
   mine: boolean;
+  createdAt: string;
 }
 
+/**
+ * Interface Interactions
+ */
+interface PostInteraction {
+  id: number;
+  userId: number;
+  publicationId: number;
+}
+
+/**
+ * Interface Post
+ */
 interface Post {
   id: number;
-  authorName: string;
-  authorHandle: string;
+  description: string;
+  image?: string;
+  user: { id: number; nom: string; prenom: string; photo?: string; username?: string };
+  nombreLikes: number;
+  nombrePartages: number;
+  createdAt: string;
   authorAvatar: string;
   timeAgo: string;
   text: string;
-  imageUrl?: string;
   likes: number;
   commentsCount: number;
   shares: number;
   likedByMe: boolean;
   comments: PostComment[];
+  showAllComments: boolean;
+  interactions: PostInteraction[] | null;
+  sharedPublication: Post | null;
+  commentairePartage?: string | null;
 }
 
+/**
+ * Interface Amis
+ */
 interface OnlineFriend {
   name: string;
   avatar: string;
@@ -37,49 +70,79 @@ interface OnlineFriend {
   lastActive?: string;
 }
 
-interface CurrentUser {
+/**
+ * Interface User
+ */
+export interface CurrentUser {
   nom: string;
+  id: number;
   prenom: string;
-  email: string;
-  telephone?: string;
-  dateNaissance: string;
-  ville?: string;
-  pays?: string;
   isAdmin: boolean;
   photo?: string;
-  createdAt:string;
+  username?: string;
+}
+
+/**
+ * Type pour écouter sur les commentaires
+ */
+type NewCommentEvent = {
+  publicationId: number;
+  comment: PostComment;
+};
+
+/**
+ * Type pour écouter sur les likes des commentaires
+ */
+type CommentLikeEvent = {
+  commentId: number;
+  publicationId: number;
+  likesCount: number;
+  userId?: number;
+};
+
+/**
+ * Type pour écouter sur les likes des publications
+ */
+type PostLikeEvent = {
+  publicationId: number;
+  likesCount: number;
+  userId: number;
+  liked: boolean;
+};
 
 
-  // ajoute ce que ton backend renvoie
+/**
+ * Type pour écouter sur les partages des publications
+ */
+type PostShareEvent = {
+ publicationId: number,
+ sharesCount: number
+};
+
+
+type CommentDeleteEvent ={
+  publicationId: number,
+  commentId: number,
 }
 
 @Component({
   selector: 'app-fil-actualite',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    FontAwesomeModule,
-    HeaderComponent,
-    PostCreatorComponent
-  ],
-  templateUrl: './fil-actualite.component.html'
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FontAwesomeModule, HeaderComponent, PostCreatorComponent, RouterModule],
+  templateUrl: './fil-actualite.component.html',
 })
-export class FilActualiteComponent implements OnInit {
-  // Navigation du header
+export class FilActualiteComponent implements OnInit, OnDestroy {
+
+  /**
+   * VARIABLES
+   */
   activeTab: 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexion' = 'home';
-
-  currentUser: CurrentUser | null = null; 
-  isUserLoading = true;
-
-  // Formulaire de création de post
-  onlineFriends2: any[] = [];
+  currentUser: CurrentUser | null = null;
+  onlineFriends: OnlineFriend[] = [];
   postForm: FormGroup;
   imagePreview: string | null = null;
   formErrors: { [key: string]: string } = {};
 
-  // fil d'actualite
   allPosts: Post[] = [];
   visiblePosts: Post[] = [];
 
@@ -87,141 +150,387 @@ export class FilActualiteComponent implements OnInit {
   isLoadingMore = false;
   hasMore = true;
 
-  // Commentaires
   newCommentText: { [postId: number]: string } = {};
-
-  // Amis connectés
-  onlineFriends: OnlineFriend[] = [
-    {
-      name: 'Thomas Leroy',
-      avatar: 'https://i.pravatar.cc/150?img=12',
-      status: 'En ligne',
-      lastActive: 'Actif maintenant',
-    }
-  ];
-
-  // Ami sélectionné pour le mini-chat
   selectedFriend: OnlineFriend | null = null;
+  selectedCommentImage: { [postId: number]: File | null } = {};
+  commentImagePreview: { [postId: number]: string | null } = {};
+  defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
 
-  constructor(private fb: FormBuilder, private router: Router, private http: HttpClient) {
+  postsPage = 0;
+  readonly postsLimit = 5;
 
+  selectedPhoto: string | null = null;
+  likedUsers: CurrentUser[] = [];
+  CommentsUsers: CurrentUser[] = [];
+  ShareUsers: CurrentUser[] = [];
+  showLikesModal = false;
+  showCommentsModal = false;
+  showUsersShareModal = false;
+  isShareModalOpen = false;
+  postToShare: Post | null = null;
+  shareDescription = '';
+  isSharing = false;
+
+  constructor(private fb: FormBuilder, private router: Router, private http: HttpClient, private themeService: ThemeService, private realtimeService: RealtimeService) {
     this.postForm = this.fb.group({
       text: ['', [Validators.maxLength(1000)]],
-      image: [null]
+      image: [null],
     });
   }
 
+  /**
+   * INITIALISATION
+   */
   ngOnInit(): void {
     this.loadCurrentUser();
-    this.seedPosts();
+    this.loadOnlineFriends();
     this.loadInitialPosts();
-  }
 
-  // ----------------- Navigation -----------------
-  setActiveTab(tab: typeof this.activeTab) {
-    this.activeTab = tab;
+    this.realtimeService.connect();
 
     /**
-     * Home
+     * Vérifier s'il y a nouveaux publications
      */
-    if (tab === 'home') {
-        this.loadCurrentUser();
-        this.router.navigate(['/fil-actualite']);
-    }
+    this.realtimeService.on<Post>('new_publication', (newPost) => {
+      console.log(' Connexion à Socekt réussi pour les publications :', newPost.id);
+      this.addNewPostToList(newPost);
+    });
+
 
     /**
-     * Déconnexion
+     * Vérifier s'il y a nouveaux commentaires
      */
-    if (tab === 'deconnexion') {
-      this.http.post(`${environment.apiUrl}/auth/logout`,{},{ withCredentials: true }).subscribe({
-        next: () => {
-          this.router.navigate(['/auth']);
-        },
-        error: () => {
-          this.router.navigate(['/auth']);
-        }
-      });
+    this.realtimeService.on<NewCommentEvent>('new_comment', (data) => {
+      console.log(' Connexion à Socekt réussi pour les commeentaires :', data.publicationId, data.comment.id);
+       this.addNewCommentToPost(data.publicationId, data.comment);
+    });
+
+
+    /**
+     * Vérifier s'il y a nouveaux likes pour le commentaire
+     */
+    this.realtimeService.on<CommentLikeEvent>('comment_like_updated', (data) => {
+      console.log(' Connexion à Socekt réussi pour les likes :', data.publicationId, data.commentId, data.likesCount);
+      this.addNewLikeToComment(data.publicationId, data.commentId, data.likesCount);
+    });
+
+
+    /**
+     * Vérifier s'il y a nouveaux likes pour la publication
+     */
+    this.realtimeService.on<PostLikeEvent>('post_like_updated', (data) => {
+      console.log(' Connexion à Socekt réussi pour les likes publication :', data.publicationId, data.likesCount, data.liked, data.userId);
+      this.addNewLikeToPost(data.publicationId, data.likesCount, data.liked, data.userId);
+    });
+
+
+    /**
+     * Vérifier s'il y a nouveaux likes pour la publication
+     */
+    this.realtimeService.on<PostShareEvent>('post_share_updated', (data) => {
+      console.log(' Connexion à Socekt réussi pour les shares publication :', data.publicationId, data.sharesCount);
+      this.addNewShareToPost(data.publicationId, data.sharesCount);
+    });
+
+    
+    /**
+     * Vérifier s'il un commentaire a été supprimé pour une publication
+     */
+    // this.realtimeService.on<PostShareEvent>('post_share_updated', (data) => {
+    //   console.log(' Connexion à Socekt réussi pour la supression d\'un commentaire d\'une publication :', data.publicationId, data.sharesCount);
+    //   this.addNewShareToPost(data.publicationId, data.sharesCount);
+    // });
+
+
+    /**
+     * Vérifier s'il y a nouveaux likes pour la publication
+     */
+    this.realtimeService.on<CommentDeleteEvent>('delete_comment', (data) => {
+      console.log('Connexion à Socekt réussi pour la supression d\'un commentaire d\'une publication :', data.publicationId, data.commentId);
+      this.deleteCommentToPost(data.publicationId, data.commentId);
+    });
+  }
+  /**
+   * Se déconnecter de websocekt afin de s'arrêter d'écouter
+   */
+  ngOnDestroy(): void {
+    this.realtimeService.disconnect();
+  }
+
+  /**
+   * Gestion des publications ( pour vérifier si la publications existe ou non)
+   * @param post 
+   */
+  addNewPostToList(post: Post) {
+    const alreadyExists = this.allPosts.some((p) => p.id === post.id);
+
+    if (!alreadyExists) {
+      const postReady: Post = {
+        ...post,
+        showAllComments: false,
+        likedByMe: false,
+        commentsCount: post.comments ? post.comments.length : 0,
+        interactions: post.interactions || [],
+        comments: post.comments || [],
+        nombreLikes: post.nombreLikes || 0,
+        shares: post.shares || 0,
+      };
+
+      this.allPosts = [postReady, ...this.allPosts];
+      this.visiblePosts = [...this.allPosts];
     }
   }
 
 
+ /**
+  * Gestion des commentaires ( pour vérifier si le commentaire existe ou non)
+  * @param publicationId 
+  * @param comment 
+  */
+  addNewCommentToPost(publicationId: number, comment: PostComment) {
+    const post = this.allPosts.find(p => p.id === publicationId);
+     if (!post) return;
 
+    const alreadyExists = post.comments.some(c => c.id === comment.id);
+    if (alreadyExists) return;
+      post.comments = [...(post.comments ?? []), comment];
+      post.commentsCount = (post.commentsCount ?? 0) + 1;
+
+      this.visiblePosts = [...this.allPosts];
+  }
+
+
+  /**
+   * Gestion des likes pour le commentaire
+   * @param publicationId 
+   * @param commentId 
+   * @param likesCount 
+   * @returns 
+   */
+  addNewLikeToComment(publicationId: number, commentId: number, likesCount: number) {
+    const post = this.allPosts.find(p => p.id === publicationId);
+    if (!post) return;
+
+    const comment = post.comments?.find(c => c.id === commentId);
+    if (!comment) return;
+
+    comment.nombreLikes = likesCount;
+    this.visiblePosts = [...this.allPosts];
+  }
+
+
+  /**
+   * Gestion des likes pour la publication
+   * @param publicationId 
+   * @param likesCount 
+   * @param liked 
+   * @param userId 
+   * @returns 
+   */
+  addNewLikeToPost(publicationId: number, likesCount: number, liked: boolean, userId: number) {
+    const post = this.allPosts.find(p => p.id === publicationId);
+      if (!post) return;
+
+      post.nombreLikes = likesCount
+      if(userId == this.currentUser?.id)
+      {
+        post.likedByMe = liked
+      }
+    this.visiblePosts = [...this.allPosts];
+  }
+
+
+  /**
+   * Gestion des shares pour les publications
+   * @param publicationId 
+   * @param sharesCount 
+   * @returns 
+   */
+  addNewShareToPost(publicationId: number, sharesCount: number){
+
+    const post = this.allPosts.find(p => p.id === publicationId);
+      if (!post) return;
+      post.nombrePartages  = sharesCount;
+    this.visiblePosts = [...this.allPosts];
+  }
 
 /**
- * Charger les informations de l'utilisateur
+ * Gestion des commentaires pour les publications
+ * @param publicationId 
+ * @param commentId 
+ * @returns 
  */
-private loadCurrentUser() {
-  this.http
-    .get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUserconnected`, {
-      withCredentials: true
-    })
-    .subscribe({
-      next: (res) => {
-        this.currentUser = res.user;
-        this.isUserLoading = false;
-      },
-      error: () => {
-        this.isUserLoading = false;
-        this.router.navigate(['/auth']);
-      }
-    });
+deleteCommentToPost(publicationId: number, commentId: number) {
+  const post = this.allPosts.find(p => p.id === publicationId);
+  if (!post) return;
+  const before = (post.comments ?? []).length;
+  post.comments = (post.comments ?? []).filter(c => Number(c.id) !== Number(commentId));
+  const after = post.comments.length;
+  if (after < before) {
+    post.commentsCount = Math.max(0, (post.commentsCount ?? 0) - 1);
+  }
+
+  this.visiblePosts = [...this.allPosts];
 }
 
 
-/**
- * clic sur un ami connecté → ouvrir le mini chat
- * @param friend 
- */
+  /**
+   * Navigation dans le navbar
+   * @param tab 
+   */
+  setActiveTab(tab: typeof this.activeTab) {
+    this.activeTab = tab;
+    if (tab === 'home') {
+      this.router.navigate(['/fil-actualite']);
+    } else if (tab === 'deconnexion') {
+      this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
+        next: () => {
+          this.themeService.applyAuthTheme();
+          this.router.navigate(['/auth']);
+        },
+        error: () => {
+          this.themeService.applyAuthTheme();
+          this.router.navigate(['/auth']);
+        },
+      });
+    } else if (tab === 'messages') {
+      this.router.navigate(['/messages']);
+    } else if (tab === 'settings') {
+      this.router.navigate(['/settings']);
+    }
+  }
+
+  /**
+   * Charger les données de l'utilisateur connecté depuis sle backend
+   */
+  loadCurrentUser() {
+    this.http
+      .get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUserconnected`, {
+        withCredentials: true,
+      })
+      .subscribe({
+        next: (res) => {
+          this.currentUser = res.user;
+        },
+        error: () => {
+          this.themeService.applyAuthTheme();
+          this.router.navigate(['/auth']);
+        },
+      });
+  }
+
+  /**
+   * Charger les amies connectés
+   */
+  loadOnlineFriends() {
+    this.http
+      .get<OnlineFriend[]>(`${environment.apiUrl}/friends/online`, { withCredentials: true })
+      .subscribe({
+        next: (friends) => {
+          this.onlineFriends = friends;
+        },
+        error: (err) => {
+          this.onlineFriends = [];
+        },
+      });
+  }
+
   openChat(friend: OnlineFriend) {
     this.selectedFriend = friend;
     this.activeTab = 'messages';
   }
 
-  // ----------------- Posts mock -----------------
-  seedPosts() {
-    this.allPosts = [
-      {
-        id: 1,
-        authorName: 'Sophie Martin',
-        authorHandle: '@sophie.martin',
-        authorAvatar: 'https://i.pravatar.cc/150?img=47',
-        timeAgo: 'Il y a 2 heures',
-        text: 'Belle journée pour explorer la nature ! 🌿 Les montagnes sont magnifiques cette saison.',
-        imageUrl: 'https://images.pexels.com/photos/712876/pexels-photo-712876.jpeg?auto=compress&cs=tinysrgb&w=1200',
-        likes: 124,
-        commentsCount: 2,
-        shares: 12,
-        likedByMe: false,
-        comments: [
-          { id: 1, author: 'Marie', text: 'Magnifique photo 😍', mine: false },
-          { id: 2, author: 'Toi', text: 'Ça donne envie de partir en rando !', mine: true }
-        ]
-      }
-    ];
-  }
-
+  /**
+   * Charger des publications
+   */
   loadInitialPosts() {
-    setTimeout(() => {
-      this.visiblePosts = this.allPosts.slice(0, 3);
-      this.hasMore = this.visiblePosts.length < this.allPosts.length;
-      this.isInitialLoading = false;
-    }, 800);
+    this.isInitialLoading = true;
+    this.postsPage = 0;
+
+    this.http.get<Post[]>(`${environment.apiUrl}/publications/getAllPosts`, {
+      params: {
+        page: this.postsPage.toString(),
+        limit: this.postsLimit.toString(),
+      },
+      withCredentials: true,
+    }).subscribe({
+      next: (posts) => {
+        const postsWithUIState = posts.map((post) => ({
+          ...post,
+          showAllComments: false,
+          likedByMe: Array.isArray(post.interactions) ? post.interactions.some((i) => i.userId === this.currentUser?.id) : false,
+          commentsCount: post.comments ? post.comments.length : 0,
+        }));
+        this.allPosts = postsWithUIState;
+        this.visiblePosts = postsWithUIState;
+        this.hasMore = posts.length === this.postsLimit;
+        this.isInitialLoading = false;
+      },
+      error: (err) => {
+        console.error('Erreur chargement posts', err);
+        this.isInitialLoading = false;
+        this.hasMore = false;
+        this.allPosts = [];
+        this.visiblePosts = [];
+      },
+    });
   }
 
+  /**
+   * Méthode qui permet de récupérer les publications depuis le backend
+   * @returns 
+   */
   loadMorePosts() {
     if (this.isLoadingMore || !this.hasMore) return;
     this.isLoadingMore = true;
+    this.postsPage++;
 
-    setTimeout(() => {
-      const currentLength = this.visiblePosts.length;
-      const next = this.allPosts.slice(currentLength, currentLength + 3);
-      this.visiblePosts = [...this.visiblePosts, ...next];
-      this.hasMore = this.visiblePosts.length < this.allPosts.length;
-      this.isLoadingMore = false;
-    }, 800);
+    this.http
+      .get<Post[]>(`${environment.apiUrl}/publications/getAllPosts`, {
+        params: {
+          page: this.postsPage.toString(),
+          limit: this.postsLimit.toString(),
+        },
+        withCredentials: true,
+      })
+      .subscribe({
+        next: (posts) => {
+
+          const uniqueNewPosts = posts.filter(newPost => 
+            !this.allPosts.some(existingPost => existingPost.id === newPost.id)
+          );
+
+          if (posts.length < this.postsLimit) {
+             this.hasMore = false;
+          }
+
+
+          if (uniqueNewPosts.length > 0) {
+          const formattedPosts = uniqueNewPosts.map((post) => ({
+            ...post,
+            showAllComments: false,
+            likedByMe: Array.isArray(post.interactions)
+              ? post.interactions.some((i) => i.userId === this.currentUser?.id)
+              : false,
+            commentsCount: post.comments ? post.comments.length : 0,
+          }));
+
+          this.allPosts = [...this.allPosts, ...formattedPosts];
+          this.visiblePosts = this.allPosts;
+          this.hasMore = posts.length === this.postsLimit;
+          this.isLoadingMore = false;
+          }
+        },
+        error: (err) => {
+          this.isLoadingMore = false;
+          this.hasMore = false;
+        },
+      });
   }
 
-  // Infinite scroll (sur la fenêtre)
+  /**
+   * Listenner qui écoute pour charger plus de publications 
+   */
   @HostListener('window:scroll', [])
   onWindowScroll() {
     const threshold = 300;
@@ -232,7 +541,6 @@ private loadCurrentUser() {
     }
   }
 
-  // ----------------- Création de publication -----------------
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) {
@@ -243,25 +551,24 @@ private loadCurrentUser() {
 
     const file = input.files[0];
     this.formErrors['image'] = '';
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/heic'];
 
-    const allowedTypes = ['image/jpeg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-      this.formErrors['image'] = 'Format non supporté. Formats acceptés : JPG, PNG.';
+      this.formErrors['image'] = 'Format non supporté. (JPG, PNG, HEIC)';
       this.postForm.patchValue({ image: null });
       this.imagePreview = null;
       return;
     }
 
-    const maxSize = 5 * 1024 * 1024;
+    const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      this.formErrors['image'] = 'Taille trop grande. Maximum 5 Mo.';
+      this.formErrors['image'] = 'Taille trop grande (Max 5Mo).';
       this.postForm.patchValue({ image: null });
       this.imagePreview = null;
       return;
     }
 
     this.postForm.patchValue({ image: file });
-
     const reader = new FileReader();
     reader.onload = () => {
       this.imagePreview = reader.result as string;
@@ -269,9 +576,12 @@ private loadCurrentUser() {
     reader.readAsDataURL(file);
   }
 
+  /**
+   * Publier une publication
+   * @returns 
+   */
   publishPost() {
     this.formErrors = {};
-
     const textControl = this.postForm.get('text');
     const imageControl = this.postForm.get('image');
 
@@ -280,85 +590,313 @@ private loadCurrentUser() {
     const image: File | null = (imageControl?.value as File | null) ?? null;
 
     if (!text && !image) {
-      const msg = 'Vous devez entrer un texte ou ajouter une image.';
+      const msg = 'Texte ou image requis.';
       this.formErrors['text'] = msg;
       this.formErrors['image'] = msg;
       return;
     }
 
     if (text && text.length > 1000) {
-      this.formErrors['text'] = 'Le texte ne doit pas dépasser 1 000 caractères.';
+      this.formErrors['text'] = 'Max 1000 caractères.';
       return;
     }
 
-    const newPost: Post = {
-      id: Date.now(),
-      authorName: 'Toi',
-      authorHandle: '@toi',
-      authorAvatar: 'https://i.pravatar.cc/150?img=5',
-      timeAgo: 'À l’instant',
-      text: text || '',
-      imageUrl: this.imagePreview || undefined,
-      likes: 0,
-      commentsCount: 0,
-      shares: 0,
-      likedByMe: false,
-      comments: []
-    };
+    const formData = new FormData();
+    if (text) formData.append('text', text);
+    if (image) formData.append('image', image);
 
-    this.allPosts.unshift(newPost);
-    this.visiblePosts.unshift(newPost);
-
-    this.postForm.reset({ text: '', image: null });
-    this.imagePreview = null;
+    this.http.post<Post>(`${environment.apiUrl}/publications/addPost`, formData, { withCredentials: true }).subscribe({
+      next: (createdPost) => {
+        this.postForm.reset({ text: '', image: null });
+        this.imagePreview = null;
+        this.addNewPostToList(createdPost);
+      },
+      error: (err) => {
+        console.error('Erreur publication', err);
+        this.formErrors['text'] = 'Impossible de publier pour le moment.';
+      },
+    });
   }
 
-  // ----------------- Like / Comment / Share -----------------
-  toggleLike(post: Post) {
-    post.likedByMe = !post.likedByMe;
-    post.likes += post.likedByMe ? 1 : -1;
+
+
+  /**
+   * Likes
+   * @param event 
+   * @param post 
+   */
+  toggleLike(event: Event, post: Post) {
+    event.stopPropagation();
+    const newLikeState = !post.likedByMe;
+    post.likedByMe = newLikeState;
+    post.nombreLikes += newLikeState ? 1 : -1;
+
+    this.http
+      .post(
+        `${environment.apiUrl}/publications/likePost/${post.id}`,
+        { like: newLikeState },
+        { withCredentials: true }
+      )
+      .subscribe({
+        error: () => {
+          post.likedByMe = !newLikeState;
+          post.nombreLikes += newLikeState ? 1 : -1;
+        },
+      });
   }
 
+  /**
+   * Commentaires
+   * @param post 
+   * @returns 
+   */
   addComment(post: Post) {
     const text = this.newCommentText[post.id]?.trim();
-    if (!text) return;
+    const image = this.selectedCommentImage[post.id];
 
-    const comment: PostComment = {
-      id: Date.now(),
-      author: 'Toi',
-      text,
-      mine: true
-    };
+    if (!text && !image) return;
+    const formData = new FormData();
+    if (text) formData.append('text', text);
+    if (image) formData.append('image', image);
 
-    post.comments.push(comment);
-    post.commentsCount += 1;
-    this.newCommentText[post.id] = '';
+    this.http
+      .post<PostComment>(`${environment.apiUrl}/publications/addComment/${post.id}`, formData, {
+        withCredentials: true,
+      })
+      .subscribe({
+            next: (createdComment) => {
+              const exists = (post.comments ?? []).some(c => c.id === createdComment.id);
+              if (!exists) {
+                post.comments = [...(post.comments ?? []), createdComment];
+                post.commentsCount = (post.commentsCount ?? 0) + 1;
+              }
+
+              this.newCommentText[post.id] = '';
+              this.selectedCommentImage[post.id] = null;
+              this.commentImagePreview[post.id] = null;
+            },
+        error: (err) => {
+          console.error('Erreur ajout commentaire', err);
+        },
+      });
   }
 
+  /**
+   * Supprimer un commentaire
+   * @param post 
+   * @param comment 
+   */
   deleteComment(post: Post, comment: PostComment) {
-    if (!comment.mine) return;
-    post.comments = post.comments.filter(c => c.id !== comment.id);
-    post.commentsCount = Math.max(0, post.commentsCount - 1);
+    sweetalert2
+      .fire({
+        title: 'Confirmer',
+        text: 'Supprimer ce commentaire ?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Oui',
+        cancelButtonText: 'Non',
+      })
+      .then((result) => {
+        if (result.isConfirmed) {
+          this.http
+            .delete(`${environment.apiUrl}/publications/deleteComment/${comment.id}`, {
+              withCredentials: true,
+            })
+            .subscribe({
+              next: (res) => {
+                post.comments = post.comments.filter((c) => c.id !== comment.id);
+                post.commentsCount = Math.max(0, post.commentsCount - 1);
+              },
+              error: (err) => console.error(err),
+            });
+        }
+      });
   }
 
-  sharePost(post: Post) {
-    post.shares += 1;
+  /**
+   * Liker un commentaire
+   * @param commentId 
+   */
+  likeComment(commentId: number) {
+    this.http
+      .post<{ nombreLikes: number }>(
+        `${environment.apiUrl}/publications/likeComment/${commentId}`,
+        {},
+        { withCredentials: true }
+      )
+      .subscribe({
+        next: (res) => {
+          this.allPosts.forEach((post) => {
+            post.comments.forEach((comment) => {
+              if (comment.id === commentId) {
+                comment.nombreLikes = res.nombreLikes;
+              }
+            });
+          });
+        },
+        error: (err) => console.error(err),
+      });
+  }
 
-    const sharedPost: Post = {
-      ...post,
-      id: Date.now(),
-      authorName: 'Toi (partage)',
-      authorHandle: '@toi',
-      authorAvatar: 'https://i.pravatar.cc/150?img=5',
-      timeAgo: 'À l’instant',
-      likedByMe: false,
-      likes: 0,
-      comments: [],
-      commentsCount: 0,
-      shares: 0
+  toggleComments(post: Post) {
+    post.showAllComments = !post.showAllComments;
+  }
+
+  onCommentImageSelected(event: Event, postId: number) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.selectedCommentImage[postId] = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.commentImagePreview[postId] = reader.result as string;
     };
+    reader.readAsDataURL(file);
+  }
 
-    this.allPosts.unshift(sharedPost);
-    this.visiblePosts.unshift(sharedPost);
+  removeCommentImage(postId: number, input: HTMLInputElement) {
+    this.selectedCommentImage[postId] = null;
+    this.commentImagePreview[postId] = null;
+    input.value = '';
+  }
+
+  /**
+   * Partager une publication
+   * @returns 
+   */
+  sharePost() {
+    if (!this.postToShare) return;
+    this.isSharing = true;
+    this.http
+      .post<Post>(
+        `${environment.apiUrl}/publications/sharePublication/${this.postToShare.id}`,
+        { commentairePartage: this.shareDescription },
+        { withCredentials: true }
+      )
+      .subscribe({
+        next: (sharedPost) => {
+          this.postToShare!.shares += 1;
+          this.addNewPostToList(sharedPost);
+
+          this.isSharing = false;
+          this.closeShareModal();
+          this.shareDescription = '';
+        },
+        error: (err) => {
+          console.error('Erreur partage', err);
+          this.isSharing = false;
+        },
+      });
+  }
+
+  openShareModal(post: Post) {
+    this.postToShare = post;
+    this.shareDescription = '';
+    this.isShareModalOpen = true;
+  }
+  closeShareModal() {
+    this.isShareModalOpen = false;
+    this.postToShare = null;
+  }
+
+  /**
+   * Afficher les personnes qui ont liker la publication
+   * @param post 
+   */
+  affichePersonneLike(post: Post) {
+    this.http
+      .get<{ users: CurrentUser[] }>(
+        `${environment.apiUrl}/publications/getUsersWhoLikedPost/${post.id}`,
+        { withCredentials: true }
+      )
+      .subscribe({
+        next: (res) => {
+          this.likedUsers = res.users;
+          this.showLikesModal = true;
+        },
+      });
+  }
+
+  /**
+   * Afficher les personnes qui ont commenté sur la publication
+   * @param post 
+   */
+  affichePersonneComments(post: Post) {
+    this.http
+      .get<{ users: CurrentUser[] }>(
+        `${environment.apiUrl}/publications/getUsersWhoCommentedPost/${post.id}`,
+        { withCredentials: true }
+      )
+      .subscribe({
+        next: (res) => {
+          this.CommentsUsers = res.users;
+          this.showCommentsModal = true;
+        },
+      });
+  }
+
+  /**
+   * Afficher les personnes qui ont partagé la publication
+   * @param post 
+   */
+  affichePersonnePartage(post: Post) {
+    this.http
+      .get<{ users: CurrentUser[] }>(
+        `${environment.apiUrl}/publications/getUsersWhoSharedPost/${post.id}`,
+        { withCredentials: true }
+      )
+      .subscribe({
+        next: (res) => {
+          this.ShareUsers = res.users;
+          this.showUsersShareModal = true;
+        },
+      });
+  }
+
+  /**
+   * Gérer le temps pour les publications et commentairez
+   * @param date 
+   * @returns 
+   */
+  timeAgo(date: string | Date): string {
+    const d = new Date(date);
+    const hoursDiff = differenceInHours(new Date(), d);
+    if (hoursDiff >= 24) return format(d, "dd/MM/yyyy 'à' HH:mm", { locale: fr });
+    return formatDistanceToNow(d, { addSuffix: true, locale: fr });
+  }
+
+  /**
+   * Gérer le upload des images pour les publications
+   * @param imagePath 
+   * @returns 
+   */
+  srcImage(imagePath?: string | null): string {
+    if (!imagePath) return this.defaultAvatar;
+    const api = environment.apiUrl.replace(/\/$/, '');
+    return `${api}/media/${encodeURIComponent(imagePath)}`;
+  }
+
+  /***
+   * Gérer le upload des images pour les commentaires
+   */
+  srcImageComments(imagePath?: string | null): string {
+    if (!imagePath) return '';
+    const api = environment.apiUrl.replace(/\/$/, '');
+    return `${api}/media/comments/${encodeURIComponent(imagePath)}`;
+  }
+
+  /**
+   * Ouvrir la photo publiée
+   * @param photo 
+   */
+  openPhoto(photo: string) {
+    this.selectedPhoto = photo;
+  }
+
+  /**
+   * Fermer la photo publiée
+   */
+  closePhotoModal() {
+    this.selectedPhoto = null;
   }
 }

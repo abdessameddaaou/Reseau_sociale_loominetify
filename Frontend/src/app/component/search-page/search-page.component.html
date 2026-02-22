@@ -1,0 +1,150 @@
+<div class="max-w-6xl mx-auto px-4 md:px-6 py-6">
+  
+  <div class="app-card rounded-2xl p-5 shadow-sm mb-5 bg-white">
+    <div class="flex flex-col gap-4">
+      <h1 class="text-xl font-bold text-slate-800">Recherche</h1>
+
+      <div class="flex items-center bg-slate-100 rounded-full px-4 py-3 text-sm focus-within:ring-2 focus-within:ring-offset-1 focus-within:ring-blue-400 transition-all">
+        <i class="fa-solid fa-magnifying-glass fa-sm text-slate-400"></i>
+        <input
+          type="text"
+          [formControl]="searchControl"
+          placeholder="Rechercher des personnes, des groupes..."
+          class="bg-transparent outline-none text-slate-800 w-full ml-3 placeholder:text-slate-400"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="flex items-center gap-2 text-xs">
+        <button
+          type="button"
+          (click)="setFilter('all')"
+          class="px-4 py-2 rounded-full transition-all duration-200 border"
+          [ngClass]="activeFilter === 'all' 
+            ? 'bg-slate-800 text-white border-slate-800 shadow-md' 
+            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+        >
+          Tous
+        </button>
+
+        <button
+          type="button"
+          (click)="setFilter('people')"
+          class="px-4 py-2 rounded-full transition-all duration-200 border"
+          [ngClass]="activeFilter === 'people' 
+            ? 'bg-slate-800 text-white border-slate-800 shadow-md' 
+            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+        >
+          Personnes
+        </button>
+
+        <button
+          type="button"
+          (click)="setFilter('groups')"
+          class="px-4 py-2 rounded-full transition-all duration-200 border"
+          [ngClass]="activeFilter === 'groups' 
+            ? 'bg-slate-800 text-white border-slate-800 shadow-md' 
+            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+        >
+          Groupes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden min-h-[200px]">
+    
+    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <h2 class="text-sm font-semibold text-slate-700">
+        Résultats 
+        <span *ngIf="searchControl.value" class="font-normal text-slate-500">pour "{{ searchControl.value }}"</span>
+      </h2>
+      <span *ngIf="loading" class="text-xs text-blue-500 font-medium flex items-center gap-2">
+        <i class="fa-solid fa-circle-notch fa-spin"></i> Recherche...
+      </span>
+    </div>
+
+    <div class="p-2 md:p-4">
+      
+      <div *ngIf="!loading && people.length === 0 && groups.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+          <i class="fa-solid fa-magnifying-glass text-2xl text-slate-300"></i>
+        </div>
+        <p class="text-slate-500 text-sm font-medium">Aucun résultat trouvé</p>
+        <p class="text-slate-400 text-xs mt-1">Essayez d'autres mots-clés ou vérifiez l'orthographe.</p>
+      </div>
+
+      <div *ngIf="activeFilter !== 'groups' && people.length > 0" class="mb-6">
+        <h3 *ngIf="activeFilter === 'all'" class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 mt-2">
+          Personnes
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <button
+            *ngFor="let user of people"
+            type="button"
+            (click)="openProfile(user)"
+            class="group flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all text-left"
+          >
+            <img
+              [src]="user.photo || defaultAvatar"
+              class="w-12 h-12 rounded-full object-cover shadow-sm group-hover:scale-105 transition-transform"
+              alt="Avatar"
+            />
+            <div class="flex flex-col min-w-0">
+              <span class="text-sm font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                {{ user.prenom }} {{ user.nom }}
+              </span>
+              <span class="text-xs text-slate-500 truncate">@{{ user.username }}</span>
+            </div>
+          </button>
+        </div>
+
+        <div *ngIf="people.length < totalPeople" class="mt-4 text-center">
+          <button
+            (click)="loadMorePeople()"
+            [disabled]="loading"
+            class="px-6 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+          >
+            Afficher plus de résultats
+          </button>
+        </div>
+      </div>
+
+      <hr *ngIf="activeFilter === 'all' && people.length > 0 && groups.length > 0" class="border-slate-100 my-4" />
+
+      <div *ngIf="activeFilter !== 'people' && groups.length > 0">
+        <h3 *ngIf="activeFilter === 'all'" class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 mt-2">
+          Groupes
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div
+            *ngFor="let g of groups"
+            class="group flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all cursor-pointer"
+          >
+            <div *ngIf="!g.photo" class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-500 flex items-center justify-center text-lg font-bold">
+              {{ (g.name || g.nom)[0] | uppercase }}
+            </div>
+            <img
+              *ngIf="g.photo"
+              [src]="g.photo"
+              class="w-12 h-12 rounded-xl object-cover shadow-sm"
+              alt="Groupe"
+            />
+
+            <div class="flex flex-col min-w-0">
+              <span class="text-sm font-semibold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                {{ g.name || g.nom }}
+              </span>
+              <span class="text-xs text-slate-500 truncate">
+                {{ g.description ? (g.description | slice:0:50) + (g.description.length > 50 ? '...' : '') : 'Groupe public' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

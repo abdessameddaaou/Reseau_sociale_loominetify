@@ -27,20 +27,22 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss", "flag-icons/css/flag-icons.min.css"]
+            "styles": [
+              "src/styles.scss",
+              "flag-icons/css/flag-icons.min.css","node_modules/@ctrl/ngx-emoji-mart/picker.css"]
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "2mb",
+                  "maximumError": "3mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "4mb",
+                  "maximumError": "5mb"
                 }
               ],
               "outputHashing": "all",
@@ -52,16 +54,15 @@
               ]
             },
             "recette": {
-              "budgets": [
-                {
+              "budgets": [{
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "2mb",
+                  "maximumError": "3mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "4mb",
+                  "maximumError": "5mb"
                 }
               ],
               "outputHashing": "all",

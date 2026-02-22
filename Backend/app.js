@@ -1,32 +1,41 @@
 const express = require('express');
-const db = require('./db/db');
-const config = require('./config');
+const path = require('path');
 const cookieParser = require('cookie-parser');
-const cors = require("cors")
+const cors = require('cors');
+const config = require('./config');
 
 const app = express();
-app.use(express.json());
+
+// Middlewares de base
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true }));
-app.use(
-    cors({
-        origin : config.frontendBaseUrl,
-        credentials : true,
-        // allowedHeaders: ['Content-Type', 'Authorization'],
-    })
-)
-// Routes
+app.set('trust proxy', 1);
+
+// Configuration CORS
+app.use(cors({
+    origin: config.frontendBaseUrl,
+    credentials: true,
+}));
+
+// Accès public aux médias (Images)
+app.use('/api/media', express.static(path.join(__dirname, 'uploads')));
+
+// Import des Routes
 const routeUser = require('./routes/User');
 const routeAuthentification = require('./routes/Authentification');
-const routeResetBD = require('./routes/db')
-
+const routeResetBD = require('./routes/db');
+const PublicationRoute = require('./routes/Publication');
+const AmisRoute = require('./routes/Amis');
+const MessageRoute = require('./routes/Message');
+// Déclaration des Routes
+app.use('/api/publications', PublicationRoute);
 app.use('/api/users', routeUser);
 app.use('/api/auth', routeAuthentification);
 app.use('/api/db', routeResetBD);
-
-// Sync DB
-db.sync()
-  .then(() => console.log('[DB] [ Connexion à la base de données réussie ]'))
-  .catch(err => console.error('[DB] [ Erreur de connexion à la base de données ] [ Erreur : ', err.message + ' ]'));
+app.use('/api/amis', AmisRoute);
+app.use('/api/messages', require('./routes/messagerie'));
+app.use('/api/notifications', require('./routes/Notification'));
+app.use('/api/conversations', require('./routes/conversations'));
 
 module.exports = app;
