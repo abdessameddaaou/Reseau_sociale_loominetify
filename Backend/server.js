@@ -29,9 +29,14 @@ const server = http.createServer(app);
  */
 const io = socketio(server, {
     cors: {
-        origin: config.frontendBaseUrl,
+        origin: [
+            config.frontendBaseUrl,
+            'https://www.loominetify.fr',
+            'https://loominetify.fr',
+            'http://localhost:4200'
+        ],
         credentials: true,
-        methods: ["GET", "POST"]
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     },
 });
 

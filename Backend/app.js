@@ -14,7 +14,12 @@ app.set('trust proxy', 1);
 
 // Configuration CORS
 app.use(cors({
-    origin: config.frontendBaseUrl,
+    origin: [
+        config.frontendBaseUrl,
+        'https://www.loominetify.fr',
+        'https://loominetify.fr',
+        'http://localhost:4200'
+    ],
     credentials: true,
 }));
 
