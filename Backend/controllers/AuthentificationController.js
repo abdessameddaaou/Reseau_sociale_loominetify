@@ -22,7 +22,7 @@ const transport = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: EMAIL_USER,
-    pass: EMAIL_PASS 
+    pass: EMAIL_PASS
   }
 });
 
@@ -32,7 +32,7 @@ const transport = nodemailer.createTransport({
 module.exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     const user = await Users.findOne({ where: { email } });
 
     if (!user) {
@@ -50,13 +50,19 @@ module.exports.loginUser = async (req, res) => {
 
     const token = createToken(user.id);
 
-    res.cookie("jwt", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }); 
+    const isProd = process.env.APP_ENV === 'production';
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: isProd ? 'none' : 'lax',
+      secure: isProd
+    });
 
-    return res.status(200).json({ 
-        userId: user.id,
-        token: token,
-        isAdmin: user.isAdmin,
-        message: "Connexion réussie"
+    return res.status(200).json({
+      userId: user.id,
+      token: token,
+      isAdmin: user.isAdmin,
+      message: "Connexion réussie"
     });
 
   } catch (error) {
@@ -69,7 +75,11 @@ module.exports.loginUser = async (req, res) => {
  */
 module.exports.logoutUser = (req, res) => {
   try {
-    res.clearCookie("jwt");
+    const isProd = process.env.APP_ENV === 'production';
+    res.clearCookie("jwt", {
+      sameSite: isProd ? 'none' : 'lax',
+      secure: isProd
+    });
     return res.status(200).json({ message: "Déconnexion réussie" });
   } catch (error) {
     return res.status(500).json({ error: "Erreur lors de la déconnexion." });
@@ -155,7 +165,7 @@ module.exports.checkCodeReinitialisation = async (req, res) => {
 
     if (new Date() > user.dateExpirationCode) {
       return res.status(400).json({ error: "Code expiré." });
-    } 
+    }
 
     return res.status(200).json({ message: "Code valide." });
 
@@ -176,11 +186,11 @@ module.exports.resetPasswordUser = async (req, res) => {
     if (!user) return res.status(404).json({ error: "Utilisateur introuvable." });
 
     if (user.codeReinitialisation !== codeReinitialisation) {
-        return res.status(400).json({ error: "Code invalide ou manquant." });
+      return res.status(400).json({ error: "Code invalide ou manquant." });
     }
-    
+
     if (new Date() > user.dateExpirationCode) {
-        return res.status(400).json({ error: "Code expiré." });
+      return res.status(400).json({ error: "Code expiré." });
     }
 
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
@@ -198,7 +208,7 @@ module.exports.resetPasswordUser = async (req, res) => {
 
     user.codeReinitialisation = null;
     user.dateExpirationCode = null;
-    
+
     await user.save();
 
     return res.status(200).json({ message: "Mot de passe modifié avec succès." });
