@@ -15,7 +15,7 @@ app.set('trust proxy', 1);
 // Helper to parse multiple origins from ENV or dynamically add www. prefix
 const getAllowedOrigins = (baseUrl) => {
     if (!baseUrl) return '*';
-    const origins = baseUrl.split(',').map(s => s.trim());
+    const origins = baseUrl.split(',').map(s => s.trim().replace(/\/$/, ''));
     const extendedOrigins = new Set(origins);
 
     origins.forEach(origin => {

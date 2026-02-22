@@ -29,7 +29,7 @@ const server = http.createServer(app);
  */
 const getAllowedOrigins = (baseUrl) => {
     if (!baseUrl) return '*';
-    const origins = baseUrl.split(',').map(s => s.trim());
+    const origins = baseUrl.split(',').map(s => s.trim().replace(/\/$/, ''));
     const extendedOrigins = new Set(origins);
 
     origins.forEach(origin => {
