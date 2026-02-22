@@ -37,14 +37,16 @@
 
             <div class="mt-4 flex justify-between w-full text-xs text-slate-700" id="profile-header-stats"
               data-testid="profile-header-stats">
-              <div class="flex-1 text-center">
+              <button type="button" class="flex-1 text-center hover:bg-slate-50 rounded-xl py-1 transition"
+                (click)="openFollowModal('followers')">
                 <p class="font-semibold">{{ followers }}</p>
                 <p class="text-[11px] text-slate-400">Abonnés</p>
-              </div>
-              <div class="flex-1 text-center">
+              </button>
+              <button type="button" class="flex-1 text-center hover:bg-slate-50 rounded-xl py-1 transition"
+                (click)="openFollowModal('following')">
                 <p class="font-semibold">{{ following }}</p>
                 <p class="text-[11px] text-slate-400">Abonnements</p>
-              </div>
+              </button>
               <div class="flex-1 text-center">
                 <p class="font-semibold">{{ postsCount }}</p>
                 <p class="text-[11px] text-slate-400">Publications</p>
@@ -72,30 +74,34 @@
             <h2 class="text-sm font-semibold text-slate-900">
               Amis
             </h2>
-            <span class="text-[11px] text-slate-400" id="profile-friends-count" data-testid="profile-friends-count">
-              {{ Friends.length }}
-            </span>
+            <button type="button" class="text-[11px] text-[#5b7cff] hover:underline"
+              (click)="openFollowModal('friends')">
+              {{ Friends.length }} — Voir tout
+            </button>
           </div>
 
           <div class="space-y-2">
-            <button type="button" *ngFor="let friend of Friends"
+            <div *ngFor="let friend of Friends"
               class="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-slate-50 transition"
-              (click)="openFriend(friend)" [attr.data-testid]="'profile-friend-' + friend.id">
-              <div class="relative">
-                <img [src]="friend.avatar" [alt]="friend.name" class="w-8 h-8 rounded-full object-cover" />
-                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white"
-                  [ngClass]="friend.online ? 'bg-emerald-400' : 'bg-slate-300'">
-                </span>
-              </div>
-              <div class="flex-1 text-left">
-                <p class="text-xs font-semibold text-slate-800">
-                  {{ friend.name }}
-                </p>
-                <p class="text-[11px] text-slate-400">
-                  {{ friend.handle }} · {{ friend.mutual }} amis en commun
-                </p>
-              </div>
-            </button>
+              [attr.data-testid]="'profile-friend-' + friend.id">
+              <button type="button" class="flex items-center gap-3 flex-1 text-left"
+                (click)="navigateToProfile(friend.id)">
+                <div class="relative">
+                  <img [src]="friend.avatar" [alt]="friend.name" class="w-8 h-8 rounded-full object-cover" />
+                </div>
+                <div class="flex-1">
+                  <p class="text-xs font-semibold text-slate-800">{{ friend.name }}</p>
+                  <p class="text-[11px] text-slate-400">{{ friend.handle }}</p>
+                </div>
+              </button>
+              <button type="button"
+                class="text-[10px] text-red-400 hover:text-red-600 px-2 py-1 rounded-full hover:bg-red-50 transition"
+                (click)="deleteFriend(friend.id)">
+                <i class="fa-solid fa-user-minus"></i>
+              </button>
+            </div>
+            <p *ngIf="Friends.length === 0" class="text-[12px] text-slate-400 text-center py-2">Aucun ami pour le
+              moment.</p>
           </div>
         </section>
 
@@ -557,6 +563,104 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL FOLLOWERS / FOLLOWING ===================== -->
+<div *ngIf="showFollowModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+  (click)="closeFollowModal()">
+  <div class="w-[92vw] max-w-md max-h-[80vh] rounded-2xl bg-white shadow-2xl overflow-hidden"
+    (click)="$event.stopPropagation()">
+
+    <!-- Header avec tabs -->
+    <div class="flex items-center border-b border-slate-200">
+      <button type="button" class="flex-1 py-3 text-xs font-semibold text-center transition"
+        [ngClass]="followModalTab === 'followers' ? 'text-[#5b7cff] border-b-2 border-[#5b7cff]' : 'text-slate-400 hover:text-slate-600'"
+        (click)="followModalTab = 'followers'">
+        Abonnés ({{ followers }})
+      </button>
+      <button type="button" class="flex-1 py-3 text-xs font-semibold text-center transition"
+        [ngClass]="followModalTab === 'following' ? 'text-[#5b7cff] border-b-2 border-[#5b7cff]' : 'text-slate-400 hover:text-slate-600'"
+        (click)="followModalTab = 'following'">
+        Abonnements ({{ following }})
+      </button>
+      <button type="button" class="flex-1 py-3 text-xs font-semibold text-center transition"
+        [ngClass]="followModalTab === 'friends' ? 'text-[#5b7cff] border-b-2 border-[#5b7cff]' : 'text-slate-400 hover:text-slate-600'"
+        (click)="followModalTab = 'friends'">
+        Amis ({{ Friends.length }})
+      </button>
+      <button type="button" class="px-3 py-2 text-slate-400 hover:text-slate-700" (click)="closeFollowModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Liste -->
+    <div class="overflow-y-auto max-h-[60vh] p-3 space-y-1">
+
+      <!-- Tab Abonnés -->
+      <ng-container *ngIf="followModalTab === 'followers'">
+        <div *ngFor="let user of followersList"
+          class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-slate-50 transition">
+          <img [src]="user.photo || defaultAvatar" [alt]="user.prenom" class="w-9 h-9 rounded-full object-cover" />
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-slate-800 truncate">{{ user.prenom }} {{ user.nom }}</p>
+            <p class="text-[11px] text-slate-400 truncate">{{ user.email }}</p>
+          </div>
+          <button type="button" class="text-[11px] px-3 py-1 rounded-full btn-primary-gradient text-white font-semibold"
+            (click)="navigateToProfile(user.id)">
+            Voir
+          </button>
+        </div>
+        <p *ngIf="followersList.length === 0" class="text-[12px] text-slate-400 text-center py-6">Aucun abonné.</p>
+      </ng-container>
+
+      <!-- Tab Abonnements -->
+      <ng-container *ngIf="followModalTab === 'following'">
+        <div *ngFor="let user of followingList"
+          class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-slate-50 transition">
+          <img [src]="user.photo || defaultAvatar" [alt]="user.prenom" class="w-9 h-9 rounded-full object-cover" />
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-slate-800 truncate">{{ user.prenom }} {{ user.nom }}</p>
+            <p class="text-[11px] text-slate-400 truncate">{{ user.email }}</p>
+          </div>
+          <button type="button"
+            class="text-[11px] px-3 py-1 rounded-full border border-slate-200 text-slate-600 font-semibold hover:bg-slate-100 transition"
+            (click)="navigateToProfile(user.id)">
+            Voir
+          </button>
+          <button type="button"
+            class="text-[10px] px-2 py-1 rounded-full border border-red-200 text-red-500 hover:bg-red-50 transition"
+            (click)="unfollowUser(user.id)">
+            Se désabonner
+          </button>
+        </div>
+        <p *ngIf="followingList.length === 0" class="text-[12px] text-slate-400 text-center py-6">Aucun abonnement.</p>
+      </ng-container>
+
+      <!-- Tab Amis -->
+      <ng-container *ngIf="followModalTab === 'friends'">
+        <div *ngFor="let friend of Friends"
+          class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-slate-50 transition">
+          <img [src]="friend.avatar" [alt]="friend.name" class="w-9 h-9 rounded-full object-cover" />
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-slate-800 truncate">{{ friend.name }}</p>
+            <p class="text-[11px] text-slate-400 truncate">{{ friend.handle }}</p>
+          </div>
+          <button type="button" class="text-[11px] px-3 py-1 rounded-full btn-primary-gradient text-white font-semibold"
+            (click)="navigateToProfile(friend.id)">
+            Voir
+          </button>
+          <button type="button"
+            class="text-[10px] px-2 py-1 rounded-full border border-red-200 text-red-500 hover:bg-red-50 transition"
+            (click)="deleteFriend(friend.id)">
+            Supprimer
+          </button>
+        </div>
+        <p *ngIf="Friends.length === 0" class="text-[12px] text-slate-400 text-center py-6">Aucun ami pour le moment.
+        </p>
+      </ng-container>
+
     </div>
   </div>
 </div>

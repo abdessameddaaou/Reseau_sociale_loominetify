@@ -1,284 +1,636 @@
-<div class="min-h-screen app-bg flex flex-col" id="messages-page" data-testid="messages-page">
-  <!-- HEADER -->
-  <app-header [activeTab]="activeTab" (tabChange)="setActiveTab($event)" id="messages-header"
-    data-testid="messages-header">
-  </app-header>
+<div class="msg-page" id="messages-page">
 
-  <!-- CONTENU -->
-  <div class="flex-1 flex px-6 pt-4 pb-4" id="messages-layout" data-testid="messages-layout">
-    <div class="mx-auto w-full max-w-7xl flex flex-col gap-4 lg:flex-row" id="messages-container"
-      data-testid="messages-container">
-      <!-- COLONNE GAUCHE : LISTE DES CONVERSATIONS -->
-      <aside class="app-card rounded-2xl p-4 w-full lg:w-80 flex flex-col" id="messages-sidebar"
-        data-testid="messages-sidebar">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-semibold text-slate-900" id="messages-title" data-testid="messages-title">
-            Messages
-          </h2>
-          <button
-            class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-white btn-primary-gradient shadow-md"
-            id="messages-new-button" data-testid="messages-new-button" type="button">
-            <span class="text-base leading-none">+</span>
+  <!-- HEADER -->
+  <div class="relative z-10 w-full">
+    <app-header [activeTab]="activeTab" (tabChange)="setActiveTab($event)"></app-header>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="msg-layout">
+    <div class="msg-container">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- LEFT SIDEBAR: CONVERSATIONS LIST       -->
+      <!-- ═══════════════════════════════════════ -->
+      <aside class="msg-sidebar app-card">
+
+        <!-- Sidebar Header -->
+        <div class="msg-sidebar-header">
+          <h2 class="msg-sidebar-title">Messages</h2>
+          <button (click)="openNewGroupModal()" class="msg-new-group-btn btn-primary-gradient" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+              <path
+                d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+            </svg>
             Nouveau
           </button>
         </div>
 
-        <!-- Switch Tous / Messages / Groupes -->
-        <div class="flex items-center gap-1 mb-3 text-xs app-soft rounded-full p-1" id="messages-filter-switch"
-          data-testid="messages-filter-switch">
-          <button (click)="setFilter('all')" class="flex-1 px-3 py-1 rounded-full transition" [ngClass]="
-              filterMode === 'all'
-                ? 'bg-white shadow text-slate-900'
-                : 'text-slate-500'
-            " id="messages-filter-all" data-testid="messages-filter-all" type="button">
+        <!-- Filter Tabs -->
+        <div class="msg-filter-tabs">
+          <button (click)="setFilter('all')" class="msg-filter-tab"
+            [class.msg-filter-tab--active]="filterMode === 'all'" type="button">
             Tous
           </button>
-          <button (click)="setFilter('direct')" class="flex-1 px-3 py-1 rounded-full transition" [ngClass]="
-              filterMode === 'direct'
-                ? 'bg-white shadow text-slate-900'
-                : 'text-slate-500'
-            " id="messages-filter-direct" data-testid="messages-filter-direct" type="button">
-            Messages
+          <button (click)="setFilter('direct')" class="msg-filter-tab"
+            [class.msg-filter-tab--active]="filterMode === 'direct'" type="button">
+            Privés
           </button>
-          <button (click)="setFilter('group')" class="flex-1 px-3 py-1 rounded-full transition" [ngClass]="
-              filterMode === 'group'
-                ? 'bg-white shadow text-slate-900'
-                : 'text-slate-500'
-            " id="messages-filter-group" data-testid="messages-filter-group" type="button">
+          <button (click)="setFilter('group')" class="msg-filter-tab"
+            [class.msg-filter-tab--active]="filterMode === 'group'" type="button">
             Groupes
           </button>
         </div>
 
-        <div class="mb-3">
-          <input type="text" placeholder="Rechercher une conversation"
-            class="w-full text-sm rounded-full border-0 bg-slate-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            [(ngModel)]="searchTerm" id="messages-search-input" name="messages-search-input"
-            data-testid="messages-search-input" />
+        <!-- Search -->
+        <div class="msg-search-wrap">
+          <svg class="msg-search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" placeholder="Rechercher une conversation..." class="msg-search-input"
+            [(ngModel)]="searchTerm" name="messages-search" />
         </div>
 
-        <ul class="space-y-1 overflow-y-auto flex-1" id="conversation-list" data-testid="conversation-list">
+        <!-- Conversation List -->
+        <ul class="msg-conv-list">
+          <!-- Empty state -->
+          <li *ngIf="filteredConversations.length === 0" class="msg-conv-empty">
+            <div class="msg-conv-empty-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-10 h-10">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+              </svg>
+            </div>
+            <p class="msg-conv-empty-text">Aucune conversation</p>
+            <p class="msg-conv-empty-sub">Commencez à discuter avec vos amis !</p>
+          </li>
+
+          <!-- Conversation items -->
           <li *ngFor="let conv of filteredConversations" (click)="selectConversation(conv)"
-            class="conv-item flex items-center gap-3 rounded-2xl px-3 py-3 cursor-pointer transition" [ngClass]="{
-              'conv-item-active': selectedConversation?.id === conv.id,
-              'conv-item-unread': conv.unread && selectedConversation?.id !== conv.id
-            }" [attr.id]="'conversation-item-' + conv.id" [attr.data-testid]="'conversation-item-' + conv.id">
-            <div class="relative w-11 h-11 flex-shrink-0">
-              <img [src]="conv.avatar" [alt]="conv.name" class="w-full h-full rounded-full object-cover" />
-              <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white"
-                [ngClass]="conv.online ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+            class="msg-conv-item conv-item" [class.conv-item-active]="selectedConversation?.id === conv.id"
+            [class.conv-item-unread]="!!conv.unread">
+
+            <!-- Avatar -->
+            <div class="msg-conv-avatar-wrap">
+              <img [src]="conv.avatar" [alt]="conv.name" class="msg-conv-avatar" />
+              <span *ngIf="conv.type === 'group'" class="msg-conv-badge-group">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
+                  <path
+                    d="M7 8a3 3 0 100-6 3 3 0 000 6zM14.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM1.615 16.428a1.224 1.224 0 01-.569-1.175 6.002 6.002 0 0111.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 017 18a9.953 9.953 0 01-5.385-1.572zM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 00-1.588-3.755 4.502 4.502 0 015.874 2.636.818.818 0 01-.36.98A7.465 7.465 0 0114.5 16z" />
+                </svg>
+              </span>
+              <span *ngIf="conv.type === 'direct'" class="msg-conv-status-dot"
+                [class.msg-conv-status-dot--online]="conv.online"></span>
             </div>
 
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between gap-2">
-                <p class="text-sm font-semibold text-slate-900 truncate">
-                  {{ conv.name }}
-                </p>
-                <span class="text-[11px] text-slate-400 whitespace-nowrap">
-                  {{ conv.time }}
-                </span>
+            <!-- Info -->
+            <div class="msg-conv-info">
+              <div class="msg-conv-info-top">
+                <p class="msg-conv-name">{{ conv.name }}</p>
+                <span class="msg-conv-time">{{ conv.time }}</span>
               </div>
-              <div class="flex items-center justify-between gap-2 mt-0.5">
-                <p class="text-[12px] text-slate-500 truncate"
-                  [ngClass]="{ 'font-medium text-slate-700': conv.unread }">
-                  {{ conv.lastMessage }}
+              <div class="msg-conv-info-bottom">
+                <p class="msg-conv-last-msg" [class.msg-conv-last-msg--unread]="!!conv.unread">
+                  {{ conv.lastMessage || 'Démarrer la conversation...' }}
                 </p>
-                <span *ngIf="conv.unread"
-                  class="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full toggle-accent-on text-[10px] text-white">
+                <span *ngIf="conv.unread" class="msg-conv-unread-badge">
                   {{ conv.unread }}
                 </span>
               </div>
             </div>
           </li>
-
         </ul>
       </aside>
 
-      <!-- COLONNE CENTRALE : CHAT -->
-      <section class="app-card rounded-2xl p-4 flex-1 flex flex-col" id="chat-panel" data-testid="chat-panel">
-        <!-- Si aucune conversation sélectionnée -->
-        <div *ngIf="!selectedConversation"
-          class="flex flex-1 items-center justify-center text-center text-slate-400 text-sm" id="chat-empty-state"
-          data-testid="chat-empty-state">
-          <div>
-            <p class="font-semibold text-slate-500 mb-1">
-              Sélectionnez une conversation
-            </p>
-            <p>
-              Choisissez une personne dans la liste à gauche pour
-              commencer.
-            </p>
+      <!-- ═══════════════════════════════════════ -->
+      <!-- CENTER: CHAT PANEL                     -->
+      <!-- ═══════════════════════════════════════ -->
+      <section class="msg-chat-panel app-card" [class.msg-chat-active]="selectedConversation">
+
+        <!-- Empty state -->
+        <div *ngIf="!selectedConversation" class="msg-chat-empty">
+          <div class="msg-chat-empty-inner">
+            <div class="msg-chat-empty-icon-wrap">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1"
+                stroke="currentColor" class="w-16 h-16">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+              </svg>
+            </div>
+            <h3 class="msg-chat-empty-title">Vos messages</h3>
+            <p class="msg-chat-empty-desc">Sélectionnez une conversation pour commencer à discuter</p>
           </div>
         </div>
 
-        <!-- Chat affiché seulement si une conversation est sélectionnée -->
+        <!-- Active Chat -->
         <ng-container *ngIf="selectedConversation">
-          <header class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100" id="chat-header"
-            data-testid="chat-header">
-            <div class="flex items-center gap-3">
-              <div class="relative w-11 h-11">
-                <img [src]="selectedConversation.avatar" [alt]="selectedConversation.name"
-                  class="w-full h-full rounded-full object-cover" />
-                <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white" [ngClass]="
-                    selectedConversation.online
-                      ? 'bg-emerald-500'
-                      : 'bg-slate-400'
-                  "></span>
+
+          <!-- Chat Header -->
+          <header class="msg-chat-header">
+            <!-- Mobile Back Button -->
+            <button (click)="deselectConversation()" class="msg-back-btn" type="button" title="Retour">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <!-- Direct Chat -->
+            <div *ngIf="selectedConversation.type === 'direct'" class="msg-chat-header-info"
+              (click)="selectedConversation.participants && navigateToProfile(selectedConversation.participants![0]?.id !== currentUserId ? selectedConversation.participants![0]?.id : selectedConversation.participants![1]?.id)">
+              <div class="msg-chat-header-avatar">
+                <img [src]="selectedConversation.avatar" [alt]="selectedConversation.name" />
+                <span class="msg-chat-header-status"
+                  [class.msg-chat-header-status--online]="selectedConversation.online"></span>
               </div>
-              <div>
-                <p class="text-sm font-semibold text-slate-900">
-                  {{ selectedConversation.name }}
-                </p>
-                <p class="text-xs text-slate-400">
-                  @{{ selectedConversation.username }}
+              <div class="msg-chat-header-text">
+                <p class="msg-chat-header-name">{{ selectedConversation.name }}</p>
+                <p class="msg-chat-header-presence"
+                  [class.msg-chat-header-presence--online]="selectedConversation.online">
+                  {{ selectedConversation.online ? 'En ligne' : 'Hors ligne' }}
                 </p>
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
-              <button class="rounded-full bg-slate-100 px-3 py-1 text-xs" title="Appel vocal" id="chat-call-audio"
-                data-testid="chat-call-audio" type="button">
-                📞
+            <!-- Group Chat -->
+            <div *ngIf="selectedConversation.type === 'group'" class="msg-chat-header-info"
+              (click)="openGroupSettings()">
+              <div class="msg-chat-header-avatar msg-chat-header-avatar--group">
+                <img [src]="selectedConversation.avatar" [alt]="selectedConversation.name" />
+                <span class="msg-conv-badge-group" style="bottom:-2px;right:-2px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
+                    <path
+                      d="M7 8a3 3 0 100-6 3 3 0 000 6zM14.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM1.615 16.428a1.224 1.224 0 01-.569-1.175 6.002 6.002 0 0111.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 017 18a9.953 9.953 0 01-5.385-1.572zM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 00-1.588-3.755 4.502 4.502 0 015.874 2.636.818.818 0 01-.36.98A7.465 7.465 0 0114.5 16z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="msg-chat-header-text">
+                <p class="msg-chat-header-name">{{ selectedConversation.name }}</p>
+                <p class="msg-chat-header-presence">Groupe · Cliquer pour gérer</p>
+              </div>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="msg-chat-header-actions">
+              <!-- Audio Call -->
+              <button (click)="startAudioCall()" class="msg-header-action-btn" title="Appel audio" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                </svg>
               </button>
-              <button class="rounded-full bg-slate-100 px-3 py-1 text-xs" title="Appel vidéo" id="chat-call-video"
-                data-testid="chat-call-video" type="button">
-                🎥
+              <!-- Video Call -->
+              <button (click)="startVideoCall()" class="msg-header-action-btn" title="Appel vidéo" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round"
+                    d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9.75A2.25 2.25 0 0016.5 16.5v-9A2.25 2.25 0 0014.25 5.25H4.5A2.25 2.25 0 002.25 7.5v9A2.25 2.25 0 004.5 18.75z" />
+                </svg>
               </button>
-              <button class="rounded-full bg-slate-100 px-3 py-1 text-xs" title="Plus d'options" id="chat-more-options"
-                data-testid="chat-more-options" type="button">
-                ⋯
+              <!-- Group Settings -->
+              <button *ngIf="selectedConversation.type === 'group'" (click)="openGroupSettings()"
+                class="msg-header-action-btn" title="Paramètres du groupe">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
               </button>
             </div>
           </header>
 
-          <div class="flex-1 overflow-y-auto space-y-3 py-1" id="chat-messages-container"
-            data-testid="chat-messages-container">
-            <!-- Séparateur de jour -->
-            <div class="flex items-center justify-center my-2" id="chat-day-separator-today"
-              data-testid="chat-day-separator-today">
-              <span class="px-3 py-1 rounded-full bg-slate-100 text-[11px] text-slate-500">
-                Aujourd'hui
-              </span>
-            </div>
-
-            <!-- Messages -->
-            <div *ngFor="let msg of currentMessages" class="flex flex-col max-w-[75%] space-y-1" [ngClass]="
-                  msg.from === 'me'
-                    ? 'ml-auto items-end'
-                    : 'mr-auto items-start'
-                " [attr.id]="'chat-message-' + msg.id" [attr.data-testid]="'chat-message-' + msg.id">
-              <div class="px-3 py-2 rounded-2xl text-[13px] leading-snug shadow-md"
-                [ngClass]="msg.from === 'me' ? 'chat-bubble-me' : 'chat-bubble-other'">
-                {{ msg.content }}
-              </div>
-              <span class="text-[10px] text-slate-400">
-                {{ msg.time }}
-              </span>
-            </div>
-
-          </div>
-
-          <footer class="mt-3 flex items-center gap-2 rounded-2xl chat-input-shell px-3 py-2" id="chat-input-footer"
-            data-testid="chat-input-footer">
-            <button class="rounded-full bg-white px-2 py-1 text-xs shadow-sm" title="Image" id="chat-attach-image"
-              data-testid="chat-attach-image" type="button">
-              🖼️
-            </button>
-            <button class="rounded-full bg-white px-2 py-1 text-[11px] shadow-sm" title="GIF" id="chat-attach-gif"
-              data-testid="chat-attach-gif" type="button">
-              GIF
-            </button>
-
-            <textarea rows="1" [(ngModel)]="messageText" (keydown.enter)="sendMessage(); $event.preventDefault()"
-              placeholder="Écrivez un message..."
-              class="flex-1 resize-none border-0 bg-transparent text-sm focus:outline-none focus:ring-0 px-2 py-1"
-              id="chat-message-input" name="chat-message-input" data-testid="chat-message-input"></textarea>
-
-            <button (click)="sendMessage()"
-              class="rounded-full btn-primary-gradient px-4 py-1.5 text-xs font-semibold text-white shadow-md disabled:opacity-40"
-              [disabled]="!messageText.trim()" id="chat-send-button" data-testid="chat-send-button" type="button">
-              Envoyer
-            </button>
-          </footer>
-        </ng-container>
-      </section>
-
-      <!-- COLONNE DROITE : INFOS CONVERSATION -->
-      <aside class="w-full lg:w-72 space-y-4 hidden md:flex md:flex-col" id="messages-right-sidebar"
-        data-testid="messages-right-sidebar">
-        <!-- Profil -->
-        <div class="rounded-2xl accent-gradient text-white p-5 shadow-xl" id="conversation-profile-card"
-          data-testid="conversation-profile-card">
-          <div class="flex flex-col items-center text-center">
-            <div class="relative w-16 h-16 mb-3">
-              <img [src]="selectedConversation?.avatar || defaultProfile.avatar"
-                [alt]="selectedConversation?.name || defaultProfile.name"
-                class="w-full h-full rounded-full object-cover border-4 border-white/20" />
-              <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white" [ngClass]="
-                  (selectedConversation || defaultProfile).online
-                    ? 'bg-emerald-400'
-                    : 'bg-slate-300'
-                "></span>
-            </div>
-            <h3 class="text-sm font-semibold">
-              {{ selectedConversation?.name || defaultProfile.name }}
-            </h3>
-            <p class="text-[12px] text-white/80">
-              @{{ selectedConversation?.username || defaultProfile.username }}
+          <!-- Blocked Banner -->
+          <div *ngIf="blockStatus" class="msg-blocked-banner"
+            [class.msg-blocked-banner--me]="blockStatus === 'i_blocked'"
+            [class.msg-blocked-banner--them]="blockStatus === 'they_blocked'">
+            <span class="msg-blocked-icon">{{ blockStatus === 'i_blocked' ? '🔒' : '🚫' }}</span>
+            <p class="msg-blocked-text">
+              <ng-container *ngIf="blockStatus === 'i_blocked'">
+                Vous avez bloqué cet utilisateur. <strong>Débloquez-le</strong> pour envoyer des messages.
+              </ng-container>
+              <ng-container *ngIf="blockStatus === 'they_blocked'">
+                Vous ne pouvez pas envoyer de message à cet utilisateur.
+              </ng-container>
             </p>
           </div>
 
-          <div class="mt-4 flex justify-around text-[12px]">
-            <div class="text-center">
-              <span class="block text-white/80">Abonnés</span>
-              <span class="block font-semibold">
-                {{ defaultProfile.followers }}
-              </span>
+          <!-- Messages Area -->
+          <div #messagesContainer class="msg-messages-area">
+
+            <!-- Empty chat -->
+            <div *ngIf="messages.length === 0" class="msg-messages-empty">
+              <div class="msg-messages-empty-inner">
+                <span class="msg-messages-empty-wave">👋</span>
+                <p>Envoyez votre premier message !</p>
+              </div>
             </div>
-            <div class="text-center">
-              <span class="block text-white/80">Abonnements</span>
-              <span class="block font-semibold">
-                {{ defaultProfile.following }}
-              </span>
+
+            <!-- Message Bubbles -->
+            <ng-container *ngFor="let msg of messages; let i = index">
+              <div class="msg-bubble-row" [class.msg-bubble-row--me]="msg.from === 'me'">
+
+                <!-- Avatar (group, them only) -->
+                <img *ngIf="msg.from === 'them' && conversationType === 'group'"
+                  [src]="msg.senderPhoto || defaultAvatar" class="msg-bubble-avatar" />
+
+                <div class="msg-bubble-col" [class.msg-bubble-col--me]="msg.from === 'me'">
+
+                  <!-- Sender name in group -->
+                  <span *ngIf="msg.from === 'them' && conversationType === 'group'" class="msg-bubble-sender">{{
+                    msg.senderName }}</span>
+
+                  <!-- TEXT -->
+                  <div *ngIf="msg.type === 'text'" class="msg-bubble" [class.msg-bubble--me]="msg.from === 'me'"
+                    [class.msg-bubble--them]="msg.from !== 'me'">
+                    {{ msg.content }}
+                  </div>
+
+                  <!-- IMAGE -->
+                  <div *ngIf="msg.type === 'image'" class="msg-bubble-image" (click)="openLightbox(msg.fileUrl || '')">
+                    <img [src]="env.assetsUrl + '/messages/' + msg.fileUrl" alt="Photo" class="msg-bubble-image-img" />
+                    <div class="msg-bubble-image-overlay">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <!-- AUDIO -->
+                  <div *ngIf="msg.type === 'audio'" class="msg-bubble-audio" [class.msg-bubble--me]="msg.from === 'me'"
+                    [class.msg-bubble--them]="msg.from !== 'me'">
+                    <app-audio-player [audioUrl]="env.assetsUrl + '/messages/' + msg.fileUrl"
+                      [isMe]="msg.from === 'me'"></app-audio-player>
+                  </div>
+
+                  <!-- CALL -->
+                  <div *ngIf="msg.type === 'call'" class="msg-bubble-call"
+                    [class.msg-bubble-call--me]="msg.from === 'me'">
+                    <div class="msg-bubble-call-icon">
+                      <svg *ngIf="msg.content?.includes('vidéo')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                        fill="currentColor" class="w-5 h-5">
+                        <path
+                          d="M4.5 4.5a3 3 0 00-3 3v9a3 3 0 003 3h8.25a3 3 0 003-3v-9a3 3 0 00-3-3H4.5zM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06z" />
+                      </svg>
+                      <svg *ngIf="!msg.content?.includes('vidéo')" xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                        <path fill-rule="evenodd"
+                          d="M1.5 4.5a3 3 0 013-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 01-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 006.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 011.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 01-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5z"
+                          clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    <span class="font-medium text-sm">{{ msg.content }}</span>
+                  </div>
+
+                  <!-- FILE -->
+                  <div *ngIf="msg.type === 'file'" class="msg-bubble-file" [class.msg-bubble--me]="msg.from === 'me'"
+                    [class.msg-bubble--them]="msg.from !== 'me'">
+                    <a [href]="env.assetsUrl + '/messages/' + msg.fileUrl" target="_blank" download
+                      class="msg-bubble-file-link">
+                      <span class="msg-bubble-file-icon">{{ getFileIcon(msg.fileUrl || '') }}</span>
+                      <div class="msg-bubble-file-info">
+                        <p class="msg-bubble-file-name">{{ getFileName(msg.fileUrl || '') }}</p>
+                        <p class="msg-bubble-file-action">Télécharger</p>
+                      </div>
+                      <div class="msg-bubble-file-dl">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                          stroke="currentColor" class="w-5 h-5">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                      </div>
+                    </a>
+                    <p *ngIf="msg.content" class="msg-bubble-file-caption"
+                      [class.msg-bubble-file-caption--me]="msg.from === 'me'">
+                      {{ msg.content }}
+                    </p>
+                  </div>
+
+                  <!-- Timestamp -->
+                  <span class="msg-bubble-time">{{ msg.time }}</span>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- File Preview -->
+          <div *ngIf="selectedFile && !isRecording" class="msg-file-preview">
+            <div class="msg-file-preview-content">
+              <img *ngIf="selectedFilePreview" [src]="selectedFilePreview" class="msg-file-preview-img" />
+              <div *ngIf="!selectedFilePreview" class="msg-file-preview-info">
+                <span class="msg-file-preview-icon">{{ getFileIcon(selectedFile.name) }}</span>
+                <div>
+                  <p class="msg-file-preview-name">{{ selectedFile.name }}</p>
+                  <p class="msg-file-preview-size">{{ getFileSize() }}</p>
+                </div>
+              </div>
+            </div>
+            <button (click)="clearFileSelection()" class="msg-file-preview-close" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Input Footer -->
+          <footer class="msg-input-footer">
+            <div *ngIf="!blockStatus" class="msg-input-bar">
+
+              <!-- Attach Menu -->
+              <div class="msg-input-attach" appClickOutside (clickOutside)="showAttachMenu = false">
+                <button (click)="showAttachMenu = !showAttachMenu" class="msg-input-icon-btn" type="button"
+                  title="Joindre un fichier">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </button>
+                <div *ngIf="showAttachMenu" class="msg-attach-menu">
+                  <button (click)="triggerFileInput('image')" class="msg-attach-option" type="button">
+                    <div class="msg-attach-option-icon msg-attach-option-icon--photo">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H3.75A2.25 2.25 0 001.5 6.75v12a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                    </div>
+                    <span>Photo</span>
+                  </button>
+                  <button (click)="triggerFileInput('file')" class="msg-attach-option" type="button">
+                    <div class="msg-attach-option-icon msg-attach-option-icon--file">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                      </svg>
+                    </div>
+                    <span>Fichier</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Emoji Picker -->
+              <div class="msg-input-emoji" appClickOutside (clickOutside)="showEmojiPicker = false"
+                *ngIf="!isRecording">
+                <button (click)="showEmojiPicker = !showEmojiPicker" type="button" class="msg-input-icon-btn"
+                  title="Emoji">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+                  </svg>
+                </button>
+                <div *ngIf="showEmojiPicker" class="msg-emoji-picker">
+                  <emoji-mart (emojiClick)="addEmoji($event)" [darkMode]="false" [showPreview]="false"></emoji-mart>
+                </div>
+              </div>
+
+              <!-- Text Input -->
+              <textarea *ngIf="!isRecording" rows="1" [(ngModel)]="messageText" (keydown.enter)="onEnter($event)"
+                placeholder="Écrivez un message..." class="msg-input-textarea" name="chat-input"></textarea>
+
+              <!-- Voice Record Button -->
+              <button *ngIf="!isRecording" (click)="toggleRecording()" type="button"
+                class="msg-input-icon-btn msg-input-mic-btn" title="Message vocal">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                </svg>
+              </button>
+
+              <!-- Send Button -->
+              <button *ngIf="!isRecording" (click)="sendMessage()" class="msg-send-btn"
+                [class.msg-send-btn--active]="canSendMessage" [disabled]="!canSendMessage" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                  <path
+                    d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                </svg>
+              </button>
+
+              <!-- Recording Overlay -->
+              <div *ngIf="isRecording" class="msg-recording-overlay">
+                <div class="msg-recording-left">
+                  <div class="msg-recording-pulse"></div>
+                  <div class="msg-recording-waveform">
+                    <div class="msg-wave-bar"></div>
+                    <div class="msg-wave-bar"></div>
+                    <div class="msg-wave-bar"></div>
+                    <div class="msg-wave-bar"></div>
+                    <div class="msg-wave-bar"></div>
+                    <div class="msg-wave-bar"></div>
+                    <div class="msg-wave-bar"></div>
+                    <div class="msg-wave-bar"></div>
+                    <div class="msg-wave-bar"></div>
+                  </div>
+                  <span class="msg-recording-time">{{ formatRecordingTime() }}</span>
+                </div>
+                <div class="msg-recording-right">
+                  <button (click)="cancelRecording()" type="button" class="msg-recording-cancel">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                      stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                  </button>
+                  <button (click)="toggleRecording()" type="button" class="msg-recording-send btn-primary-gradient">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                      <path
+                        d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </footer>
+
+        </ng-container>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- LIGHTBOX                               -->
+  <!-- ═══════════════════════════════════════ -->
+  <div *ngIf="lightboxImageUrl" class="msg-lightbox" (click)="closeLightbox()">
+    <button class="msg-lightbox-close" (click)="closeLightbox()" type="button">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+        class="w-8 h-8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+    <img [src]="lightboxImageUrl" class="msg-lightbox-img" (click)="$event.stopPropagation()" />
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- MODAL: CREATE GROUP                    -->
+  <!-- ═══════════════════════════════════════ -->
+  <div *ngIf="showNewGroupModal" class="msg-modal-backdrop" (click)="closeNewGroupModal()">
+    <div (click)="$event.stopPropagation()" class="msg-modal app-card" style="animation: msgSlideUp 0.25s ease-out;">
+
+      <div class="msg-modal-header">
+        <h3 class="msg-modal-title">Créer un groupe</h3>
+        <button (click)="closeNewGroupModal()" class="msg-modal-close" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+            class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="msg-modal-body">
+        <div>
+          <label class="msg-modal-label">Nom du groupe</label>
+          <input type="text" [(ngModel)]="groupTitle" name="group-title" placeholder="Ex: Équipe projet..."
+            class="msg-modal-input" />
+        </div>
+
+        <div>
+          <label class="msg-modal-label">
+            Ajouter des ami(e)s <span class="text-accent">({{ selectedFriendCount }} sélectionné{{
+              selectedFriendCount > 1 ? 's' : '' }})</span>
+          </label>
+          <input type="text" [(ngModel)]="friendSearchTerm" name="friend-search" placeholder="Rechercher..."
+            class="msg-modal-input" style="margin-bottom: 12px;" />
+
+          <div class="msg-modal-friend-list">
+            <div *ngIf="filteredFriendOptions.length === 0" class="msg-modal-friend-empty">
+              Aucun ami trouvé
+            </div>
+            <div *ngFor="let friend of filteredFriendOptions" (click)="toggleFriendSelection(friend)"
+              class="msg-modal-friend-item" [class.msg-modal-friend-item--selected]="friend.selected">
+              <img [src]="friend.avatar" [alt]="friend.name" class="msg-modal-friend-avatar" />
+              <span class="msg-modal-friend-name">{{ friend.name }}</span>
+              <div class="msg-modal-friend-check" [class.msg-modal-friend-check--active]="friend.selected">
+                <svg *ngIf="friend.selected" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="msg-modal-footer">
+        <button (click)="closeNewGroupModal()" class="msg-modal-btn-cancel" type="button">Annuler</button>
+        <button (click)="createGroup()" class="msg-modal-btn-confirm btn-primary-gradient"
+          [disabled]="selectedFriendCount === 0" type="button">
+          Créer le groupe
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- MODAL: GROUP SETTINGS                  -->
+  <!-- ═══════════════════════════════════════ -->
+  <div *ngIf="showGroupSettingsModal" class="msg-modal-backdrop" (click)="closeGroupSettingsModal()">
+    <div (click)="$event.stopPropagation()" class="msg-modal app-card" style="animation: msgSlideUp 0.25s ease-out;">
+
+      <!-- Header -->
+      <div class="msg-modal-header" style="gap: 12px;">
+        <div class="msg-group-settings-avatar" (click)="triggerGroupAvatarInput()">
+          <img [src]="selectedConversation?.avatar || defaultAvatar" />
+          <div class="msg-group-settings-avatar-overlay">
+            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <input type="file" id="groupAvatarInput" class="hidden" accept="image/*"
+            (change)="updateGroupAvatar($event)" />
+        </div>
+        <div style="flex: 1;">
+          <h3 class="msg-modal-title" style="margin:0;">{{ selectedConversation?.name }}</h3>
+          <p style="font-size: 13px; color: var(--text-muted); margin: 2px 0 0;">{{ groupMembers.length }} membres</p>
+        </div>
+        <button (click)="closeGroupSettingsModal()" class="msg-modal-close" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+            class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="msg-group-tabs">
+        <button class="msg-group-tab" [class.msg-group-tab--active]="groupSettingsTab === 'members'"
+          (click)="groupSettingsTab = 'members'">Membres</button>
+        <button class="msg-group-tab" [class.msg-group-tab--active]="groupSettingsTab === 'add'"
+          (click)="prepareAddMembers()">Ajouter</button>
+      </div>
+
+      <!-- Members Tab -->
+      <div *ngIf="groupSettingsTab === 'members'" class="msg-modal-body" style="max-height: 280px; overflow-y: auto;">
+        <div *ngFor="let member of groupMembers" class="msg-group-member">
+          <div class="msg-group-member-info">
+            <img [src]="member.photo || defaultAvatar" class="msg-group-member-avatar" />
+            <div>
+              <p class="msg-group-member-name">{{ member.prenom }} {{ member.nom }}</p>
+              <p class="msg-group-member-role" *ngIf="member.id === selectedConversation?.['creatorId']">Créateur</p>
+            </div>
+          </div>
+          <button *ngIf="member.id !== currentUserId" (click)="removeMember(member.id)" class="msg-group-member-remove"
+            title="Exclure">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Add Members Tab -->
+      <div *ngIf="groupSettingsTab === 'add'" class="msg-modal-body">
+        <input type="text" [(ngModel)]="addMemberSearchTerm" placeholder="Rechercher des ami(e)s..."
+          class="msg-modal-input" style="margin-bottom: 12px;" />
+
+        <div class="msg-modal-friend-list">
+          <div *ngIf="filteredAddMemberOptions.length === 0" class="msg-modal-friend-empty">
+            Aucun ami disponible
+          </div>
+          <div *ngFor="let friend of filteredAddMemberOptions" (click)="toggleFriendSelection(friend)"
+            class="msg-modal-friend-item" [class.msg-modal-friend-item--selected]="friend.selected">
+            <img [src]="friend.avatar" class="msg-modal-friend-avatar" />
+            <span class="msg-modal-friend-name">{{ friend.name }}</span>
+            <div class="msg-modal-friend-check" [class.msg-modal-friend-check--active]="friend.selected">
+              <svg *ngIf="friend.selected" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
             </div>
           </div>
         </div>
 
-        <!-- Stats conversation -->
-        <div class="app-card rounded-2xl p-4 text-[13px] text-slate-600" id="conversation-stats-card"
-          data-testid="conversation-stats-card">
-          <h4 class="text-sm font-semibold text-slate-900 mb-2">
-            Infos de la conversation
-          </h4>
-          <ul class="space-y-2">
-            <li class="flex justify-between">
-              <span>Créée</span>
-              <span class="text-slate-500">12 mars 2025</span>
-            </li>
-            <li class="flex justify-between">
-              <span>Photos partagées</span>
-              <span class="text-slate-500">23</span>
-            </li>
-            <li class="flex justify-between">
-              <span>Liens partagés</span>
-              <span class="text-slate-500">8</span>
-            </li>
-          </ul>
-        </div>
+        <button class="msg-modal-btn-confirm btn-primary-gradient" style="width: 100%; margin-top: 12px;"
+          [disabled]="selectedAddMemberCount === 0" (click)="addSelectedMembersToGroup()">
+          Ajouter ({{ selectedAddMemberCount }})
+        </button>
+      </div>
 
-        <!-- Actions -->
-        <div class="app-card rounded-2xl p-4 space-y-2" id="conversation-actions-card"
-          data-testid="conversation-actions-card">
-          <button class="w-full rounded-full border border-slate-200 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50"
-            id="conversation-mute-button" data-testid="conversation-mute-button" type="button">
-            Mettre en sourdine
-          </button>
-          <button
-            class="w-full rounded-full border border-rose-200 px-3 py-2 text-xs text-rose-600 bg-rose-50 hover:bg-rose-100"
-            id="conversation-block-button" data-testid="conversation-block-button" type="button">
-            Bloquer / Signaler
-          </button>
-        </div>
-      </aside>
+      <!-- Footer: Leave Group -->
+      <div class="msg-group-leave-section">
+        <button (click)="leaveGroup()" class="msg-group-leave-btn">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Quitter le groupe
+        </button>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Call Overlay (global) -->
+<app-call-overlay></app-call-overlay>

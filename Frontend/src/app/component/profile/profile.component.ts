@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../header/header.component';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment.dev';
 import { FormsModule } from '@angular/forms';
+import { SocketService } from '../../service/socket.service';
+import { Subscription } from 'rxjs';
 
 type HeaderTab = 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexion';
 
@@ -85,6 +87,14 @@ interface FriendPreview {
   mutual: number;
 }
 
+interface FollowUser {
+  id: number;
+  nom: string;
+  prenom: string;
+  email: string;
+  photo?: string;
+}
+
 interface GroupPreview {
   id: number;
   name: string;
@@ -100,7 +110,7 @@ interface GroupPreview {
   imports: [CommonModule, HeaderComponent, FormsModule],
   templateUrl: './profile.component.html',
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
 
 
   /**
@@ -112,7 +122,7 @@ export class ProfileComponent implements OnInit {
     { id: 3, icon: 'group', text: 'A rejoint un nouveau groupe.', timeAgo: 'Il y a 3 jours' },
   ];
 
-  defaultAvatar ='https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
+  defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
   activeTab: HeaderTab = 'home';
   currentUser: CurrentUser | null = null;
   isUserLoading = true;
@@ -133,11 +143,60 @@ export class ProfileComponent implements OnInit {
   commentLoading = false;
   likeLoading = false;
 
-  constructor(private router: Router, private http: HttpClient) {}
+  // Modal followers/following
+  showFollowModal = false;
+  followModalTab: 'followers' | 'following' | 'friends' = 'followers';
+  followersList: FollowUser[] = [];
+  followingList: FollowUser[] = [];
+
+  // Socket subscriptions
+  private socketSubs: Subscription[] = [];
+  private currentUserIdNum: number | null = null;
+
+  constructor(private router: Router, private http: HttpClient, private socketService: SocketService) { }
 
   ngOnInit(): void {
     this.loadCurrentUser();
     this.loadMyPosts();
+    this.setupSocketListeners();
+  }
+
+  ngOnDestroy(): void {
+    this.socketSubs.forEach(s => s.unsubscribe());
+  }
+
+  private setupSocketListeners() {
+    // Quand quelqu'un s'abonne ou se désabonne → mettre à jour les compteurs
+    this.socketSubs.push(
+      this.socketService.onNewFollow().subscribe((data: any) => {
+        if (this.currentUserIdNum == null) return;
+        // Quelqu'un s'est abonné à MOI
+        if (data.followingId === this.currentUserIdNum) {
+          this.followers++;
+          // Recharger pour mettre à jour les listes
+          this.loadCurrentUser();
+        }
+        // MOI je me suis abonné à quelqu'un (via un autre onglet par ex)
+        if (data.followerId === this.currentUserIdNum) {
+          this.following++;
+        }
+      })
+    );
+
+    this.socketSubs.push(
+      this.socketService.onUnfollow().subscribe((data: any) => {
+        if (this.currentUserIdNum == null) return;
+        // Quelqu'un s'est désabonné de MOI
+        if (data.followingId === this.currentUserIdNum) {
+          this.followers = Math.max(0, this.followers - 1);
+          this.loadCurrentUser();
+        }
+        // MOI je me suis désabonné
+        if (data.followerId === this.currentUserIdNum) {
+          this.following = Math.max(0, this.following - 1);
+        }
+      })
+    );
   }
 
   /**
@@ -185,11 +244,47 @@ export class ProfileComponent implements OnInit {
    */
   loadCurrentUser() {
     this.http
-      .get<{ user: CurrentUser }>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true })
+      .get<any>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true })
       .subscribe({
         next: (res) => {
           this.currentUser = res.user;
+          this.currentUserIdNum = res.user.id;
           this.isUserLoading = false;
+
+          // Charger les compteurs
+          const followersArr = res.user.followers || [];
+          const followingArr = res.user.following || [];
+          this.followers = followersArr.length;
+          this.following = followingArr.length;
+          this.followersList = followersArr;
+          this.followingList = followingArr;
+
+          // Construire la liste d'amis à partir des relations acceptées
+          const sentFriends = (res.user.sentRelations || [])
+            .filter((r: any) => r.status === 'acceptée')
+            .map((r: any) => r.addresseeId);
+          const receivedFriends = (res.user.receivedRelations || [])
+            .filter((r: any) => r.status === 'acceptée')
+            .map((r: any) => r.requesterId);
+          const friendIds = new Set([...sentFriends, ...receivedFriends]);
+
+          // Chercher les infos des amis dans followers + following
+          const allUsers = [...followersArr, ...followingArr];
+          const seen = new Set<number>();
+          this.Friends = [];
+          for (const u of allUsers) {
+            if (friendIds.has(u.id) && !seen.has(u.id)) {
+              seen.add(u.id);
+              this.Friends.push({
+                id: u.id,
+                name: `${u.prenom} ${u.nom}`,
+                handle: `@${u.prenom}${u.nom}`,
+                avatar: u.photo || this.defaultAvatar,
+                online: false,
+                mutual: 0
+              });
+            }
+          }
         },
         error: () => {
           this.isUserLoading = false;
@@ -256,6 +351,42 @@ export class ProfileComponent implements OnInit {
     console.log('Ouvrir groupe', group.id);
   }
 
+  // ── Modal followers/following ──
+  openFollowModal(tab: 'followers' | 'following' | 'friends') {
+    this.followModalTab = tab;
+    this.showFollowModal = true;
+  }
+
+  closeFollowModal() {
+    this.showFollowModal = false;
+  }
+
+  navigateToProfile(userId: number) {
+    this.showFollowModal = false;
+    this.router.navigate(['/profil', userId]);
+  }
+
+  deleteFriend(friendId: number) {
+    this.http.post<any>(`${environment.apiUrl}/amis/deleteFriend`, { friendId }, { withCredentials: true }).subscribe({
+      next: () => {
+        this.Friends = this.Friends.filter(f => f.id !== friendId);
+        // Recharger les données pour mettre à jour les compteurs
+        this.loadCurrentUser();
+      },
+      error: (err) => console.error('Erreur suppression ami :', err)
+    });
+  }
+
+  unfollowUser(userId: number) {
+    this.http.delete<any>(`${environment.apiUrl}/amis/unfollowUser/${userId}`, { withCredentials: true }).subscribe({
+      next: () => {
+        this.followingList = this.followingList.filter(u => u.id !== userId);
+        this.following = this.followingList.length;
+      },
+      error: (err) => console.error('Erreur unfollow :', err)
+    });
+  }
+
 
 
   /**
@@ -297,39 +428,39 @@ export class ProfileComponent implements OnInit {
    */
   loadMyPosts() {
     this.http.get<ApiPublication[]>(`${environment.apiUrl}/publications/getAllPostUserConnected`, { withCredentials: true }).subscribe({
-        next: (posts) => {
-          const list = Array.isArray(posts) ? posts : [];
+      next: (posts) => {
+        const list = Array.isArray(posts) ? posts : [];
 
-          this.Publications = list.map((res) => {
-            const rawComments = (res.comments ?? res.Comments ?? []) as ApiComment[];
-            const safeComments = Array.isArray(rawComments) ? rawComments : [];
+        this.Publications = list.map((res) => {
+          const rawComments = (res.comments ?? res.Comments ?? []) as ApiComment[];
+          const safeComments = Array.isArray(rawComments) ? rawComments : [];
 
-            return {
-              id: res.id,
-              description: res.description,
-              timeAgo: this.timeAgo(res.createdAt),
-              likes: res.nombreLikes ?? 0,
-              commentaires: safeComments.length,
-              image: res.image,
-              createdAt: res.createdAt,
-              comments: safeComments,
-              showAllComments: false,
-            };
-          });
+          return {
+            id: res.id,
+            description: res.description,
+            timeAgo: this.timeAgo(res.createdAt),
+            likes: res.nombreLikes ?? 0,
+            commentaires: safeComments.length,
+            image: res.image,
+            createdAt: res.createdAt,
+            comments: safeComments,
+            showAllComments: false,
+          };
+        });
 
-          this.postsCount = this.Publications.length;
+        this.postsCount = this.Publications.length;
 
-          this.Photos = list
-            .filter((p) => !!p.image)
-            .map((p) => this.srcImage(p.image!));
-        },
-        error: (err) => {
-          console.error('Erreur récupération posts', err);
-          this.Publications = [];
-          this.Photos = [];
-          this.postsCount = 0;
-        },
-      });
+        this.Photos = list
+          .filter((p) => !!p.image)
+          .map((p) => this.srcImage(p.image!));
+      },
+      error: (err) => {
+        console.error('Erreur récupération posts', err);
+        this.Publications = [];
+        this.Photos = [];
+        this.postsCount = 0;
+      },
+    });
   }
 
   /**
@@ -393,49 +524,49 @@ export class ProfileComponent implements OnInit {
 
     this.commentLoading = true;
 
-    this.http.post<ApiComment>(`${environment.apiUrl}/publications/addComment/${postId}`, formData, { withCredentials: true }) .subscribe({
-    next: (createdComment) => {
-    const postId = this.selectedPost!.id;
+    this.http.post<ApiComment>(`${environment.apiUrl}/publications/addComment/${postId}`, formData, { withCredentials: true }).subscribe({
+      next: (createdComment) => {
+        const postId = this.selectedPost!.id;
 
-    const fixed: ApiComment = {
-    id: createdComment.id,
-    contenu: createdComment.contenu ?? (this.newCommentText[postId] || '').trim(),
-    image: createdComment.image ?? null,
-    nombreLikes: createdComment.nombreLikes ?? 0,
-    createdAt:
-      createdComment.createdAt && !isNaN(new Date(createdComment.createdAt).getTime())
-        ? createdComment.createdAt
-        : new Date().toISOString(),
-    mine: createdComment.mine ?? true,
-    user: createdComment.user ?? {
-      id: 0,
-      nom: this.currentUser?.nom ?? 'Moi',
-      prenom: this.currentUser?.prenom ?? '',
-      photo: this.currentUser?.photo ?? this.defaultAvatar,
-    },
-  };
+        const fixed: ApiComment = {
+          id: createdComment.id,
+          contenu: createdComment.contenu ?? (this.newCommentText[postId] || '').trim(),
+          image: createdComment.image ?? null,
+          nombreLikes: createdComment.nombreLikes ?? 0,
+          createdAt:
+            createdComment.createdAt && !isNaN(new Date(createdComment.createdAt).getTime())
+              ? createdComment.createdAt
+              : new Date().toISOString(),
+          mine: createdComment.mine ?? true,
+          user: createdComment.user ?? {
+            id: 0,
+            nom: this.currentUser?.nom ?? 'Moi',
+            prenom: this.currentUser?.prenom ?? '',
+            photo: this.currentUser?.photo ?? this.defaultAvatar,
+          },
+        };
 
-  this.selectedPost!.comments = [...(this.selectedPost!.comments ?? []), fixed];
-  this.selectedPost!.commentaires = this.selectedPost!.comments.length;
-  this.selectedPostComments = [...this.selectedPost!.comments];
+        this.selectedPost!.comments = [...(this.selectedPost!.comments ?? []), fixed];
+        this.selectedPost!.commentaires = this.selectedPost!.comments.length;
+        this.selectedPostComments = [...this.selectedPost!.comments];
 
-  const idx = this.Publications.findIndex(p => p.id === postId);
-  if (idx !== -1) {
-    this.Publications[idx].comments = [...this.selectedPost!.comments];
-    this.Publications[idx].commentaires = this.selectedPost!.commentaires;
-  }
-  this.newCommentText[postId] = '';
-  this.selectedCommentImage[postId] = null;
-  this.commentImagePreview[postId] = null;
+        const idx = this.Publications.findIndex(p => p.id === postId);
+        if (idx !== -1) {
+          this.Publications[idx].comments = [...this.selectedPost!.comments];
+          this.Publications[idx].commentaires = this.selectedPost!.commentaires;
+        }
+        this.newCommentText[postId] = '';
+        this.selectedCommentImage[postId] = null;
+        this.commentImagePreview[postId] = null;
 
-  this.commentLoading = false;
-},
+        this.commentLoading = false;
+      },
 
-        error: (err) => {
-          console.error('Erreur ajout commentaire', err);
-          this.commentLoading = false;
-        },
-      });
+      error: (err) => {
+        console.error('Erreur ajout commentaire', err);
+        this.commentLoading = false;
+      },
+    });
   }
 
   /**
@@ -448,25 +579,25 @@ export class ProfileComponent implements OnInit {
     if (!comment.mine) return;
 
     this.http.delete(`${environment.apiUrl}/posts/${post.id}/comments/${comment.id}`, { withCredentials: true }).subscribe({
-        next: () => {
-          post.comments = (post.comments || []).filter((c) => c.id !== comment.id);
-          post.commentaires = post.comments.length;
+      next: () => {
+        post.comments = (post.comments || []).filter((c) => c.id !== comment.id);
+        post.commentaires = post.comments.length;
 
-          if (this.selectedPost?.id === post.id) {
-            this.selectedPost!.comments = [...post.comments];
-            this.selectedPost!.commentaires = post.commentaires;
-            this.selectedPostComments = [...post.comments];
-          }
-          const idx = this.Publications.findIndex((p) => p.id === post.id);
-          if (idx !== -1) {
-            this.Publications[idx].comments = [...post.comments];
-            this.Publications[idx].commentaires = post.commentaires;
-          }
-        },
-        error: (err) => {
-          console.error('Erreur suppression commentaire', err);
-        },
-      });
+        if (this.selectedPost?.id === post.id) {
+          this.selectedPost!.comments = [...post.comments];
+          this.selectedPost!.commentaires = post.commentaires;
+          this.selectedPostComments = [...post.comments];
+        }
+        const idx = this.Publications.findIndex((p) => p.id === post.id);
+        if (idx !== -1) {
+          this.Publications[idx].comments = [...post.comments];
+          this.Publications[idx].commentaires = post.commentaires;
+        }
+      },
+      error: (err) => {
+        console.error('Erreur suppression commentaire', err);
+      },
+    });
   }
 
   /**
@@ -480,14 +611,14 @@ export class ProfileComponent implements OnInit {
     const valueLike = true;
 
     this.http.post(`${environment.apiUrl}/posts/${postId}/like`, { like: valueLike }, { withCredentials: true }).subscribe({
-        next: () => {
-          this.loadMyPosts();
-          this.likeLoading = false;
-        },
-        error: (err) => {
-          console.error('Erreur like', err);
-          this.likeLoading = false;
-        },
-      });
+      next: () => {
+        this.loadMyPosts();
+        this.likeLoading = false;
+      },
+      error: (err) => {
+        console.error('Erreur like', err);
+        this.likeLoading = false;
+      },
+    });
   }
 }

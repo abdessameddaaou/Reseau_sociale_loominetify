@@ -5,6 +5,7 @@ import { HeaderComponent } from '../header/header.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment.dev';
+import { SocketService } from '../../service/socket.service';
 
 type HeaderTab = 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexion';
 
@@ -61,7 +62,7 @@ interface GroupPreview {
 
 type FollowStatus = 'unknown' | 'following' | 'not-following' | 'requested' | 'received';
 
-type AbonneStatus =  'following' | 'not-following';
+type AbonneStatus = 'following' | 'not-following';
 
 @Component({
   selector: 'app-userprofileview',
@@ -73,12 +74,15 @@ export class UserprofileviewComponent implements OnInit {
   activeTab: HeaderTab = 'home';
   profileUser: ProfileUser | null = null;
   isLoading = true;
-  defaultAvatar ='https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
+  defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
   followers = 0;
   following = 0;
   postsCount = 0;
   followAmisStatus: FollowStatus = 'not-following';
   followStatus: AbonneStatus = 'not-following';
+  private currentUserId: string | null = null;
+  private pendingFollowAction = false; // true quand toggleFollow() a déjà fait un update optimiste
+  showFriendMenu = false;
   recentActivity: ProfileActivity[] = [];
   stats = {
     activityScore: 0,
@@ -95,26 +99,62 @@ export class UserprofileviewComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private http: HttpClient
-  ) {}
+    private http: HttpClient,
+    private socketService: SocketService
+  ) { }
 
   ngOnInit(): void {
+
+    // Écouter les nouveaux abonnements en temps réel
+    this.socketService.onNewFollow().subscribe((data) => {
+      if (this.profileUser && String(data.followingId) === String(this.profileUser.id)) {
+        // Si c'est MOI et que j'ai un update optimiste en cours (toggleFollow), ne pas re-compter
+        if (this.pendingFollowAction && this.currentUserId && String(data.followerId) === this.currentUserId) {
+          this.pendingFollowAction = false;
+          return;
+        }
+        // Sinon incrémenter (autre user, ou accept depuis notification)
+        this.followers++;
+        // Mettre à jour le statut si c'est moi qui follow (ex: via acceptation d'invitation)
+        if (this.currentUserId && String(data.followerId) === this.currentUserId) {
+          this.followStatus = 'following';
+        }
+      }
+    });
+
+    // Écouter les désabonnements
+    this.socketService.onUnfollow().subscribe((data) => {
+      if (this.profileUser && String(data.followingId) === String(this.profileUser.id)) {
+        // Si c'est MOI et que j'ai un update optimiste en cours (toggleFollow), ne pas re-compter
+        if (this.pendingFollowAction && this.currentUserId && String(data.followerId) === this.currentUserId) {
+          this.pendingFollowAction = false;
+          return;
+        }
+        // Sinon décrémenter
+        this.followers--;
+        if (this.currentUserId && String(data.followerId) === this.currentUserId) {
+          this.followStatus = 'not-following';
+        }
+      }
+    });
+
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (!id) return;
-      this.http.get<{ user: { id: number | string } }>(`${environment.apiUrl}/users/getUserconnected`,{ withCredentials: true }).subscribe({
-          next: (res) => {
-            const meId = res?.user?.id;
-            if (meId != null && String(meId) === String(id)) {
-              this.router.navigate(['/profile']);
-              return;
-            }
-            this.loadUserProfile(id);
-          },
-          error: () => {
-            this.loadUserProfile(id);
-          },
-        });
+      this.http.get<{ user: { id: number | string } }>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true }).subscribe({
+        next: (res) => {
+          const meId = res?.user?.id;
+          this.currentUserId = meId != null ? String(meId) : null;
+          if (meId != null && String(meId) === String(id)) {
+            this.router.navigate(['/profile']);
+            return;
+          }
+          this.loadUserProfile(id);
+        },
+        error: () => {
+          this.loadUserProfile(id);
+        },
+      });
     });
   }
 
@@ -125,22 +165,50 @@ export class UserprofileviewComponent implements OnInit {
   loadUserProfile(id: string) {
     this.isLoading = true;
     this.http.get<any>(`${environment.apiUrl}/users/getUser/${id}`, { withCredentials: true }).subscribe({
-        next: (response) => {
-          this.profileUser = response.user
-          this.followers = response.user.followers?.length || 0;
-          this.following = response.user.following?.length || 0;
-           this.http.get<any>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true })
+      next: (response) => {
+        this.profileUser = response.user;
+        const followersArr = response.user.followers || [];
+        const followingArr = response.user.following || [];
+        this.followers = followersArr.length;
+        this.following = followingArr.length;
+
+        // Construire la liste d'amis du profil visité
+        const sentFriends = (response.user.sentRelations || [])
+          .filter((r: any) => r.status === 'acceptée')
+          .map((r: any) => r.addresseeId);
+        const receivedFriends = (response.user.receivedRelations || [])
+          .filter((r: any) => r.status === 'acceptée')
+          .map((r: any) => r.requesterId);
+        const friendIds = new Set([...sentFriends, ...receivedFriends]);
+
+        const allUsers = [...followersArr, ...followingArr];
+        const seen = new Set<number>();
+        this.Friends = [];
+        for (const u of allUsers) {
+          if (friendIds.has(u.id) && !seen.has(u.id)) {
+            seen.add(u.id);
+            this.Friends.push({
+              id: u.id,
+              name: `${u.prenom} ${u.nom}`,
+              handle: `${u.prenom}${u.nom}`,
+              avatar: u.photo || this.defaultAvatar,
+              online: false,
+              mutual: 0
+            });
+          }
+        }
+
+        this.http.get<any>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true })
           .subscribe((meRes) => {
-            console.log('Utilisateur connecté :', meRes.user);
             this.resolveFollowStatus(meRes.user, String(this.profileUser?.id));
             this.resolveAbonneStatus(meRes.user, String(this.profileUser?.id));
           });
-          this.isLoading = false;
-        },
-        error: (err) => {
-          this.isLoading = false;
-        },
-      });
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+      },
+    });
   }
 
   /** Getters */
@@ -181,38 +249,52 @@ export class UserprofileviewComponent implements OnInit {
    * @returns
    */
   toggleFollow() {
- if (!this.profileUser?.id) return;
+    if (!this.profileUser?.id) return;
 
-  // S'ABONNER
-  if (this.followStatus === 'not-following') {
-    this.http.post<any>(`${environment.apiUrl}/amis/followUser`, {
-      friendId: this.profileUser.id
-    }, { withCredentials: true }).subscribe({
-      next: (resp) => {
-        console.log('Réponse follow :', resp);
-        this.followStatus = 'following';
-        this.followers++;
-      },
-      error: (err) => {
-        console.error('Erreur follow :', err);
-      }
-    });
-  }
+    // S'ABONNER
+    if (this.followStatus === 'not-following') {
+      // Mise à jour optimiste + flag pour éviter le double-comptage socket
+      this.pendingFollowAction = true;
+      this.followStatus = 'following';
+      this.followers++;
 
-  // SE DÉSABONNER
-  else if (this.followStatus === 'following') {
-    this.http.delete<any>(`${environment.apiUrl}/amis/unfollowUser/${this.profileUser.id}`,
-      { withCredentials: true }).subscribe({
-      next: (resp) => {
-        console.log('Réponse unfollow :', resp);
-        this.followStatus = 'not-following';
-        this.followers--;
-      },
-      error: (err) => {
-        console.error('Erreur unfollow :', err);
-      }
-    });
-  }
+      this.http.post<any>(`${environment.apiUrl}/amis/followUser`, {
+        friendId: this.profileUser.id
+      }, { withCredentials: true }).subscribe({
+        next: (resp) => {
+          console.log('Réponse follow :', resp);
+        },
+        error: (err) => {
+          console.error('Erreur follow :', err);
+          // Rollback en cas d'erreur
+          this.pendingFollowAction = false;
+          this.followStatus = 'not-following';
+          this.followers--;
+        }
+      });
+    }
+
+    // SE DÉSABONNER
+    else if (this.followStatus === 'following') {
+      // Mise à jour optimiste + flag pour éviter le double-comptage socket
+      this.pendingFollowAction = true;
+      this.followStatus = 'not-following';
+      this.followers--;
+
+      this.http.delete<any>(`${environment.apiUrl}/amis/unfollowUser/${this.profileUser.id}`,
+        { withCredentials: true }).subscribe({
+          next: (resp) => {
+            console.log('Réponse unfollow :', resp);
+          },
+          error: (err) => {
+            console.error('Erreur unfollow :', err);
+            // Rollback en cas d'erreur
+            this.pendingFollowAction = false;
+            this.followStatus = 'following';
+            this.followers++;
+          }
+        });
+    }
   }
 
   /**
@@ -222,7 +304,7 @@ export class UserprofileviewComponent implements OnInit {
   openConversationWithUser() {
     if (!this.profileUser) return;
     if (this.followAmisStatus !== 'following') return;
-    this.router.navigate(['/messages']);
+    this.router.navigate(['/messages'], { queryParams: { userId: this.profileUser.id } });
   }
 
   /**
@@ -233,9 +315,7 @@ export class UserprofileviewComponent implements OnInit {
     console.log('Ouvrir la publication', post.id);
   }
   openFriend(friend: FriendPreview) {
-
-    // redirection vers la page d el'amie ( cette page )
-    console.log('Ouvrir ami', friend.id);
+    this.router.navigate(['/profil', friend.id]);
   }
   openGroup(group: GroupPreview) {
     console.log('Ouvrir groupe', group.id);
@@ -247,37 +327,55 @@ export class UserprofileviewComponent implements OnInit {
     this.selectedPhoto = null;
   }
 
-sendInvitation() {
-      this.http.post<any>(`${environment.apiUrl}/amis/sendInvitation`, {
-        friendId: this.profileUser?.id}, { withCredentials: true }).subscribe({
-        next: (response) => {
-          console.log('Invitation envoyée avec succès :', response);
-          this.followAmisStatus = 'requested';
-        },
-        error: (err) => {
-          console.error('Erreur lors de l\'envoi de l\'invitation :', err);
-        },
-      });
+  deleteFriend() {
+    if (!this.profileUser?.id) return;
+    this.http.post<any>(`${environment.apiUrl}/amis/deleteFriend`, {
+      friendId: this.profileUser.id
+    }, { withCredentials: true }).subscribe({
+      next: () => {
+        this.followAmisStatus = 'not-following';
+        this.followStatus = 'not-following';
+        this.showFriendMenu = false;
+        // Recharger le profil pour mettre à jour les compteurs
+        this.loadUserProfile(String(this.profileUser!.id));
+      },
+      error: (err) => console.error('Erreur suppression ami :', err)
+    });
+  }
+
+  sendInvitation() {
+    this.http.post<any>(`${environment.apiUrl}/amis/sendInvitation`, {
+      friendId: this.profileUser?.id
+    }, { withCredentials: true }).subscribe({
+      next: (response) => {
+        console.log('Invitation envoyée avec succès :', response);
+        this.followAmisStatus = 'requested';
+      },
+      error: (err) => {
+        console.error('Erreur lors de l\'envoi de l\'invitation :', err);
+      },
+    });
   }
 
 
-acceptInvitation() {
+  acceptInvitation() {
     this.http.post<any>(`${environment.apiUrl}/amis/acceptInvitation`, {
-      requesterId: this.profileUser?.id}, { withCredentials: true }).subscribe({
+      requesterId: this.profileUser?.id
+    }, { withCredentials: true }).subscribe({
       next: (response) => {
         console.log('Invitation acceptée avec succès :', response);
-        this.followAmisStatus = 'following';
-        this.followers++;
+        // Socket gérera la mise à jour
       },
       error: (err) => {
         console.error('Erreur lors de l\'acceptation de l\'invitation :', err);
       },
     });
-}
+  }
 
-rejectInvitation() {
+  rejectInvitation() {
     this.http.post<any>(`${environment.apiUrl}/amis/refuseInvitation`, {
-      requesterId: this.profileUser?.id}, { withCredentials: true }).subscribe({
+      requesterId: this.profileUser?.id
+    }, { withCredentials: true }).subscribe({
       next: (response) => {
         console.log('Invitation refusée avec succès :', response);
         this.followAmisStatus = 'not-following';
@@ -286,70 +384,70 @@ rejectInvitation() {
         console.error('Erreur lors du refus de l\'invitation :', err);
       },
     });
-}
+  }
 
-private resolveFollowStatus(
-  me: any,
-  profileId: string
-) {
-  const myId = String(me.id);
+  private resolveFollowStatus(
+    me: any,
+    profileId: string
+  ) {
+    const myId = String(me.id);
 
-  // 1️⃣ Amis (accepté dans les deux sens)
-  const isFriend =
-    me.sentRelations?.some(
+    // 1️⃣ Amis (accepté dans les deux sens)
+    const isFriend =
+      me.sentRelations?.some(
+        (r: any) =>
+          String(r.addresseeId) === profileId &&
+          r.status === 'acceptée'
+      ) ||
+      me.receivedRelations?.some(
+        (r: any) =>
+          String(r.requesterId) === profileId &&
+          r.status === 'acceptée'
+      );
+
+    if (isFriend) {
+      this.followAmisStatus = 'following';
+      return;
+    }
+
+    // 2️⃣ Invitation envoyée par moi
+    const sentRequest = me.sentRelations?.some(
       (r: any) =>
         String(r.addresseeId) === profileId &&
-        r.status === 'acceptée'
-    ) ||
-    me.receivedRelations?.some(
-      (r: any) =>
-        String(r.requesterId) === profileId &&
-        r.status === 'acceptée'
+        r.status === 'envoyée'
     );
 
-  if (isFriend) {
-    this.followAmisStatus = 'following';
-    return;
+    if (sentRequest) {
+      this.followAmisStatus = 'requested';
+      return;
+    }
+
+    // 3️⃣ Invitation reçue par moi
+    const receivedRequest = me.receivedRelations?.some(
+      (r: any) =>
+        String(r.requesterId) === profileId &&
+        r.status === 'envoyée'
+    );
+
+    if (receivedRequest) {
+      this.followAmisStatus = 'received';
+      return;
+    }
+
+    // 4️⃣ Aucune relation
+    this.followAmisStatus = 'not-following';
   }
 
-  // 2️⃣ Invitation envoyée par moi
-  const sentRequest = me.sentRelations?.some(
-    (r: any) =>
-      String(r.addresseeId) === profileId &&
-      r.status === 'envoyée'
-  );
+  private resolveAbonneStatus(me: any, profileUserId: string) {
+    if (!me || !me.following) {
+      this.followStatus = 'not-following';
+      return;
+    }
 
-  if (sentRequest) {
-    this.followAmisStatus = 'requested';
-    return;
+    const isFollowing = me.following.some(
+      (u: any) => String(u.id) === profileUserId
+    );
+
+    this.followStatus = isFollowing ? 'following' : 'not-following';
   }
-
-  // 3️⃣ Invitation reçue par moi
-  const receivedRequest = me.receivedRelations?.some(
-    (r: any) =>
-      String(r.requesterId) === profileId &&
-      r.status === 'envoyée'
-  );
-
-  if (receivedRequest) {
-    this.followAmisStatus = 'received';
-    return;
-  }
-
-  // 4️⃣ Aucune relation
-  this.followAmisStatus = 'not-following';
-}
-
-private resolveAbonneStatus(me: any, profileUserId: string) {
-  if (!me || !me.following) {
-    this.followStatus = 'not-following';
-    return;
-  }
-
-  const isFollowing = me.following.some(
-    (u: any) => String(u.id) === profileUserId
-  );
-
-  this.followStatus = isFollowing ? 'following' : 'not-following';
-}
 }

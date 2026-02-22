@@ -1,4 +1,4 @@
-<header class="app-card border-0 border-b shadow-sm" id="main-header" data-testid="main-header">
+<header class="app-card border-0 border-b shadow-sm relative z-50" id="main-header" data-testid="main-header">
   <div class="max-w-6xl mx-auto flex items-center justify-between px-6 py-3" id="header-inner"
     data-testid="header-inner">
     <div class="flex items-center gap-4" id="header-left" data-testid="header-left">
@@ -206,7 +206,7 @@
       </button>
 
       <!-- LOGOUT -->
-      <button class="flex items-center gap-1" [ngClass]="
+      <button class="hidden md:flex items-center gap-1" [ngClass]="
           activeTab === 'deconnexion'
             ? 'text-rose-500 font-semibold'
             : 'text-slate-500'
@@ -216,6 +216,76 @@
           <i class="fa-solid fa-arrow-right-from-bracket fa-lg text-rose-500"></i>
         </span>
       </button>
+
+      <!-- MOBILE MENU DROPDOWN (Mobile Only) -->
+      <div class="relative md:hidden" id="nav-mobile-menu-wrapper" data-testid="nav-mobile-menu-wrapper">
+        <button #mobileMenuButton class="flex items-center gap-1"
+          [ngClass]="showMobileMenu ? 'text-accent font-semibold' : 'text-slate-500'" (click)="toggleMobileMenu($event)"
+          title="Menu" type="button" id="nav-mobile-menu-button">
+          <span class="material-icons text-base relative inline-block">
+            <i class="fa-solid fa-bars fa-lg"></i>
+          </span>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div *ngIf="showMobileMenu" #mobileMenuDropdown
+          class="absolute right-0 mt-3 w-64 app-card rounded-2xl z-50 flex flex-col p-2 shadow-xl border border-slate-100"
+          id="mobile-menu-dropdown">
+
+          <!-- My Profile -->
+          <div class="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors"
+            (click)="goToProfile()" id="mobile-menu-profile">
+            <img [src]="currentUser?.photo || defaultAvatar" class="w-10 h-10 rounded-full object-cover">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-slate-800 truncate">{{ currentUser?.nom }} {{ currentUser?.prenom }}
+              </p>
+              <p class="text-xs text-slate-400">Voir mon profil</p>
+            </div>
+          </div>
+
+          <div class="h-px bg-slate-100 my-1"></div>
+
+          <!-- Mobile Search -->
+          <div class="p-2 relative z-50">
+            <div class="flex items-center app-soft rounded-full px-3 py-2 text-sm">
+              <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+              <input type="text" [formControl]="searchControl" placeholder="Rechercher..."
+                class="bg-transparent outline-none text-slate-600 w-full ml-2">
+            </div>
+
+            <!-- Search Results -->
+            <div *ngIf="showSearchDropdown && searchControl.value!.length >= 2"
+              class="absolute top-full left-0 right-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-slate-100 z-[60] overflow-hidden">
+              <ul *ngIf="searchResults.length > 0" class="py-1">
+                <li *ngFor="let user of searchResults" (click)="onSearchResultClick(user); showMobileMenu=false;"
+                  class="px-3 py-2 hover:bg-slate-50 cursor-pointer flex items-center gap-2">
+                  <img [src]="user.photo || defaultAvatar" class="w-6 h-6 rounded-full object-cover">
+                  <span class="text-sm font-medium text-slate-800 truncate">{{ user.prenom }} {{ user.nom }}</span>
+                </li>
+              </ul>
+              <div *ngIf="searchResults.length === 0" class="px-3 py-2 text-center text-slate-500 text-xs">
+                Aucun utilisateur trouvé
+              </div>
+            </div>
+          </div>
+
+          <div class="h-px bg-slate-100 my-1"></div>
+
+          <!-- Settings -->
+          <button class="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl w-full text-left transition-colors"
+            type="button" (click)="onTabClick('settings'); showMobileMenu=false;">
+            <i class="fa-solid fa-gear text-slate-500 w-5 text-center"></i>
+            <span class="text-sm font-medium text-slate-700">Paramètres</span>
+          </button>
+
+          <!-- Logout -->
+          <button class="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl w-full text-left transition-colors"
+            type="button" (click)="onTabClick('deconnexion'); showMobileMenu=false;">
+            <i class="fa-solid fa-arrow-right-from-bracket text-rose-500 w-5 text-center"></i>
+            <span class="text-sm font-medium text-rose-600">Se déconnecter</span>
+          </button>
+        </div>
+      </div>>
     </nav>
   </div>
 </header>

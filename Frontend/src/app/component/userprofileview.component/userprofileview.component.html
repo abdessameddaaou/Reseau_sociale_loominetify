@@ -26,9 +26,7 @@
             <div class="h-20 accent-gradient"></div>
 
             <div class="p-4 -mt-10 flex flex-col items-center text-center">
-              <img
-                [src]="defaultAvatar"
-                alt="avatar"
+              <img [src]="profileUser?.photo || defaultAvatar" alt="avatar"
                 class="w-20 h-20 rounded-full border-4 border-white object-cover shadow" id="public-profile-avatar"
                 data-testid="public-profile-avatar" />
 
@@ -64,25 +62,24 @@
 
               <!-- Boutons d’action : abonné / non abonné -->
               <div class="mt-4 flex gap-2 w-full">
-                  <button type="button"
-                    class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md disabled:opacity-60"
-                    (click)="toggleFollow()"  id="public-profile-follow-button"
-                    data-testid="public-profile-follow-button">
-                    <ng-container [ngSwitch]="followStatus">
-                      <span *ngSwitchCase="'not-following'">
-                        S’abonner
-                      </span>
-                      <span *ngSwitchCase="'following'">
-                        Abonné(e)
-                      </span>
-                      <span *ngSwitchDefault>
-                        S’abonner
-                      </span>
-                    </ng-container>
+                <button type="button"
+                  class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md disabled:opacity-60"
+                  (click)="toggleFollow()" id="public-profile-follow-button" data-testid="public-profile-follow-button">
+                  <ng-container [ngSwitch]="followStatus">
+                    <span *ngSwitchCase="'not-following'">
+                      S’abonner
+                    </span>
+                    <span *ngSwitchCase="'following'">
+                      Se désabonner
+                    </span>
+                    <span *ngSwitchDefault>
+                      S’abonner
+                    </span>
+                  </ng-container>
 
-                  </button>
+                </button>
 
-                  <!-- <button
+                <!-- <button
                       type="button"
                       class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md disabled:opacity-60"
                       [disabled]="followStatus === 'requested' || followStatus === 'following'"
@@ -96,61 +93,61 @@
                         <span *ngSwitchCase="'following'">Ami(e)</span>
                       </ng-container>
                     </button> -->
-                  <!-- CAS : aucune relation -->
-              <button
-                *ngIf="followAmisStatus === 'not-following'"
-                type="button"
-                class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md"
-                (click)="sendInvitation()"
-              >
-                Envoyer une invitation
-              </button>
-
-              <!-- CAS : invitation envoyée -->
-              <button
-                *ngIf="followAmisStatus === 'requested'"
-                type="button"
-                class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md opacity-60"
-                disabled
-              >
-                Invitation envoyée
-              </button>
-
-              <!-- CAS : invitation reçue -->
-              <div *ngIf="followAmisStatus === 'received'" class="flex gap-2">
-                <button
-                  type="button"
+                <!-- CAS : aucune relation -->
+                <button *ngIf="followAmisStatus === 'not-following'" type="button"
                   class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md"
-                  (click)="acceptInvitation()"
-                >
-                  Accepter
+                  (click)="sendInvitation()">
+                  Envoyer une invitation
                 </button>
-                <button
-                  type="button"
-                  class="flex-1 rounded-full border border-red-300 bg-red-50 text-red-600 text-[11px] font-semibold py-1.5
-                        hover:bg-red-100 transition"
-                  (click)="rejectInvitation()"
-                >
-                  Refuser
+
+                <!-- CAS : invitation envoyée -->
+                <button *ngIf="followAmisStatus === 'requested'" type="button"
+                  class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md opacity-60"
+                  disabled>
+                  Invitation envoyée
                 </button>
-              </div>
 
-              <!-- CAS : amis -->
-              <button
-                *ngIf="followAmisStatus === 'following'"
-                type="button"
-                class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md opacity-60"
-                disabled
-              >
-                Ami(e)
-              </button>
-
-                  <button *ngIf="followAmisStatus === 'following'" type="button"
-                    class="flex-1 rounded-full border border-slate-200 bg-white text-[11px] font-semibold py-1.5 hover:bg-slate-50 transition"
-                    (click)="openConversationWithUser()" id="public-profile-message-button"
-                    data-testid="public-profile-message-button">
-                    Message
+                <!-- CAS : invitation reçue -->
+                <div *ngIf="followAmisStatus === 'received'" class="flex gap-2">
+                  <button type="button"
+                    class="flex-1 rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md"
+                    (click)="acceptInvitation()">
+                    Accepter
                   </button>
+                  <button type="button" class="flex-1 rounded-full border border-red-300 bg-red-50 text-red-600 text-[11px] font-semibold py-1.5
+                        hover:bg-red-100 transition" (click)="rejectInvitation()">
+                    Refuser
+                  </button>
+                </div>
+
+                <!-- CAS : amis -->
+                <div *ngIf="followAmisStatus === 'following'" class="relative flex-1">
+                  <button type="button"
+                    class="w-full rounded-full btn-primary-gradient text-[11px] font-semibold py-1.5 shadow-md flex items-center justify-center gap-1"
+                    (click)="showFriendMenu = !showFriendMenu">
+                    <i class="fa-solid fa-user-check text-[10px]"></i>
+                    Ami(e)
+                    <i class="fa-solid fa-chevron-down text-[8px] ml-1"></i>
+                  </button>
+                  <!-- Menu déroulant -->
+                  <div *ngIf="showFriendMenu"
+                    class="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-slate-200 z-10 overflow-hidden">
+                    <button type="button"
+                      class="w-full px-3 py-2 text-[11px] text-red-500 hover:bg-red-50 flex items-center gap-2 transition"
+                      (click)="deleteFriend(); showFriendMenu = false">
+                      <i class="fa-solid fa-user-minus"></i>
+                      Supprimer l'ami
+                    </button>
+                  </div>
+                </div>
+
+                <button *ngIf="followAmisStatus === 'following'" type="button"
+                  class="flex-1 rounded-full border border-slate-200 bg-white text-[11px] font-semibold py-1.5 hover:bg-slate-50 transition"
+                  (click)="openConversationWithUser()" id="public-profile-message-button"
+                  data-testid="public-profile-message-button">
+                  <i class="fa-solid fa-envelope text-[10px] mr-1"></i>
+                  Message
+                </button>
               </div>
 
               <p class="mt-3 text-[11px] text-slate-400" id="public-profile-member-since"
@@ -161,8 +158,8 @@
           </section>
 
           <!-- Amis -->
-          <section *ngIf="followAmisStatus === 'following'" class="app-card rounded-2xl shadow-sm p-4 space-y-3"
-            id="public-profile-friends-card" data-testid="public-profile-friends-card">
+          <section class="app-card rounded-2xl shadow-sm p-4 space-y-3" id="public-profile-friends-card"
+            data-testid="public-profile-friends-card">
             <div class="flex items-center justify-between">
               <h2 class="text-sm font-semibold text-slate-900">
                 Amis
