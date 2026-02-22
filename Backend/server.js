@@ -25,21 +25,11 @@ app.set('port', port);
 const server = http.createServer(app);
 
 /**
- * Normalisation et extension des origines CORS (sans ajout auto de www.)
- */
-const getAllowedOrigins = (baseUrl) => {
-    if (!baseUrl) return '*';
-    return baseUrl.split(',').map(s => s.trim().replace(/\/$/, ''));
-};
-
-const allowedOrigins = getAllowedOrigins(config.frontendBaseUrl);
-
-/**
  * Initialisation Socket.io
  */
 const io = socketio(server, {
     cors: {
-        origin: allowedOrigins,
+        origin: config.frontendBaseUrl,
         credentials: true,
         methods: ["GET", "POST"]
     },
