@@ -1,61 +1,56 @@
 const jwt = require("jsonwebtoken");
-require('dotenv').config();
 
-// Récupération de la clé secrète
-const SECRET_KEY = process.env.JWT_SECRET || "CHANGE_MOI_DANS_DOTENV";
 
+/**
+ * Vérification du token pour la sécurité du backend
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
 module.exports.checkUser = (req, res, next) => {
   const token = req.cookies.jwt;
 
-
   if (!token) {
-    return res.status(401).json({ message: "Non autorisé : Connectez-vous d'abord." });
+    return res.status(401).json({ message: "Non autorisé : aucun token trouvé." });
   }
 
-  jwt.verify(token, SECRET_KEY, async (err, decodedToken) => {
+  jwt.verify(token, "RANDOM_TOKEN_SECRET", async (err, decodedToken) => {
     if (err) {
-      const isProd = process.env.APP_ENV === 'production';
-      res.clearCookie("jwt", {
-        sameSite: isProd ? 'none' : 'lax',
-        secure: isProd
-      });
-      return res.status(401).json({ message: "Session expirée, veuillez vous reconnecter." });
+      res.clearCookie("jwt");
+      return res.status(401).json({ message: "Token invalide." });
     } else {
-
-      // --- LOGIQUE DE RAFRAÎCHISSEMENT (Sliding Expiration) ---
       const now = Math.floor(Date.now() / 1000);
       const timeLeft = decodedToken.exp - now;
 
-      // 30 * 60 = 1800 secondes (30 minutes)
       if (timeLeft < 30 * 60) {
         const newToken = jwt.sign(
           { id: decodedToken.id },
-          SECRET_KEY,
+          "RANDOM_TOKEN_SECRET",
           { expiresIn: "2h" }
         );
 
-        const isProd = process.env.APP_ENV === 'production';
         res.cookie("jwt", newToken, {
           httpOnly: true,
-          maxAge: 2 * 60 * 60 * 1000,
-          sameSite: isProd ? 'none' : 'lax',
-          secure: isProd
+          sameSite: 'Lax'
         });
       }
       req.userId = decodedToken.id;
-
       next();
     }
   });
 };
 
+/**
+ * API pour vérifier le chemin côté front 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 module.exports.UserConnecte = (req, res) => {
   try {
-    return res.status(200).json({
-      authenticated: true,
-      userId: req.userId
-    });
+    return res.status(200).json({ authenticated: true, userId: req.userId });
   } catch (error) {
-    return res.status(500).json({ error: "Erreur serveur lors de la vérification." });
+    return res.status(500).json({ error: "Problème est servenue !" });
   }
 }
