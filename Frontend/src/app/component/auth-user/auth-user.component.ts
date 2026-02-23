@@ -26,6 +26,8 @@ export class AuthUserComponent implements OnInit {
   signupForm: FormGroup;
   dropdownOpen = false;
   selectedCountry: any = null;
+  phoneCodeDropdownOpen = false;
+  selectedPhoneCountry: any = null;
   signupErrors: { [key: string]: string } = {};
   loginError = '';
   signupError = '';
@@ -97,14 +99,18 @@ export class AuthUserComponent implements OnInit {
    */
 
   ngOnInit() {
-    this.http.get<any[]>('https://restcountries.com/v3.1/all?fields=name,flags,cca2,translations').subscribe((data) => {
+    this.http.get<any[]>('https://restcountries.com/v3.1/all?fields=name,flags,cca2,translations,idd').subscribe((data) => {
       this.countries = data
         .map((c) => ({
           name: c.translations?.fra?.common || c.name.common,
           code: c.cca2,
           flag: c.flags.png,
+          dialCode: c.idd?.root ? c.idd.root + (c.idd.suffixes?.[0] || '') : ''
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
+
+      // Mettre la France par défaut si possible
+      this.selectedPhoneCountry = this.countries.find(c => c.code === 'FR') || null;
     });
 
     this.themeService.applyAuthTheme();
@@ -122,6 +128,15 @@ export class AuthUserComponent implements OnInit {
     this.selectedCountry = country;
     this.signupForm.get('pays')?.setValue(country.name);
     this.dropdownOpen = false;
+  }
+
+  togglePhoneCodeDropdown() {
+    this.phoneCodeDropdownOpen = !this.phoneCodeDropdownOpen;
+  }
+
+  selectPhoneCountry(country: any) {
+    this.selectedPhoneCountry = country;
+    this.phoneCodeDropdownOpen = false;
   }
 
 
@@ -318,7 +333,15 @@ export class AuthUserComponent implements OnInit {
 
       return;
     }
-    this.http.post(`${environment.apiUrl}/users/newUser`, this.signupForm.value, { withCredentials: true }).subscribe({
+
+    const payload = { ...this.signupForm.value };
+    if (payload.telephone && payload.telephone.trim() !== '') {
+      payload.telephone = `${this.selectedPhoneCountry?.dialCode || ''} ${payload.telephone.trim()}`;
+    } else {
+      payload.telephone = null;
+    }
+
+    this.http.post(`${environment.apiUrl}/users/newUser`, payload, { withCredentials: true }).subscribe({
       next: () => {
         Swal.fire({
           icon: 'success',

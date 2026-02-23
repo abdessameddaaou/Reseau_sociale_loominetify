@@ -5,11 +5,12 @@ import Swal from 'sweetalert2';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../environments/environment.dev';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './reset-password.component.html',
 })
 export class ResetPasswordComponent {
@@ -21,7 +22,7 @@ export class ResetPasswordComponent {
   interval: any;
   errors: { [key: string]: string } = {};
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
+  constructor(private fb: FormBuilder, private http: HttpClient, private router: Router, private translate: TranslateService) {
     this.resetForm = this.fb.group({
       method: ['email', Validators.required],
       email: [''],
@@ -61,16 +62,16 @@ export class ResetPasswordComponent {
     const email = this.resetForm.get('email')?.value?.trim();
     if (method === 'email') {
       if (!email) {
-        this.errors['email'] = "L'email est obligatoire.";
+        this.errors['email'] = this.translate.instant('RESET_PASSWORD.ERRORS.EMAIL_REQUIRED');
         ok = false;
       } else if (!this.validateEmail(email)) {
-        this.errors['email'] = 'Veuillez entrer un email valide.';
+        this.errors['email'] = this.translate.instant('RESET_PASSWORD.ERRORS.EMAIL_INVALID');
         ok = false;
       }
     } else {
       const phone = this.resetForm.get('phone')?.value?.trim();
       if (!phone) {
-        this.errors['phone'] = 'Le numéro de téléphone est obligatoire.';
+        this.errors['phone'] = this.translate.instant('RESET_PASSWORD.ERRORS.PHONE_REQUIRED');
         ok = false;
       }
     }
@@ -90,8 +91,8 @@ export class ResetPasswordComponent {
         console.error("Erreur lors de l'envoi du code de vérification", err);
         Swal.fire({
           icon: 'error',
-          title: 'Erreur',
-          text: err.error.error || "Une erreur est survenue lors de l'envoi du code.",
+          title: this.translate.instant('RESET_PASSWORD.ERRORS.ERROR_TITLE'),
+          text: err.error?.error || this.translate.instant('RESET_PASSWORD.ERRORS.ERROR_SENDING'),
         });
       },
     });
@@ -123,7 +124,7 @@ export class ResetPasswordComponent {
     let ok = true;
 
     if (!code || code.length < 4) {
-      this.errors['code'] = 'Veuillez entrer le code reçu.';
+      this.errors['code'] = this.translate.instant('RESET_PASSWORD.ERRORS.CODE_REQUIRED');
       ok = false;
     }
 
@@ -144,8 +145,8 @@ export class ResetPasswordComponent {
           console.error("Erreur lors de l'envoi du code de vérification", err);
           Swal.fire({
             icon: 'error',
-            title: 'Erreur',
-            text: err.error.error || 'Une erreur est survenue lors de la vérification du code.',
+            title: this.translate.instant('RESET_PASSWORD.ERRORS.ERROR_TITLE'),
+            text: err.error?.error || this.translate.instant('RESET_PASSWORD.ERRORS.ERROR_VERIFYING'),
           });
         },
       });
@@ -164,18 +165,18 @@ export class ResetPasswordComponent {
     let ok = true;
 
     if (!newPassword) {
-      this.errors['newPassword'] = 'Le nouveau mot de passe est obligatoire.';
+      this.errors['newPassword'] = this.translate.instant('RESET_PASSWORD.ERRORS.NEW_PASSWORD_REQUIRED');
       ok = false;
     } else if (!this.validatePassword(newPassword)) {
-      this.errors['newPassword'] = 'Le mot de passe ne respecte pas les critères de sécurité.';
+      this.errors['newPassword'] = this.translate.instant('RESET_PASSWORD.ERRORS.PASSWORD_CRITERIA');
       ok = false;
     }
 
     if (!confirmPassword) {
-      this.errors['confirmPassword'] = 'Veuillez confirmer votre nouveau mot de passe.';
+      this.errors['confirmPassword'] = this.translate.instant('RESET_PASSWORD.ERRORS.CONFIRM_PASSWORD_REQUIRED');
       ok = false;
     } else if (newPassword && confirmPassword && newPassword !== confirmPassword) {
-      this.errors['confirmPassword'] = 'Les mots de passe ne correspondent pas.';
+      this.errors['confirmPassword'] = this.translate.instant('RESET_PASSWORD.ERRORS.PASSWORDS_MISMATCH');
       ok = false;
     }
 
@@ -186,9 +187,9 @@ export class ResetPasswordComponent {
       next: () => {
         Swal.fire({
           icon: 'success',
-          title: 'Mot de passe réinitialisé',
-          text: 'Votre mot de passe a été modifié avec succès.',
-          confirmButtonText: 'Retour à la connexion',
+          title: this.translate.instant('RESET_PASSWORD.SUCCESS.TITLE'),
+          text: this.translate.instant('RESET_PASSWORD.SUCCESS.TEXT'),
+          confirmButtonText: this.translate.instant('RESET_PASSWORD.SUCCESS.CONFIRM_BTN'),
           confirmButtonColor: '#5b7cff',
         }).then(() => {
           this.success = true;
@@ -199,8 +200,8 @@ export class ResetPasswordComponent {
         console.error(err);
         Swal.fire({
           icon: 'error',
-          title: 'Erreur',
-          text: err.error.error || 'Une erreur est survenue lors de la vérification du code.',
+          title: this.translate.instant('RESET_PASSWORD.ERRORS.ERROR_TITLE'),
+          text: err.error?.error || this.translate.instant('RESET_PASSWORD.ERRORS.ERROR_VERIFYING'),
         });
       },
     });

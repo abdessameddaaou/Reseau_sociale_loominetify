@@ -5,12 +5,12 @@ const Users = db.define("Users", {
   id: { type: DataTypes.INTEGER.UNSIGNED, primaryKey: true, autoIncrement: true, allowNull: false },
   nom: { type: DataTypes.STRING, allowNull: false },
   prenom: { type: DataTypes.STRING, allowNull: false },
-  email: { 
+  email: {
     type: DataTypes.STRING, allowNull: false, unique: { msg: "Cet email est déjà utilisé" },
     validate: { isEmail: { msg: "Le format de l'email est invalide" } }
   },
   password: { type: DataTypes.STRING, allowNull: false },
-  telephone: { type: DataTypes.INTEGER, allowNull: true },
+  telephone: { type: DataTypes.STRING, allowNull: true },
   dateNaissance: { type: DataTypes.DATEONLY, allowNull: false },
   ville: { type: DataTypes.STRING, allowNull: true },
   pays: { type: DataTypes.STRING, allowNull: false },
