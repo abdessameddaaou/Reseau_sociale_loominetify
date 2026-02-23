@@ -555,6 +555,12 @@ function formatTime(date) {
     if (diffH < 24) return `Il y a ${diffH}h`;
     const diffD = Math.floor(diffH / 24);
     if (diffD < 7) return `Il y a ${diffD}j`;
+
+    // Pour les dates de plus de 7 jours : return le format DD/MM/YYYY
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
 }
 
 /**

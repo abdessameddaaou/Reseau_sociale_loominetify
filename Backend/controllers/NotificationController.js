@@ -136,7 +136,7 @@ module.exports.acceptInvite = async (req, res) => {
         const notifAccept = await Notification.create({
             recipientId: requesterId,
             senderId: userId,
-            type: 'accept',
+            type: 'follow',
             message: `${userAccepter.prenom} ${userAccepter.nom} a accepté votre invitation`,
             relatedId: userId
         });
@@ -151,7 +151,7 @@ module.exports.acceptInvite = async (req, res) => {
                 recipientId: requesterId,
                 notification: {
                     id: notifAccept.id,
-                    type: 'accept',
+                    type: 'follow',
                     message: notifAccept.message,
                     sender: {
                         id: userAccepter.id,
