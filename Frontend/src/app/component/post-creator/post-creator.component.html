@@ -1,11 +1,11 @@
 <form class="app-card rounded-2xl p-4" [formGroup]="postForm" (ngSubmit)="onSubmit()" id="post-form" name="post-form"
   data-testid="post-form">
   <div class="flex items-start gap-3">
-    <img [src]="currentUser?.photo || defaultAvatar" alt="avatar" class="w-10 h-10 rounded-full object-cover" id="post-avatar"
-      data-testid="post-avatar" />
+    <img [src]="currentUser?.photo || defaultAvatar" alt="avatar" class="w-10 h-10 rounded-full object-cover"
+      id="post-avatar" data-testid="post-avatar" />
     <div class="flex-1">
-      <textarea rows="5" placeholder="Quoi de neuf ?" formControlName="text" id="post-text" name="post-text"
-        data-testid="post-text-input"
+      <textarea rows="5" [placeholder]="'POST_CREATOR.PLACEHOLDER' | translate" formControlName="text" id="post-text"
+        name="post-text" data-testid="post-text-input"
         class="w-full resize-none border border-slate-200 rounded-2xl px-4 py-2 text-sm outline-none bg-transparent focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"></textarea>
 
       <div class="mt-1 text-xs text-red-600 min-h-[1rem]" id="post-text-error" data-testid="post-text-error">
@@ -14,21 +14,15 @@
     </div>
   </div>
 
-<!-- Preview mini (100x100) -->
-<div *ngIf="imagePreview"
-     class="ml-12 mb-3 flex items-center gap-3">
+  <!-- Preview mini (100x100) -->
+  <div *ngIf="imagePreview" class="ml-12 mb-3 flex items-center gap-3">
 
-  <div class="relative w-[100px] h-[100px] rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
-    <img
-      [src]="imagePreview"
-      alt="preview"
-      class="w-full h-full object-cover"
-      loading="lazy"
-    />
+    <div class="relative w-[100px] h-[100px] rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+      <img [src]="imagePreview" alt="preview" class="w-full h-full object-cover" loading="lazy" />
+    </div>
+
+    <span class="text-xs text-slate-500">{{ 'POST_CREATOR.IMAGE_ADDED' | translate }}</span>
   </div>
-
-  <span class="text-xs text-slate-500">Image ajoutée</span>
-</div>
 
 
 
@@ -45,34 +39,21 @@
 
       </label>
 
-  <div class="relative">
-    <button
-      id="post-emoji-btn"
-      type="button"
-      (click)="toggleEmoji($event)"
-      class="flex items-center gap-1 py-1 rounded-full hover:bg-slate-100"
-    >
-      <i class="fa-regular fa-face-grin-beam fa-lg"></i>
-    </button>
+      <div class="relative">
+        <button id="post-emoji-btn" type="button" (click)="toggleEmoji($event)"
+          class="flex items-center gap-1 py-1 rounded-full hover:bg-slate-100">
+          <i class="fa-regular fa-face-grin-beam fa-lg"></i>
+        </button>
 
-  <div
-    *ngIf="showEmoji"
-    id="emoji-popover"
-    class="absolute top-full left-0 mt-2 z-[9999]
+        <div *ngIf="showEmoji" id="emoji-popover" class="absolute top-full left-0 mt-2 z-[9999]
           inline-block w-fit
           rounded-2xl border border-slate-200 shadow-xl
-          overflow-hidden bg-transparent"
-  >
-    <emoji-mart
-      class="block"
-      (emojiSelect)="handleEmojiSelect($event)"
-      [perLine]="8"
-      [emojiSize]="18"
-      [showPreview]="false"
-    ></emoji-mart>
-  </div>
+          overflow-hidden bg-transparent">
+          <emoji-mart class="block" (emojiSelect)="handleEmojiSelect($event)" [perLine]="8" [emojiSize]="18"
+            [showPreview]="false"></emoji-mart>
+        </div>
 
-  </div>
+      </div>
 
       <span class="text-[11px] text-red-600 min-h-[1rem]" id="post-image-error" data-testid="post-image-error">
         {{ formErrors['image'] }}
@@ -81,9 +62,8 @@
 
     <button type="submit" id="post-submit-btn" data-testid="post-submit-btn"
       class="px-5 py-2 rounded-full btn-primary-gradient text-white text-sm font-semibold shadow-sm hover:shadow-md hover:-translate-y-[1px] transition">
-      Publier
+      {{ 'POST_CREATOR.PUBLISH_BTN' | translate }}
     </button>
 
   </div>
 </form>
-

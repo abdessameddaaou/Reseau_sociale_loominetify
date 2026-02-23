@@ -12,7 +12,7 @@
       <aside class="hidden md:block w-64" id="settings-sidebar" data-testid="settings-sidebar">
         <div class="app-card rounded-2xl p-4">
           <h2 class="text-sm font-semibold text-slate-800 mb-3">
-            Paramètres
+            {{ 'SETTINGS.TITLE' | translate }}
           </h2>
           <div class="flex flex-col gap-1 text-sm">
             <button type="button" id="settings-nav-profile" data-testid="settings-nav-profile"
@@ -20,7 +20,7 @@
               [ngClass]="section === 'profile' ? 'accent-pill font-semibold' : 'text-slate-600 hover:bg-slate-50'"
               (click)="setSection('profile')">
               <span class="w-5 flex justify-center"><i class="fa-solid fa-user"></i></span>
-              <span>Profil</span>
+              <span>{{ 'SETTINGS.NAV_PROFILE' | translate }}</span>
             </button>
 
             <button type="button" id="settings-nav-security" data-testid="settings-nav-security"
@@ -28,7 +28,7 @@
               [ngClass]="section === 'security' ? 'accent-pill font-semibold' : 'text-slate-600 hover:bg-slate-50'"
               (click)="setSection('security')">
               <span class="w-5 flex justify-center"><i class="fa-solid fa-lock"></i></span>
-              <span>Sécurité</span>
+              <span>{{ 'SETTINGS.NAV_SECURITY' | translate }}</span>
             </button>
 
             <button type="button" id="settings-nav-privacy" data-testid="settings-nav-privacy"
@@ -36,7 +36,7 @@
               [ngClass]="section === 'privacy' ? 'accent-pill font-semibold' : 'text-slate-600 hover:bg-slate-50'"
               (click)="setSection('privacy')">
               <span class="w-5 flex justify-center"><i class="fa-solid fa-shield-halved"></i></span>
-              <span>Confidentialité</span>
+              <span>{{ 'SETTINGS.NAV_PRIVACY' | translate }}</span>
             </button>
 
             <button type="button" id="settings-nav-notifications" data-testid="settings-nav-notifications"
@@ -44,7 +44,7 @@
               [ngClass]="section === 'notifications' ? 'accent-pill font-semibold' : 'text-slate-600 hover:bg-slate-50'"
               (click)="setSection('notifications')">
               <span class="w-5 flex justify-center"><i class="fa-solid fa-bell"></i></span>
-              <span>Notifications</span>
+              <span>{{ 'SETTINGS.NAV_NOTIFICATIONS' | translate }}</span>
             </button>
 
             <button type="button" id="settings-nav-appearance" data-testid="settings-nav-appearance"
@@ -52,7 +52,7 @@
               [ngClass]="section === 'appearance' ? 'accent-pill font-semibold' : 'text-slate-600 hover:bg-slate-50'"
               (click)="setSection('appearance')">
               <span class="w-5 flex justify-center"><i class="fa-solid fa-palette"></i></span>
-              <span>Apparence</span>
+              <span>{{ 'SETTINGS.NAV_APPEARANCE' | translate }}</span>
             </button>
 
             <button type="button" id="settings-nav-account" data-testid="settings-nav-account"
@@ -60,7 +60,7 @@
               [ngClass]="section === 'account' ? 'bg-rose-50 text-rose-600 font-semibold' : 'text-rose-600 hover:bg-rose-50'"
               (click)="setSection('account')">
               <span class="w-5 flex justify-center"><i class="fa-solid fa-user-slash"></i></span>
-              <span>Compte</span>
+              <span>{{ 'SETTINGS.NAV_ACCOUNT' | translate }}</span>
             </button>
           </div>
         </div>
@@ -68,21 +68,21 @@
 
       <section class="flex-1 space-y-4" id="settings-content" data-testid="settings-content">
 
-      <!-- ========================================================== -->
-      <!-- ========================= Profile ======================== -->
-      <!-- ========================================================== -->
+        <!-- ========================================================== -->
+        <!-- ========================= Profile ======================== -->
+        <!-- ========================================================== -->
         <form *ngIf="section === 'profile'" [formGroup]="userForm" (ngSubmit)="saveProfile()"
           class="app-card rounded-2xl p-5 md:p-6 space-y-5" id="settings-profile-section"
           data-testid="settings-profile-section">
 
           <div class="flex items-center justify-between gap-4">
             <div>
-              <h2 class="text-lg font-semibold text-slate-900">Informations du profil</h2>
-              <p class="text-xs text-slate-500">Mettez à jour ce que les autres voient sur Loominetfy.</p>
+              <h2 class="text-lg font-semibold text-slate-900">{{ 'SETTINGS.PROFILE.TITLE' | translate }}</h2>
+              <p class="text-xs text-slate-500">{{ 'SETTINGS.PROFILE.DESC' | translate }}</p>
             </div>
             <span *ngIf="profileSaved" class="text-[11px] text-emerald-500 font-medium"
               data-testid="profile-saved-indicator">
-              Modifications enregistrées ✔
+              {{ 'SETTINGS.SAVED' | translate }}
             </span>
           </div>
 
@@ -108,70 +108,78 @@
                 </div>
 
                 <div class="text-xs text-slate-500">
-                  <p class="mb-1 font-medium text-slate-700">Photo de profil</p>
-                  <p>Format JPG, PNG – max 5 Mo.</p>
+                  <p class="mb-1 font-medium text-slate-700">{{ 'SETTINGS.PROFILE.PHOTO' | translate }}</p>
+                  <p>{{ 'SETTINGS.PROFILE.PHOTO_INFO' | translate }}</p>
                 </div>
               </div>
 
               <div class="grid md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <label for="profile-firstName" class="block text-xs font-medium text-slate-500 mb-1">Prénom</label>
+                  <label for="profile-firstName" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.PROFILE.FIRST_NAME' | translate }}</label>
                   <input id="profile-firstName" name="profile-firstName" data-testid="profile-firstName-input"
                     type="text" formControlName="prenom"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
                 </div>
 
                 <div>
-                  <label for="profile-lastName" class="block text-xs font-medium text-slate-500 mb-1">Nom</label>
+                  <label for="profile-lastName" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.PROFILE.LAST_NAME' | translate }}</label>
                   <input id="profile-lastName" name="profile-lastName" data-testid="profile-lastName-input" type="text"
                     formControlName="nom"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
                 </div>
 
                 <div>
-                  <label for="profile-telephone" class="block text-xs font-medium text-slate-500 mb-1">Téléphone</label>
+                  <label for="profile-telephone" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.PROFILE.PHONE' | translate }}</label>
                   <input id="profile-telephone" name="profile-telephone" type="text" formControlName="telephone"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
                 </div>
 
                 <div>
-                  <label for="profile-pays" class="block text-xs font-medium text-slate-500 mb-1">Pays</label>
+                  <label for="profile-pays" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.PROFILE.COUNTRY' | translate }}</label>
                   <input id="profile-pays" name="profile-pays" type="text" formControlName="pays"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
                 </div>
 
                 <div>
-                  <label for="profile-ville" class="block text-xs font-medium text-slate-500 mb-1">Ville</label>
+                  <label for="profile-ville" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.PROFILE.CITY' | translate }}</label>
                   <input id="profile-ville" name="profile-ville" type="text" formControlName="ville"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
                 </div>
 
                 <div>
-                  <label for="profile-profession"
-                    class="block text-xs font-medium text-slate-500 mb-1">Profession</label>
+                  <label for="profile-profession" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.PROFILE.PROFESSION' | translate }}</label>
                   <input id="profile-profession" name="profile-profession" data-testid="profile-profession-input"
-                    type="text" formControlName="profession" placeholder="Développeur web, Designer…"
+                    type="text" formControlName="profession"
+                    [placeholder]="'SETTINGS.PROFILE.PROFESSION_PLACEHOLDER' | translate"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
                 </div>
 
                 <div>
-                  <label for="profile-birthDate" class="block text-xs font-medium text-slate-500 mb-1">Date de
-                    naissance</label>
+                  <label for="profile-birthDate" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.PROFILE.BIRTH_DATE' | translate }}</label>
                   <input id="profile-birthDate" name="profile-birthDate" data-testid="profile-birthDate-input"
                     type="date" formControlName="dateNaissance"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
-                  <p class="text-[11px] text-slate-400 mt-1">Utilisée pour calculer votre âge sur la page de profil.</p>
+                  <p class="text-[11px] text-slate-400 mt-1">{{ 'SETTINGS.PROFILE.BIRTH_DATE_INFO' | translate }}</p>
                 </div>
 
                 <div>
-                  <label for="profile-website" class="block text-xs font-medium text-slate-500 mb-1">Site web</label>
+                  <label for="profile-website" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.PROFILE.WEBSITE' | translate }}</label>
                   <input id="profile-website" name="profile-website" data-testid="profile-website-input" type="url"
                     formControlName="siteweb" placeholder="https://…"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
                 </div>
 
                 <div>
-                  <label class="block text-xs font-medium text-slate-500 mb-1">Centres d’intérêt (Hashtags)</label>
+                  <label class="block text-xs font-medium text-slate-500 mb-1">{{ 'SETTINGS.PROFILE.INTERESTS' |
+                    translate }}</label>
                   <div class="flex flex-wrap gap-2 min-h-[32px] mb-2">
                     <span *ngFor="let tag of userForm.get('hashtags')?.value"
                       class="flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs border border-slate-200">
@@ -184,28 +192,28 @@
                   <div class="flex gap-2">
                     <div class="relative flex-1">
                       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">#</span>
-                      <input #tagInput type="text" placeholder="WebDev, Design..."
+                      <input #tagInput type="text" [placeholder]="'SETTINGS.PROFILE.INTERESTS_PLACEHOLDER' | translate"
                         (keydown.enter)="$event.preventDefault(); addHashtag(tagInput)"
                         class="w-full rounded-xl border border-slate-200 pl-7 pr-3 py-2 text-sm outline-none focus:border-[#5b7cff]" />
                     </div>
                     <button type="button" (click)="addHashtag(tagInput)"
                       class="px-4 py-2 bg-slate-800 text-white rounded-xl text-xs font-semibold">
-                      Ajouter
+                      {{ 'SETTINGS.PROFILE.ADD' | translate }}
                     </button>
                   </div>
                 </div>
                 <div>
                   <label for="profile-relationStatus" class="block text-xs font-medium text-slate-500 mb-1">
-                    Statut relationnel
+                    {{ 'SETTINGS.PROFILE.RELATIONSHIP' | translate }}
                   </label>
 
                   <div class="relative">
                     <select id="profile-relationStatus" name="profile-relationStatus" formControlName="relationStatus"
                       class="w-full h-[40px] rounded-xl border border-slate-200 bg-white px-3 pr-10 text-sm outline-none
                               focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10 appearance-none">
-                      <option [ngValue]="null">Non renseigné</option>
+                      <option [ngValue]="null">{{ 'SETTINGS.PROFILE.RELATIONSHIP_UNSPECIFIED' | translate }}</option>
                       <option *ngFor="let opt of relationStatusOptions" [value]="opt.value">
-                        {{ opt.label }}
+                        {{ opt.label | translate }}
                       </option>
                     </select>
                     <i
@@ -213,18 +221,19 @@
                   </div>
                 </div>
                 <div class="md:col-span-2">
-                  <label for="profile-bio" class="block text-xs font-medium text-slate-500 mb-1">Biographie</label>
+                  <label for="profile-bio" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.PROFILE.BIO' | translate }}</label>
                   <textarea id="profile-bio" name="profile-bio" data-testid="profile-bio-textarea" rows="3"
                     formControlName="bio"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10 resize-none"
-                    placeholder="Présentez-vous en quelques lignes..."></textarea>
+                    [placeholder]="'SETTINGS.PROFILE.BIO_PLACEHOLDER' | translate"></textarea>
                 </div>
               </div>
               <div class="flex justify-end pt-2">
                 <button type="submit" id="profile-save-btn" data-testid="profile-save-btn"
                   class="inline-flex items-center gap-2 rounded-full btn-primary-gradient px-5 py-2 text-xs font-semibold shadow-md">
                   <i class="fa-solid fa-floppy-disk text-[11px]"></i>
-                  Enregistrer
+                  {{ 'SETTINGS.SAVE_BTN' | translate }}
                 </button>
               </div>
 
@@ -279,12 +288,12 @@
           id="settings-security-section" data-testid="settings-security-section">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-slate-900">Sécurité du compte</h2>
-              <p class="text-xs text-slate-500">Gérez votre mot de passe, 2FA et connexions récentes.</p>
+              <h2 class="text-lg font-semibold text-slate-900">{{ 'SETTINGS.SECURITY.TITLE' | translate }}</h2>
+              <p class="text-xs text-slate-500">{{ 'SETTINGS.SECURITY.DESC' | translate }}</p>
             </div>
             <span *ngIf="securitySaved" class="text-[11px] text-emerald-500 font-medium"
               data-testid="security-saved-indicator">
-              Modifications enregistrées ✔
+              {{ 'SETTINGS.SAVED' | translate }}
             </span>
           </div>
 
@@ -292,8 +301,8 @@
             <div class="space-y-4" data-testid="security-form">
               <div class="grid gap-3">
                 <div>
-                  <label for="security-currentPassword" class="block text-xs font-medium text-slate-500 mb-1">Mot de
-                    passe actuel</label>
+                  <label for="security-currentPassword" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.SECURITY.CURRENT_PASSWORD' | translate }}</label>
                   <input id="security-currentPassword" name="security-currentPassword"
                     data-testid="security-currentPassword-input" type="password"
                     [(ngModel)]="securityForm.currentPassword"
@@ -301,23 +310,23 @@
                 </div>
 
                 <div>
-                  <label for="security-newPassword" class="block text-xs font-medium text-slate-500 mb-1">Nouveau mot de
-                    passe</label>
+                  <label for="security-newPassword" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.SECURITY.NEW_PASSWORD' | translate }}</label>
                   <input id="security-newPassword" name="security-newPassword" data-testid="security-newPassword-input"
                     type="password" [(ngModel)]="securityForm.newPassword"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
                 </div>
 
                 <div>
-                  <label for="security-confirmPassword" class="block text-xs font-medium text-slate-500 mb-1">Confirmer
-                    le nouveau mot de passe</label>
+                  <label for="security-confirmPassword" class="block text-xs font-medium text-slate-500 mb-1">{{
+                    'SETTINGS.SECURITY.CONFIRM_PASSWORD' | translate }}</label>
                   <input id="security-confirmPassword" name="security-confirmPassword"
                     data-testid="security-confirmPassword-input" type="password"
                     [(ngModel)]="securityForm.confirmPassword"
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10" />
                   <p *ngIf="passwordsDontMatch" class="text-[11px] text-red-500 mt-1"
                     data-testid="security-passwords-error">
-                    Les mots de passe ne correspondent pas.
+                    {{ 'SETTINGS.SECURITY.PASSWORDS_DONT_MATCH' | translate }}
                   </p>
                 </div>
               </div>
@@ -329,7 +338,7 @@
                 </div>
                 <div class="flex-1">
                   <div class="flex items-center justify-between mb-1">
-                    <p class="font-semibold text-slate-800">Authentification à deux facteurs</p>
+                    <p class="font-semibold text-slate-800">{{ 'SETTINGS.SECURITY.TWO_FACTOR_TITLE' | translate }}</p>
                     <label class="inline-flex items-center cursor-pointer" for="security-twoFactorEnabled">
                       <input id="security-twoFactorEnabled" name="security-twoFactorEnabled"
                         data-testid="security-twoFactor-checkbox" type="checkbox" class="sr-only"
@@ -341,13 +350,13 @@
                       </span>
                     </label>
                   </div>
-                  <p class="text-slate-500">Ajoutez une couche de sécurité supplémentaire à votre compte.</p>
+                  <p class="text-slate-500">{{ 'SETTINGS.SECURITY.TWO_FACTOR_DESC' | translate }}</p>
                 </div>
               </div>
             </div>
 
             <div class="space-y-3 text-sm">
-              <p class="text-xs font-semibold text-slate-500">Connexions récentes</p>
+              <p class="text-xs font-semibold text-slate-500">{{ 'SETTINGS.SECURITY.RECENT_SESSIONS' | translate }}</p>
               <div class="rounded-xl app-soft px-3 py-2 space-y-2 max-h-40 overflow-y-auto"
                 data-testid="security-sessions-list">
                 <div *ngFor="let session of recentSessions"
@@ -359,13 +368,14 @@
                   </div>
                   <span class="px-2 py-0.5 rounded-full text-[10px]"
                     [ngClass]="session.current ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'">
-                    {{ session.current ? 'Session active' : 'Déconnectée' }}
+                    {{ session.current ? ('SETTINGS.SECURITY.ACTIVE_SESSION' | translate) :
+                    ('SETTINGS.SECURITY.DISCONNECTED' | translate) }}
                   </span>
                 </div>
               </div>
               <button type="button" id="security-logout-all-btn" data-testid="security-logout-all-btn"
                 class="text-[11px] text-accent hover:underline mt-1" (click)="logoutAllDevices()">
-                Déconnecter tous les appareils
+                {{ 'SETTINGS.SECURITY.LOGOUT_ALL' | translate }}
               </button>
             </div>
           </div>
@@ -374,7 +384,7 @@
             <button type="button" id="security-save-btn" data-testid="security-save-btn" (click)="saveSecurity()"
               class="inline-flex items-center gap-2 rounded-full btn-primary-gradient px-5 py-2 text-xs font-semibold text-white shadow-md">
               <i class="fa-solid fa-shield-check text-[11px]"></i>
-              Mettre à jour
+              {{ 'SETTINGS.UPDATE_BTN' | translate }}
             </button>
           </div>
         </div>
@@ -386,44 +396,45 @@
           id="settings-privacy-section" data-testid="settings-privacy-section">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-slate-900">Confidentialité</h2>
-              <p class="text-xs text-slate-500">Contrôlez qui peut voir vos informations et vous contacter.</p>
+              <h2 class="text-lg font-semibold text-slate-900">{{ 'SETTINGS.PRIVACY.TITLE' | translate }}</h2>
+              <p class="text-xs text-slate-500">{{ 'SETTINGS.PRIVACY.DESC' | translate }}</p>
             </div>
             <span *ngIf="privacySaved" class="text-[11px] text-emerald-500 font-medium"
               data-testid="privacy-saved-indicator">
-              Modifications enregistrées ✔
+              {{ 'SETTINGS.SAVED' | translate }}
             </span>
           </div>
 
           <div class="space-y-4 text-sm">
             <div>
-              <p class="text-xs font-medium text-slate-500 mb-1">Visibilité du profil</p>
+              <p class="text-xs font-medium text-slate-500 mb-1">{{ 'SETTINGS.PRIVACY.PROFILE_VISIBILITY' | translate }}
+              </p>
               <div class="flex flex-wrap gap-2">
                 <button type="button" id="privacy-visibility-public" data-testid="privacy-visibility-public"
                   class="px-3 py-1.5 rounded-full border text-xs"
                   [ngClass]="privacyForm.profileVisibility === 'public' ? 'border-accent bg-accent-soft' : 'border-slate-200 text-slate-600'"
                   (click)="privacyForm.profileVisibility = 'public'">
-                  Public
+                  {{ 'SETTINGS.PRIVACY.PUBLIC' | translate }}
                 </button>
                 <button type="button" id="privacy-visibility-friends" data-testid="privacy-visibility-friends"
                   class="px-3 py-1.5 rounded-full border text-xs"
                   [ngClass]="privacyForm.profileVisibility === 'friends' ? 'border-accent bg-accent-soft' : 'border-slate-200 text-slate-600'"
                   (click)="privacyForm.profileVisibility = 'friends'">
-                  Amis uniquement
+                  {{ 'SETTINGS.PRIVACY.FRIENDS_ONLY' | translate }}
                 </button>
                 <button type="button" id="privacy-visibility-private" data-testid="privacy-visibility-private"
                   class="px-3 py-1.5 rounded-full border text-xs"
                   [ngClass]="privacyForm.profileVisibility === 'private' ? 'border-accent bg-accent-soft' : 'border-slate-200 text-slate-600'"
                   (click)="privacyForm.profileVisibility = 'private'">
-                  Privé
+                  {{ 'SETTINGS.PRIVACY.PRIVATE' | translate }}
                 </button>
               </div>
             </div>
 
             <div class="flex items-center justify-between gap-4">
               <div>
-                <p class="text-sm text-slate-800">Montrer mon statut “En ligne”</p>
-                <p class="text-xs text-slate-500">Vos amis voient si vous êtes connecté actuellement.</p>
+                <p class="text-sm text-slate-800">{{ 'SETTINGS.PRIVACY.SHOW_ONLINE' | translate }}</p>
+                <p class="text-xs text-slate-500">{{ 'SETTINGS.PRIVACY.SHOW_ONLINE_DESC' | translate }}</p>
               </div>
               <label class="inline-flex items-center cursor-pointer" for="privacy-showOnline">
                 <input id="privacy-showOnline" name="privacy-showOnline" data-testid="privacy-showOnline-checkbox"
@@ -438,21 +449,21 @@
 
             <div class="flex items-center justify-between gap-4">
               <div>
-                <p class="text-sm text-slate-800">Qui peut vous envoyer un message ?</p>
+                <p class="text-sm text-slate-800">{{ 'SETTINGS.PRIVACY.WHO_CAN_MESSAGE' | translate }}</p>
               </div>
               <select id="privacy-messagesFrom" name="privacy-messagesFrom" data-testid="privacy-messagesFrom-select"
                 [(ngModel)]="privacyForm.messagesFrom"
                 class="text-xs rounded-xl border border-slate-200 px-3 py-1.5 outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10 bg-white">
-                <option value="everyone">Tout le monde</option>
-                <option value="friends">Mes amis uniquement</option>
-                <option value="none">Personne</option>
+                <option value="everyone">{{ 'SETTINGS.PRIVACY.EVERYONE' | translate }}</option>
+                <option value="friends">{{ 'SETTINGS.PRIVACY.FRIENDS_ONLY_OPT' | translate }}</option>
+                <option value="none">{{ 'SETTINGS.PRIVACY.NO_ONE' | translate }}</option>
               </select>
             </div>
 
             <div class="flex items-center justify-between gap-4">
               <div>
-                <p class="text-sm text-slate-800">Autoriser l’identification sur les photos</p>
-                <p class="text-xs text-slate-500">Vos amis peuvent vous taguer sur leurs publications.</p>
+                <p class="text-sm text-slate-800">{{ 'SETTINGS.PRIVACY.ALLOW_TAGGING' | translate }}</p>
+                <p class="text-xs text-slate-500">{{ 'SETTINGS.PRIVACY.ALLOW_TAGGING_DESC' | translate }}</p>
               </div>
               <label class="inline-flex items-center cursor-pointer" for="privacy-allowTagging">
                 <input id="privacy-allowTagging" name="privacy-allowTagging" data-testid="privacy-allowTagging-checkbox"
@@ -470,7 +481,7 @@
             <button type="button" id="privacy-save-btn" data-testid="privacy-save-btn" (click)="savePrivacy()"
               class="inline-flex items-center gap-2 rounded-full btn-primary-gradient px-5 py-2 text-xs font-semibold text-white shadow-md">
               <i class="fa-solid fa-shield-halved text-[11px]"></i>
-              Enregistrer
+              {{ 'SETTINGS.SAVE_BTN' | translate }}
             </button>
           </div>
         </div>
@@ -483,49 +494,49 @@
           id="settings-notifications-section" data-testid="settings-notifications-section">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-slate-900">Notifications</h2>
-              <p class="text-xs text-slate-500">Choisissez comment vous souhaitez être averti.</p>
+              <h2 class="text-lg font-semibold text-slate-900">{{ 'SETTINGS.NOTIFICATIONS.TITLE' | translate }}</h2>
+              <p class="text-xs text-slate-500">{{ 'SETTINGS.NOTIFICATIONS.DESC' | translate }}</p>
             </div>
             <span *ngIf="notificationsSaved" class="text-[11px] text-emerald-500 font-medium"
               data-testid="notifications-saved-indicator">
-              Modifications enregistrées ✔
+              {{ 'SETTINGS.SAVED' | translate }}
             </span>
           </div>
 
           <div class="grid md:grid-cols-2 gap-6 text-sm">
             <div class="space-y-3">
-              <p class="text-xs font-semibold text-slate-500">Par e-mail</p>
+              <p class="text-xs font-semibold text-slate-500">{{ 'SETTINGS.NOTIFICATIONS.BY_EMAIL' | translate }}</p>
               <label class="flex items-center justify-between gap-4" for="notif-emailLikes">
-                <span class="text-slate-700 text-sm">Likes sur mes publications</span>
+                <span class="text-slate-700 text-sm">{{ 'SETTINGS.NOTIFICATIONS.LIKES' | translate }}</span>
                 <input id="notif-emailLikes" name="notif-emailLikes" data-testid="notif-emailLikes-checkbox"
                   type="checkbox" [(ngModel)]="notificationsForm.emailLikes" />
               </label>
               <label class="flex items-center justify-between gap-4" for="notif-emailComments">
-                <span class="text-slate-700 text-sm">Commentaires sur mes publications</span>
+                <span class="text-slate-700 text-sm">{{ 'SETTINGS.NOTIFICATIONS.COMMENTS' | translate }}</span>
                 <input id="notif-emailComments" name="notif-emailComments" data-testid="notif-emailComments-checkbox"
                   type="checkbox" [(ngModel)]="notificationsForm.emailComments" />
               </label>
               <label class="flex items-center justify-between gap-4" for="notif-emailFollowers">
-                <span class="text-slate-700 text-sm">Nouvelles invitations / abonnés</span>
+                <span class="text-slate-700 text-sm">{{ 'SETTINGS.NOTIFICATIONS.FOLLOWERS' | translate }}</span>
                 <input id="notif-emailFollowers" name="notif-emailFollowers" data-testid="notif-emailFollowers-checkbox"
                   type="checkbox" [(ngModel)]="notificationsForm.emailFollowers" />
               </label>
             </div>
 
             <div class="space-y-3">
-              <p class="text-xs font-semibold text-slate-500">Notifications in-app</p>
+              <p class="text-xs font-semibold text-slate-500">{{ 'SETTINGS.NOTIFICATIONS.IN_APP' | translate }}</p>
               <label class="flex items-center justify-between gap-4" for="notif-pushMessages">
-                <span class="text-slate-700 text-sm">Messages privés</span>
+                <span class="text-slate-700 text-sm">{{ 'SETTINGS.NOTIFICATIONS.MESSAGES' | translate }}</span>
                 <input id="notif-pushMessages" name="notif-pushMessages" data-testid="notif-pushMessages-checkbox"
                   type="checkbox" [(ngModel)]="notificationsForm.pushMessages" />
               </label>
               <label class="flex items-center justify-between gap-4" for="notif-pushReminders">
-                <span class="text-slate-700 text-sm">Rappels / événements</span>
+                <span class="text-slate-700 text-sm">{{ 'SETTINGS.NOTIFICATIONS.REMINDERS' | translate }}</span>
                 <input id="notif-pushReminders" name="notif-pushReminders" data-testid="notif-pushReminders-checkbox"
                   type="checkbox" [(ngModel)]="notificationsForm.pushReminders" />
               </label>
               <label class="flex items-center justify-between gap-4" for="notif-pushFavorites">
-                <span class="text-slate-700 text-sm">Nouveaux posts des favoris</span>
+                <span class="text-slate-700 text-sm">{{ 'SETTINGS.NOTIFICATIONS.FAVORITES' | translate }}</span>
                 <input id="notif-pushFavorites" name="notif-pushFavorites" data-testid="notif-pushFavorites-checkbox"
                   type="checkbox" [(ngModel)]="notificationsForm.pushFavorites" />
               </label>
@@ -537,7 +548,7 @@
               (click)="saveNotifications()"
               class="inline-flex items-center gap-2 rounded-full btn-primary-gradient px-5 py-2 text-xs font-semibold text-white shadow-md">
               <i class="fa-solid fa-bell text-[11px]"></i>
-              Enregistrer
+              {{ 'SETTINGS.SAVE_BTN' | translate }}
             </button>
           </div>
         </div>
@@ -546,46 +557,47 @@
           id="settings-appearance-section" data-testid="settings-appearance-section">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-slate-900">Apparence</h2>
-              <p class="text-xs text-slate-500">Personnalisez le thème de Loominetfy.</p>
+              <h2 class="text-lg font-semibold text-slate-900">{{ 'SETTINGS.APPEARANCE.TITLE' | translate }}</h2>
+              <p class="text-xs text-slate-500">{{ 'SETTINGS.APPEARANCE.DESC' | translate }}</p>
             </div>
             <span *ngIf="appearanceSaved" class="text-[11px] text-emerald-500 font-medium"
               data-testid="appearance-saved-indicator">
-              Modifications enregistrées ✔
+              {{ 'SETTINGS.SAVED' | translate }}
             </span>
           </div>
 
           <div class="grid md:grid-cols-2 gap-6 text-sm">
             <div class="space-y-4">
               <div>
-                <p class="text-xs font-semibold text-slate-500 mb-1">Thème</p>
+                <p class="text-xs font-semibold text-slate-500 mb-1">{{ 'SETTINGS.APPEARANCE.THEME' | translate }}</p>
                 <div class="flex gap-2">
                   <button type="button" id="appearance-theme-light" data-testid="appearance-theme-light"
                     class="flex-1 px-3 py-2 rounded-xl border text-xs flex items-center justify-between"
                     [ngClass]="appearanceForm.theme === 'light' ? 'border-accent bg-accent-soft' : 'border-slate-200 text-slate-600'"
                     (click)="appearanceForm.theme = 'light'">
-                    <span>Clair</span>
+                    <span>{{ 'SETTINGS.APPEARANCE.LIGHT' | translate }}</span>
                     <i class="fa-regular fa-sun"></i>
                   </button>
                   <button type="button" id="appearance-theme-dark" data-testid="appearance-theme-dark"
                     class="flex-1 px-3 py-2 rounded-xl border text-xs flex items-center justify-between"
                     [ngClass]="appearanceForm.theme === 'dark' ? 'border-accent bg-accent-soft' : 'border-slate-200 text-slate-600'"
                     (click)="appearanceForm.theme = 'dark'">
-                    <span>Sombre</span>
+                    <span>{{ 'SETTINGS.APPEARANCE.DARK' | translate }}</span>
                     <i class="fa-regular fa-moon"></i>
                   </button>
                   <button type="button" id="appearance-theme-system" data-testid="appearance-theme-system"
                     class="flex-1 px-3 py-2 rounded-xl border text-xs flex items-center justify-between"
                     [ngClass]="appearanceForm.theme === 'system' ? 'border-accent bg-accent-soft' : 'border-slate-200 text-slate-600'"
                     (click)="appearanceForm.theme = 'system'">
-                    <span>Système</span>
+                    <span>{{ 'SETTINGS.APPEARANCE.SYSTEM' | translate }}</span>
                     <i class="fa-solid fa-display"></i>
                   </button>
                 </div>
               </div>
 
               <div>
-                <p class="text-xs font-semibold text-slate-500 mb-1">Couleur principale</p>
+                <p class="text-xs font-semibold text-slate-500 mb-1">{{ 'SETTINGS.APPEARANCE.ACCENT_COLOR' | translate
+                  }}</p>
                 <div class="flex gap-3" data-testid="appearance-accent-list">
                   <button *ngFor="let color of accentColors" type="button"
                     class="w-8 h-8 rounded-full border-2 flex items-center justify-center"
@@ -600,7 +612,7 @@
 
             <div class="rounded-2xl app-soft px-4 py-4 text-xs text-slate-500" id="appearance-preview-card"
               data-testid="appearance-preview-card">
-              <p class="font-semibold text-slate-700 mb-2">Aperçu</p>
+              <p class="font-semibold text-slate-700 mb-2">{{ 'SETTINGS.APPEARANCE.PREVIEW' | translate }}</p>
               <div class="rounded-xl bg-white shadow-sm p-3 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded-full bg-slate-200"></div>
@@ -611,12 +623,11 @@
                 </div>
                 <span class="inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] text-white"
                   [ngStyle]="{ 'background': selectedAccent?.value }" data-testid="appearance-preview-button">
-                  Bouton
+                  {{ 'SETTINGS.APPEARANCE.BUTTON' | translate }}
                 </span>
               </div>
               <p class="mt-3">
-                Le thème sombre et les couleurs n'affectent que votre affichage. Les autres utilisateurs voient
-                Loominetfy avec leurs propres préférences.
+                {{ 'SETTINGS.APPEARANCE.PREVIEW_DESC' | translate }}
               </p>
             </div>
           </div>
@@ -625,7 +636,7 @@
             <button type="button" id="appearance-save-btn" data-testid="appearance-save-btn" (click)="saveAppearance()"
               class="inline-flex items-center gap-2 rounded-full btn-primary-gradient px-5 py-2 text-xs font-semibold text-white shadow-md">
               <i class="fa-solid fa-palette text-[11px]"></i>
-              Enregistrer
+              {{ 'SETTINGS.SAVE_BTN' | translate }}
             </button>
           </div>
         </div>
@@ -640,49 +651,46 @@
 
 
             <div>
-              <h2 class="text-lg font-semibold text-slate-900">Paramètres du compte</h2>
-              <p class="text-xs text-slate-500">Langue, données du compte et suppression.</p>
+              <h2 class="text-lg font-semibold text-slate-900">{{ 'SETTINGS.ACCOUNT.TITLE' | translate }}</h2>
+              <p class="text-xs text-slate-500">{{ 'SETTINGS.ACCOUNT.DESC' | translate }}</p>
             </div>
           </div>
 
           <div class="space-y-4 text-sm" data-testid="account-form">
             <div class="flex items-center justify-between gap-4">
               <div>
-                <p class="text-sm text-slate-800">Langue de l’interface</p>
-                <p class="text-xs text-slate-500">Cette option change uniquement la langue de Loominetfy.</p>
+                <p class="text-sm text-slate-800">{{ 'SETTINGS.ACCOUNT.LANGUAGE' | translate }}</p>
+                <p class="text-xs text-slate-500">{{ 'SETTINGS.ACCOUNT.LANGUAGE_DESC' | translate }}</p>
               </div>
               <select id="account-language" name="account-language" data-testid="account-language-select"
-                [(ngModel)]="accountForm.language"
+                [(ngModel)]="accountForm.language" (ngModelChange)="changeLanguage($event)"
                 class="text-xs rounded-xl border border-slate-200 px-3 py-1.5 outline-none focus:border-[#5b7cff] focus:ring-2 focus:ring-[#5b7cff]/10 bg-white">
                 <option value="fr">Français</option>
                 <option value="en">English</option>
-                <option value="es">Español</option>
               </select>
             </div>
 
             <div class="rounded-xl app-soft px-4 py-3 flex items-center justify-between gap-4">
               <div>
-                <p class="text-sm text-slate-800">Télécharger mes données</p>
-                <p class="text-xs text-slate-500">Recevez une copie de vos publications, messages et informations de
-                  compte.</p>
+                <p class="text-sm text-slate-800">{{ 'SETTINGS.ACCOUNT.DOWNLOAD_DATA' | translate }}</p>
+                <p class="text-xs text-slate-500">{{ 'SETTINGS.ACCOUNT.DOWNLOAD_DATA_DESC' | translate }}</p>
               </div>
               <button type="button" id="account-download-data-btn" data-testid="account-download-data-btn"
                 class="px-4 py-1.5 rounded-full text-[11px] bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
                 (click)="downloadData()">
-                Télécharger
+                {{ 'SETTINGS.ACCOUNT.DOWNLOAD_BTN' | translate }}
               </button>
             </div>
 
             <div class="pt-3 border-t border-slate-100">
-              <p class="text-xs font-semibold text-rose-500 mb-1">Zone dangereuse</p>
+              <p class="text-xs font-semibold text-rose-500 mb-1">{{ 'SETTINGS.ACCOUNT.DANGER_ZONE' | translate }}</p>
               <p class="text-xs text-slate-500 mb-3">
-                La suppression de votre compte est définitive. Vos données pourront être supprimées de manière
-                irréversible.
+                {{ 'SETTINGS.ACCOUNT.DELETE_DESC' | translate }}
               </p>
               <button type="button" id="account-delete-request-btn" data-testid="account-delete-request-btn"
                 class="px-4 py-2 rounded-full text-[11px] bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100"
                 (click)="requestAccountDeletion()">
-                Demander la suppression du compte
+                {{ 'SETTINGS.ACCOUNT.DELETE_BTN' | translate }}
               </button>
             </div>
           </div>

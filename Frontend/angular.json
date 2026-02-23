@@ -18,10 +18,13 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
+              "src/assets",
               {
                 "glob": "**/*",
                 "input": "public"
@@ -29,7 +32,9 @@
             ],
             "styles": [
               "src/styles.scss",
-              "flag-icons/css/flag-icons.min.css","node_modules/@ctrl/ngx-emoji-mart/picker.css"]
+              "flag-icons/css/flag-icons.min.css",
+              "node_modules/@ctrl/ngx-emoji-mart/picker.css"
+            ]
           },
           "configurations": {
             "production": {
@@ -54,7 +59,8 @@
               ]
             },
             "recette": {
-              "budgets": [{
+              "budgets": [
+                {
                   "type": "initial",
                   "maximumWarning": "2mb",
                   "maximumError": "3mb"
@@ -73,7 +79,6 @@
                 }
               ]
             },
-
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -104,16 +109,22 @@
         "test": {
           "builder": "@angular/build:karma",
           "options": {
-            "polyfills": ["zone.js", "zone.js/testing"],
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
+              "src/assets",
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss"]
+            "styles": [
+              "src/styles.scss"
+            ]
           }
         }
       }

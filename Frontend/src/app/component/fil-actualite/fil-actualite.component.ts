@@ -12,6 +12,7 @@ import { differenceInHours, format, formatDistanceToNow } from 'date-fns';
 import { de, fr, th } from 'date-fns/locale';
 import sweetalert2 from 'sweetalert2';
 import { RealtimeService } from '../../service/realtime.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 /**
  * Interface Commentaires
@@ -115,12 +116,12 @@ type PostLikeEvent = {
  * Type pour écouter sur les partages des publications
  */
 type PostShareEvent = {
- publicationId: number,
- sharesCount: number
+  publicationId: number,
+  sharesCount: number
 };
 
 
-type CommentDeleteEvent ={
+type CommentDeleteEvent = {
   publicationId: number,
   commentId: number,
 }
@@ -128,7 +129,7 @@ type CommentDeleteEvent ={
 @Component({
   selector: 'app-fil-actualite',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FontAwesomeModule, HeaderComponent, PostCreatorComponent, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FontAwesomeModule, HeaderComponent, PostCreatorComponent, RouterModule, TranslateModule],
   templateUrl: './fil-actualite.component.html',
 })
 export class FilActualiteComponent implements OnInit, OnDestroy {
@@ -202,7 +203,7 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
      */
     this.realtimeService.on<NewCommentEvent>('new_comment', (data) => {
       console.log(' Connexion à Socekt réussi pour les commeentaires :', data.publicationId, data.comment.id);
-       this.addNewCommentToPost(data.publicationId, data.comment);
+      this.addNewCommentToPost(data.publicationId, data.comment);
     });
 
 
@@ -232,7 +233,7 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
       this.addNewShareToPost(data.publicationId, data.sharesCount);
     });
 
-    
+
     /**
      * Vérifier s'il un commentaire a été supprimé pour une publication
      */
@@ -282,21 +283,21 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
   }
 
 
- /**
-  * Gestion des commentaires ( pour vérifier si le commentaire existe ou non)
-  * @param publicationId 
-  * @param comment 
-  */
+  /**
+   * Gestion des commentaires ( pour vérifier si le commentaire existe ou non)
+   * @param publicationId 
+   * @param comment 
+   */
   addNewCommentToPost(publicationId: number, comment: PostComment) {
     const post = this.allPosts.find(p => p.id === publicationId);
-     if (!post) return;
+    if (!post) return;
 
     const alreadyExists = post.comments.some(c => c.id === comment.id);
     if (alreadyExists) return;
-      post.comments = [...(post.comments ?? []), comment];
-      post.commentsCount = (post.commentsCount ?? 0) + 1;
+    post.comments = [...(post.comments ?? []), comment];
+    post.commentsCount = (post.commentsCount ?? 0) + 1;
 
-      this.visiblePosts = [...this.allPosts];
+    this.visiblePosts = [...this.allPosts];
   }
 
 
@@ -329,13 +330,12 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
    */
   addNewLikeToPost(publicationId: number, likesCount: number, liked: boolean, userId: number) {
     const post = this.allPosts.find(p => p.id === publicationId);
-      if (!post) return;
+    if (!post) return;
 
-      post.nombreLikes = likesCount
-      if(userId == this.currentUser?.id)
-      {
-        post.likedByMe = liked
-      }
+    post.nombreLikes = likesCount
+    if (userId == this.currentUser?.id) {
+      post.likedByMe = liked
+    }
     this.visiblePosts = [...this.allPosts];
   }
 
@@ -346,32 +346,32 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
    * @param sharesCount 
    * @returns 
    */
-  addNewShareToPost(publicationId: number, sharesCount: number){
+  addNewShareToPost(publicationId: number, sharesCount: number) {
 
     const post = this.allPosts.find(p => p.id === publicationId);
-      if (!post) return;
-      post.nombrePartages  = sharesCount;
+    if (!post) return;
+    post.nombrePartages = sharesCount;
     this.visiblePosts = [...this.allPosts];
   }
 
-/**
- * Gestion des commentaires pour les publications
- * @param publicationId 
- * @param commentId 
- * @returns 
- */
-deleteCommentToPost(publicationId: number, commentId: number) {
-  const post = this.allPosts.find(p => p.id === publicationId);
-  if (!post) return;
-  const before = (post.comments ?? []).length;
-  post.comments = (post.comments ?? []).filter(c => Number(c.id) !== Number(commentId));
-  const after = post.comments.length;
-  if (after < before) {
-    post.commentsCount = Math.max(0, (post.commentsCount ?? 0) - 1);
-  }
+  /**
+   * Gestion des commentaires pour les publications
+   * @param publicationId 
+   * @param commentId 
+   * @returns 
+   */
+  deleteCommentToPost(publicationId: number, commentId: number) {
+    const post = this.allPosts.find(p => p.id === publicationId);
+    if (!post) return;
+    const before = (post.comments ?? []).length;
+    post.comments = (post.comments ?? []).filter(c => Number(c.id) !== Number(commentId));
+    const after = post.comments.length;
+    if (after < before) {
+      post.commentsCount = Math.max(0, (post.commentsCount ?? 0) - 1);
+    }
 
-  this.visiblePosts = [...this.allPosts];
-}
+    this.visiblePosts = [...this.allPosts];
+  }
 
 
   /**
@@ -496,29 +496,29 @@ deleteCommentToPost(publicationId: number, commentId: number) {
       .subscribe({
         next: (posts) => {
 
-          const uniqueNewPosts = posts.filter(newPost => 
+          const uniqueNewPosts = posts.filter(newPost =>
             !this.allPosts.some(existingPost => existingPost.id === newPost.id)
           );
 
           if (posts.length < this.postsLimit) {
-             this.hasMore = false;
+            this.hasMore = false;
           }
 
 
           if (uniqueNewPosts.length > 0) {
-          const formattedPosts = uniqueNewPosts.map((post) => ({
-            ...post,
-            showAllComments: false,
-            likedByMe: Array.isArray(post.interactions)
-              ? post.interactions.some((i) => i.userId === this.currentUser?.id)
-              : false,
-            commentsCount: post.comments ? post.comments.length : 0,
-          }));
+            const formattedPosts = uniqueNewPosts.map((post) => ({
+              ...post,
+              showAllComments: false,
+              likedByMe: Array.isArray(post.interactions)
+                ? post.interactions.some((i) => i.userId === this.currentUser?.id)
+                : false,
+              commentsCount: post.comments ? post.comments.length : 0,
+            }));
 
-          this.allPosts = [...this.allPosts, ...formattedPosts];
-          this.visiblePosts = this.allPosts;
-          this.hasMore = posts.length === this.postsLimit;
-          this.isLoadingMore = false;
+            this.allPosts = [...this.allPosts, ...formattedPosts];
+            this.visiblePosts = this.allPosts;
+            this.hasMore = posts.length === this.postsLimit;
+            this.isLoadingMore = false;
           }
         },
         error: (err) => {
@@ -664,17 +664,17 @@ deleteCommentToPost(publicationId: number, commentId: number) {
         withCredentials: true,
       })
       .subscribe({
-            next: (createdComment) => {
-              const exists = (post.comments ?? []).some(c => c.id === createdComment.id);
-              if (!exists) {
-                post.comments = [...(post.comments ?? []), createdComment];
-                post.commentsCount = (post.commentsCount ?? 0) + 1;
-              }
+        next: (createdComment) => {
+          const exists = (post.comments ?? []).some(c => c.id === createdComment.id);
+          if (!exists) {
+            post.comments = [...(post.comments ?? []), createdComment];
+            post.commentsCount = (post.commentsCount ?? 0) + 1;
+          }
 
-              this.newCommentText[post.id] = '';
-              this.selectedCommentImage[post.id] = null;
-              this.commentImagePreview[post.id] = null;
-            },
+          this.newCommentText[post.id] = '';
+          this.selectedCommentImage[post.id] = null;
+          this.commentImagePreview[post.id] = null;
+        },
         error: (err) => {
           console.error('Erreur ajout commentaire', err);
         },

@@ -1,0 +1,58 @@
+{
+    "NAVBAR": {
+        "HOME": "Home",
+        "MESSAGES": "Messages",
+        "NOTIFICATIONS": "Notifications",
+        "PROFILE": "Profile",
+        "SETTINGS": "Settings",
+        "LOGOUT": "Log Out"
+    },
+    "AUTH": {
+        "LOGIN_TITLE": "Welcome back!",
+        "LOGIN_DESC": "Sign in to continue",
+        "SIGNUP_TITLE": "Create an account",
+        "SIGNUP_DESC": "Join the loominetfy community.",
+        "TAB_LOGIN": "Log in",
+        "TAB_SIGNUP": "Sign up",
+        "EMAIL": "Email address",
+        "PASSWORD": "Password",
+        "FORGOT_PASSWORD": "Forgot password?",
+        "BTN_LOGIN": "Log in"
+    },
+    "HEADER": {
+        "SEARCH_PLACEHOLDER": "Search",
+        "SEARCH_NO_RESULTS": "No users found",
+        "NOTIFICATIONS_TITLE": "Notifications",
+        "NOTIFICATIONS_MARK_READ": "Mark all as read",
+        "FILTER_ALL": "All",
+        "FILTER_INVITES": "Invites",
+        "FILTER_ACTIVITY": "Activity",
+        "NOTIFICATIONS_EMPTY": "No notifications yet",
+        "BTN_ACCEPT": "Accept",
+        "BTN_DECLINE": "Ignore",
+        "BTN_VIEW": "View"
+    },
+    "FEED": {
+        "EMPTY_POSTS": "No content yet. Add a publication to get started",
+        "SHARED_POST": "reshared",
+        "USER_FALLBACK": "User",
+        "DELETE_COMMENT": "Delete",
+        "LIKE_COMMENT": "Like",
+        "HIDE_COMMENTS": "Hide comments",
+        "VIEW_ALL_COMMENTS": "View all comments",
+        "WRITE_COMMENT_PLACEHOLDER": "Write a comment...",
+        "PUBLISH_COMMENT": "Publish",
+        "END_OF_FEED": "You've seen all recent publications."
+    },
+    "SIDEBAR": {
+        "ONLINE_FRIENDS": "Online friends",
+        "ONLINE_STATUS": "Online",
+        "ACTIVE_NOW": "Active now",
+        "NO_FRIENDS_ONLINE": "No friends online right now."
+    },
+    "POST_CREATOR": {
+        "PLACEHOLDER": "What's on your mind?",
+        "IMAGE_ADDED": "Image added",
+        "PUBLISH_BTN": "Publish"
+    }
+}

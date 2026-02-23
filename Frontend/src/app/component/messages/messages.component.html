@@ -16,13 +16,13 @@
 
         <!-- Sidebar Header -->
         <div class="msg-sidebar-header">
-          <h2 class="msg-sidebar-title">Messages</h2>
+          <h2 class="msg-sidebar-title">{{ 'MESSAGES.TITLE' | translate }}</h2>
           <button (click)="openNewGroupModal()" class="msg-new-group-btn btn-primary-gradient" type="button">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
               <path
                 d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
             </svg>
-            Nouveau
+            {{ 'MESSAGES.NEW_GROUP' | translate }}
           </button>
         </div>
 
@@ -30,15 +30,15 @@
         <div class="msg-filter-tabs">
           <button (click)="setFilter('all')" class="msg-filter-tab"
             [class.msg-filter-tab--active]="filterMode === 'all'" type="button">
-            Tous
+            {{ 'MESSAGES.FILTER_ALL' | translate }}
           </button>
           <button (click)="setFilter('direct')" class="msg-filter-tab"
             [class.msg-filter-tab--active]="filterMode === 'direct'" type="button">
-            Privés
+            {{ 'MESSAGES.FILTER_DIRECT' | translate }}
           </button>
           <button (click)="setFilter('group')" class="msg-filter-tab"
             [class.msg-filter-tab--active]="filterMode === 'group'" type="button">
-            Groupes
+            {{ 'MESSAGES.FILTER_GROUP' | translate }}
           </button>
         </div>
 
@@ -49,7 +49,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <input type="text" placeholder="Rechercher une conversation..." class="msg-search-input"
+          <input type="text" [placeholder]="'MESSAGES.SEARCH_PLACEHOLDER' | translate" class="msg-search-input"
             [(ngModel)]="searchTerm" name="messages-search" />
         </div>
 
@@ -64,8 +64,8 @@
                   d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
               </svg>
             </div>
-            <p class="msg-conv-empty-text">Aucune conversation</p>
-            <p class="msg-conv-empty-sub">Commencez à discuter avec vos amis !</p>
+            <p class="msg-conv-empty-text">{{ 'MESSAGES.EMPTY_CONVERSATIONS' | translate }}</p>
+            <p class="msg-conv-empty-sub">{{ 'MESSAGES.EMPTY_CONVERSATIONS_SUB' | translate }}</p>
           </li>
 
           <!-- Conversation items -->
@@ -94,7 +94,7 @@
               </div>
               <div class="msg-conv-info-bottom">
                 <p class="msg-conv-last-msg" [class.msg-conv-last-msg--unread]="!!conv.unread">
-                  {{ conv.lastMessage || 'Démarrer la conversation...' }}
+                  {{ conv.lastMessage || ('MESSAGES.START_CONVERSATION' | translate) }}
                 </p>
                 <span *ngIf="conv.unread" class="msg-conv-unread-badge">
                   {{ conv.unread }}
@@ -120,8 +120,8 @@
                   d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
               </svg>
             </div>
-            <h3 class="msg-chat-empty-title">Vos messages</h3>
-            <p class="msg-chat-empty-desc">Sélectionnez une conversation pour commencer à discuter</p>
+            <h3 class="msg-chat-empty-title">{{ 'MESSAGES.YOUR_MESSAGES' | translate }}</h3>
+            <p class="msg-chat-empty-desc">{{ 'MESSAGES.SELECT_CONVERSATION' | translate }}</p>
           </div>
         </div>
 
@@ -149,7 +149,7 @@
                 <p class="msg-chat-header-name">{{ selectedConversation.name }}</p>
                 <p class="msg-chat-header-presence"
                   [class.msg-chat-header-presence--online]="selectedConversation.online">
-                  {{ selectedConversation.online ? 'En ligne' : 'Hors ligne' }}
+                  {{ selectedConversation.online ? ('MESSAGES.ONLINE' | translate) : ('MESSAGES.OFFLINE' | translate) }}
                 </p>
               </div>
             </div>
@@ -168,7 +168,7 @@
               </div>
               <div class="msg-chat-header-text">
                 <p class="msg-chat-header-name">{{ selectedConversation.name }}</p>
-                <p class="msg-chat-header-presence">Groupe · Cliquer pour gérer</p>
+                <p class="msg-chat-header-presence">{{ 'MESSAGES.GROUP_MANAGE' | translate }}</p>
               </div>
             </div>
 
@@ -210,10 +210,10 @@
             <span class="msg-blocked-icon">{{ blockStatus === 'i_blocked' ? '🔒' : '🚫' }}</span>
             <p class="msg-blocked-text">
               <ng-container *ngIf="blockStatus === 'i_blocked'">
-                Vous avez bloqué cet utilisateur. <strong>Débloquez-le</strong> pour envoyer des messages.
+                <span [innerHTML]="'MESSAGES.I_BLOCKED_MSG' | translate"></span>
               </ng-container>
               <ng-container *ngIf="blockStatus === 'they_blocked'">
-                Vous ne pouvez pas envoyer de message à cet utilisateur.
+                {{ 'MESSAGES.THEY_BLOCKED_MSG' | translate }}
               </ng-container>
             </p>
           </div>
@@ -225,7 +225,7 @@
             <div *ngIf="messages.length === 0" class="msg-messages-empty">
               <div class="msg-messages-empty-inner">
                 <span class="msg-messages-empty-wave">👋</span>
-                <p>Envoyez votre premier message !</p>
+                <p>{{ 'MESSAGES.FIRST_MESSAGE' | translate }}</p>
               </div>
             </div>
 
@@ -295,7 +295,7 @@
                       <span class="msg-bubble-file-icon">{{ getFileIcon(msg.fileUrl || '') }}</span>
                       <div class="msg-bubble-file-info">
                         <p class="msg-bubble-file-name">{{ getFileName(msg.fileUrl || '') }}</p>
-                        <p class="msg-bubble-file-action">Télécharger</p>
+                        <p class="msg-bubble-file-action">{{ 'MESSAGES.DOWNLOAD' | translate }}</p>
                       </div>
                       <div class="msg-bubble-file-dl">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
@@ -393,7 +393,8 @@
 
               <!-- Text Input -->
               <textarea *ngIf="!isRecording" rows="1" [(ngModel)]="messageText" (keydown.enter)="onEnter($event)"
-                placeholder="Écrivez un message..." class="msg-input-textarea" name="chat-input"></textarea>
+                [placeholder]="'MESSAGES.WRITE_MESSAGE_PLACEHOLDER' | translate" class="msg-input-textarea"
+                name="chat-input"></textarea>
 
               <!-- Voice Record Button -->
               <button *ngIf="!isRecording" (click)="toggleRecording()" type="button"
@@ -477,7 +478,7 @@
     <div (click)="$event.stopPropagation()" class="msg-modal app-card" style="animation: msgSlideUp 0.25s ease-out;">
 
       <div class="msg-modal-header">
-        <h3 class="msg-modal-title">Créer un groupe</h3>
+        <h3 class="msg-modal-title">{{ 'MESSAGES.CREATE_GROUP_TITLE' | translate }}</h3>
         <button (click)="closeNewGroupModal()" class="msg-modal-close" type="button">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
             class="w-5 h-5">
@@ -488,22 +489,23 @@
 
       <div class="msg-modal-body">
         <div>
-          <label class="msg-modal-label">Nom du groupe</label>
-          <input type="text" [(ngModel)]="groupTitle" name="group-title" placeholder="Ex: Équipe projet..."
-            class="msg-modal-input" />
+          <label class="msg-modal-label">{{ 'MESSAGES.GROUP_NAME_LABEL' | translate }}</label>
+          <input type="text" [(ngModel)]="groupTitle" name="group-title"
+            [placeholder]="'MESSAGES.GROUP_NAME_PLACEHOLDER' | translate" class="msg-modal-input" />
         </div>
 
         <div>
           <label class="msg-modal-label">
-            Ajouter des ami(e)s <span class="text-accent">({{ selectedFriendCount }} sélectionné{{
-              selectedFriendCount > 1 ? 's' : '' }})</span>
+            {{ 'MESSAGES.ADD_FRIENDS' | translate }} <span class="text-accent">({{ selectedFriendCount }} {{
+              'MESSAGES.SELECTED' | translate }} )</span>
           </label>
-          <input type="text" [(ngModel)]="friendSearchTerm" name="friend-search" placeholder="Rechercher..."
-            class="msg-modal-input" style="margin-bottom: 12px;" />
+          <input type="text" [(ngModel)]="friendSearchTerm" name="friend-search"
+            [placeholder]="'MESSAGES.SEARCH_FRIENDS' | translate" class="msg-modal-input"
+            style="margin-bottom: 12px;" />
 
           <div class="msg-modal-friend-list">
             <div *ngIf="filteredFriendOptions.length === 0" class="msg-modal-friend-empty">
-              Aucun ami trouvé
+              {{ 'MESSAGES.NO_FRIEND_FOUND' | translate }}
             </div>
             <div *ngFor="let friend of filteredFriendOptions" (click)="toggleFriendSelection(friend)"
               class="msg-modal-friend-item" [class.msg-modal-friend-item--selected]="friend.selected">
@@ -521,10 +523,11 @@
       </div>
 
       <div class="msg-modal-footer">
-        <button (click)="closeNewGroupModal()" class="msg-modal-btn-cancel" type="button">Annuler</button>
+        <button (click)="closeNewGroupModal()" class="msg-modal-btn-cancel" type="button">{{ 'MESSAGES.CANCEL' |
+          translate }}</button>
         <button (click)="createGroup()" class="msg-modal-btn-confirm btn-primary-gradient"
           [disabled]="selectedFriendCount === 0" type="button">
-          Créer le groupe
+          {{ 'MESSAGES.CREATE_BTN' | translate }}
         </button>
       </div>
     </div>
@@ -553,7 +556,8 @@
         </div>
         <div style="flex: 1;">
           <h3 class="msg-modal-title" style="margin:0;">{{ selectedConversation?.name }}</h3>
-          <p style="font-size: 13px; color: var(--text-muted); margin: 2px 0 0;">{{ groupMembers.length }} membres</p>
+          <p style="font-size: 13px; color: var(--text-muted); margin: 2px 0 0;">{{ groupMembers.length }} {{
+            'MESSAGES.MEMBERS_COUNT' | translate }}</p>
         </div>
         <button (click)="closeGroupSettingsModal()" class="msg-modal-close" type="button">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
@@ -566,9 +570,9 @@
       <!-- Tabs -->
       <div class="msg-group-tabs">
         <button class="msg-group-tab" [class.msg-group-tab--active]="groupSettingsTab === 'members'"
-          (click)="groupSettingsTab = 'members'">Membres</button>
+          (click)="groupSettingsTab = 'members'">{{ 'MESSAGES.MEMBERS' | translate }}</button>
         <button class="msg-group-tab" [class.msg-group-tab--active]="groupSettingsTab === 'add'"
-          (click)="prepareAddMembers()">Ajouter</button>
+          (click)="prepareAddMembers()">{{ 'MESSAGES.ADD' | translate }}</button>
       </div>
 
       <!-- Members Tab -->
@@ -578,7 +582,8 @@
             <img [src]="member.photo || defaultAvatar" class="msg-group-member-avatar" />
             <div>
               <p class="msg-group-member-name">{{ member.prenom }} {{ member.nom }}</p>
-              <p class="msg-group-member-role" *ngIf="member.id === selectedConversation?.['creatorId']">Créateur</p>
+              <p class="msg-group-member-role" *ngIf="member.id === selectedConversation?.['creatorId']">{{
+                'MESSAGES.CREATOR' | translate }}</p>
             </div>
           </div>
           <button *ngIf="member.id !== currentUserId" (click)="removeMember(member.id)" class="msg-group-member-remove"
@@ -592,12 +597,12 @@
 
       <!-- Add Members Tab -->
       <div *ngIf="groupSettingsTab === 'add'" class="msg-modal-body">
-        <input type="text" [(ngModel)]="addMemberSearchTerm" placeholder="Rechercher des ami(e)s..."
+        <input type="text" [(ngModel)]="addMemberSearchTerm" [placeholder]="'MESSAGES.SEARCH_FRIENDS' | translate"
           class="msg-modal-input" style="margin-bottom: 12px;" />
 
         <div class="msg-modal-friend-list">
           <div *ngIf="filteredAddMemberOptions.length === 0" class="msg-modal-friend-empty">
-            Aucun ami disponible
+            {{ 'MESSAGES.NO_FRIEND_AVAILABLE' | translate }}
           </div>
           <div *ngFor="let friend of filteredAddMemberOptions" (click)="toggleFriendSelection(friend)"
             class="msg-modal-friend-item" [class.msg-modal-friend-item--selected]="friend.selected">
@@ -614,7 +619,7 @@
 
         <button class="msg-modal-btn-confirm btn-primary-gradient" style="width: 100%; margin-top: 12px;"
           [disabled]="selectedAddMemberCount === 0" (click)="addSelectedMembersToGroup()">
-          Ajouter ({{ selectedAddMemberCount }})
+          {{ 'MESSAGES.ADD_COUNT' | translate }} ({{ selectedAddMemberCount }})
         </button>
       </div>
 
@@ -625,7 +630,7 @@
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          Quitter le groupe
+          {{ 'MESSAGES.LEAVE_GROUP' | translate }}
         </button>
       </div>
     </div>

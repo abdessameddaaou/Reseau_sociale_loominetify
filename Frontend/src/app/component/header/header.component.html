@@ -12,7 +12,7 @@
           <i class="fa-solid fa-magnifying-glass fa-sm"></i>
         </span>
 
-        <input type="text" [formControl]="searchControl" placeholder="Rechercher"
+        <input type="text" [formControl]="searchControl" [placeholder]="'HEADER.SEARCH_PLACEHOLDER' | translate"
           class="bg-transparent outline-none text-slate-600 w-xl ml-4" id="header-search-input"
           name="header-search-input" data-testid="header-search-input" autocomplete="off" />
 
@@ -37,7 +37,7 @@
 
 
           <div *ngIf="searchResults.length === 0" class="px-4 py-3 text-center text-slate-500 text-xs">
-            Aucun utilisateur trouvé
+            {{ 'HEADER.SEARCH_NO_RESULTS' | translate }}
           </div>
         </div>
 
@@ -92,12 +92,12 @@
           <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100"
             id="notifications-dropdown-header" data-testid="notifications-dropdown-header">
             <p class="text-sm font-semibold text-slate-900">
-              Notifications
+              {{ 'HEADER.NOTIFICATIONS_TITLE' | translate }}
             </p>
             <button type="button" class="text-[11px] text-accent hover:underline"
               (click)="markAllAsRead(); $event.stopPropagation()" id="notifications-mark-all-read"
               data-testid="notifications-mark-all-read">
-              Tout marquer comme lu
+              {{ 'HEADER.NOTIFICATIONS_MARK_READ' | translate }}
             </button>
           </div>
 
@@ -111,7 +111,7 @@
                     ? 'bg-white shadow text-slate-900'
                     : 'text-slate-500'
                 " id="notifications-filter-all" data-testid="notifications-filter-all">
-                Tous
+                {{ 'HEADER.FILTER_ALL' | translate }}
               </button>
               <button type="button" (click)="setNotificationsFilter('invites'); $event.stopPropagation()"
                 class="flex-1 px-2 py-1 rounded-full" [ngClass]="
@@ -119,7 +119,7 @@
                     ? 'bg-white shadow text-slate-900'
                     : 'text-slate-500'
                 " id="notifications-filter-invites" data-testid="notifications-filter-invites">
-                Invitations
+                {{ 'HEADER.FILTER_INVITES' | translate }}
               </button>
               <button type="button" (click)="setNotificationsFilter('activity'); $event.stopPropagation()"
                 class="flex-1 px-2 py-1 rounded-full" [ngClass]="
@@ -127,7 +127,7 @@
                     ? 'bg-white shadow text-slate-900'
                     : 'text-slate-500'
                 " id="notifications-filter-activity" data-testid="notifications-filter-activity">
-                Activité
+                {{ 'HEADER.FILTER_ACTIVITY' | translate }}
               </button>
             </div>
           </div>
@@ -136,7 +136,7 @@
           <div class="max-h-80 overflow-y-auto px-2 pb-2" id="notifications-list" data-testid="notifications-list">
             <p *ngIf="filteredNotifications.length === 0" class="text-center text-[12px] text-slate-400 py-6"
               id="notifications-empty-state" data-testid="notifications-empty-state">
-              Aucune notification pour le moment 🎉
+              {{ 'HEADER.NOTIFICATIONS_EMPTY' | translate }} 🎉
             </p>
 
             <button *ngFor="let notif of filteredNotifications" type="button"
@@ -172,25 +172,35 @@
                   <span class="px-2 py-0.5 rounded-full text-[10px] btn-primary-gradient text-white"
                     (click)="acceptInvite(notif); $event.stopPropagation()"
                     [attr.data-testid]="'notification-accept-' + notif.id">
-                    Accepter
+                    {{ 'HEADER.BTN_ACCEPT' | translate }}
                   </span>
                   <span class="px-2 py-0.5 rounded-full text-[10px] app-soft text-slate-500"
                     (click)="declineInvite(notif); $event.stopPropagation()"
                     [attr.data-testid]="'notification-decline-' + notif.id">
-                    Ignorer
+                    {{ 'HEADER.BTN_DECLINE' | translate }}
                   </span>
                 </div>
 
                 <button *ngIf="notif.type !== 'invite'" type="button"
                   class="px-2 py-0.5 rounded-full text-[10px] app-soft text-slate-500"
                   [attr.data-testid]="'notification-view-' + notif.id">
-                  Voir
+                  {{ 'HEADER.BTN_VIEW' | translate }}
                 </button>
               </div>
             </button>
 
           </div>
         </div>
+      </div>
+
+      <!-- LANGUAGE SWITCHER -->
+      <div
+        class="hidden md:flex items-center gap-2 text-sm font-semibold text-slate-500 border-r border-slate-200 pr-4 mr-1">
+        <button [ngClass]="currentLang === 'fr' ? 'text-accent' : 'hover:text-slate-800'"
+          (click)="switchLanguage('fr')">FR</button>
+        <span class="text-slate-300">|</span>
+        <button [ngClass]="currentLang === 'en' ? 'text-accent' : 'hover:text-slate-800'"
+          (click)="switchLanguage('en')">EN</button>
       </div>
 
       <!-- SETTINGS -->
@@ -271,18 +281,32 @@
 
           <div class="h-px bg-slate-100 my-1"></div>
 
+          <!-- LANGUAGE SWITCHER MOBILE -->
+          <div class="flex items-center justify-between p-3">
+            <span class="text-sm font-medium text-slate-700">Lang.</span>
+            <div class="flex gap-2 text-sm font-semibold text-slate-500">
+              <button [ngClass]="currentLang === 'fr' ? 'text-accent' : 'hover:text-slate-800'"
+                (click)="switchLanguage('fr')">FR</button>
+              <span class="text-slate-300">|</span>
+              <button [ngClass]="currentLang === 'en' ? 'text-accent' : 'hover:text-slate-800'"
+                (click)="switchLanguage('en')">EN</button>
+            </div>
+          </div>
+
+          <div class="h-px bg-slate-100 my-1"></div>
+
           <!-- Settings -->
           <button class="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl w-full text-left transition-colors"
             type="button" (click)="onTabClick('settings'); showMobileMenu=false;">
             <i class="fa-solid fa-gear text-slate-500 w-5 text-center"></i>
-            <span class="text-sm font-medium text-slate-700">Paramètres</span>
+            <span class="text-sm font-medium text-slate-700">{{ 'NAVBAR.SETTINGS' | translate }}</span>
           </button>
 
           <!-- Logout -->
           <button class="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl w-full text-left transition-colors"
             type="button" (click)="onTabClick('deconnexion'); showMobileMenu=false;">
             <i class="fa-solid fa-arrow-right-from-bracket text-rose-500 w-5 text-center"></i>
-            <span class="text-sm font-medium text-rose-600">Se déconnecter</span>
+            <span class="text-sm font-medium text-rose-600">{{ 'NAVBAR.LOGOUT' | translate }}</span>
           </button>
         </div>
       </div>>

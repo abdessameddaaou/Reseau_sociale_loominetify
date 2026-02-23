@@ -1,14 +1,16 @@
-import { Component, EventEmitter, Input, Output, HostListener  } from '@angular/core';
+import { Component, EventEmitter, Input, Output, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 
 
+import { TranslateModule } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-post-creator',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, PickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, PickerComponent, TranslateModule],
   templateUrl: './post-creator.component.html'
 })
 
@@ -21,7 +23,7 @@ export class PostCreatorComponent {
   @Input() currentUser: { photo?: string } | null = null;
   @Output() fileSelected = new EventEmitter<Event>();
   @Output() submitPost = new EventEmitter<void>();
-    defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
+  defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png';
 
   showEmoji: boolean = false;
   onFileChange(event: Event) {
@@ -31,29 +33,29 @@ export class PostCreatorComponent {
   onSubmit() {
     this.submitPost.emit();
   }
-toggleEmoji(event?: Event) {
-  event?.stopPropagation();
-  this.showEmoji = !this.showEmoji;
-}
-
-@HostListener('document:click', ['$event'])
-onDocClick(event: MouseEvent) {
-  const el = event.target as HTMLElement;
-  if (!el.closest('#emoji-popover') && !el.closest('#post-emoji-btn')) {
-    this.showEmoji = false;
+  toggleEmoji(event?: Event) {
+    event?.stopPropagation();
+    this.showEmoji = !this.showEmoji;
   }
-}
+
+  @HostListener('document:click', ['$event'])
+  onDocClick(event: MouseEvent) {
+    const el = event.target as HTMLElement;
+    if (!el.closest('#emoji-popover') && !el.closest('#post-emoji-btn')) {
+      this.showEmoji = false;
+    }
+  }
 
   handleEmojiSelect(event: any) {
-  const emoji = event.emoji.native;
+    const emoji = event.emoji.native;
 
-  const textControl = this.postForm.get('text');
-  const currentValue = textControl?.value || '';
+    const textControl = this.postForm.get('text');
+    const currentValue = textControl?.value || '';
 
-  textControl?.setValue(currentValue + emoji);
+    textControl?.setValue(currentValue + emoji);
 
-  // pour fermer le picker après sélection
-  this.showEmoji = false;
-}
+    // pour fermer le picker après sélection
+    this.showEmoji = false;
+  }
 }
 

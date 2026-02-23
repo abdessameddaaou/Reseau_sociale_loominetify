@@ -61,9 +61,20 @@
 
     <!-- DROITE -->
     <div [ngClass]="[
-        'flex flex-col justify-center bg-white rounded-[30px] p-8 md:my-5 md:mr-5 md:ml-0 md:px-10 md:py-10 transition-all duration-500 w-full',
+        'flex flex-col relative justify-center bg-white rounded-[30px] p-8 md:my-5 md:mr-5 md:ml-0 md:px-10 md:py-10 transition-all duration-500 w-full',
         pageRedirection === 'signup' ? 'md:basis-[60%]' : 'md:basis-1/2'
       ]">
+
+      <!-- LANGUAGE SWITCHER (Absolute top right) -->
+      <div
+        class="absolute top-6 right-6 flex items-center gap-2 text-sm font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full shadow-sm z-50">
+        <button [ngClass]="currentLang === 'fr' ? 'text-accent' : 'hover:text-slate-800'"
+          (click)="switchLanguage('fr')">FR</button>
+        <span class="text-slate-300">|</span>
+        <button [ngClass]="currentLang === 'en' ? 'text-accent' : 'hover:text-slate-800'"
+          (click)="switchLanguage('en')">EN</button>
+      </div>
+
       <!-- Header -->
       <div class="mb-8">
         <!-- Mobile Logo -->
@@ -75,13 +86,13 @@
         </h2>
 
         <h1 class="text-3xl font-bold bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] bg-clip-text text-transparent mb-1">
-          {{ pageRedirection === 'login' ? 'Bon retour !' : 'Créer un compte' }}
+          {{ pageRedirection === 'login' ? ('AUTH.LOGIN_TITLE' | translate) : ('AUTH.SIGNUP_TITLE' | translate) }}
         </h1>
         <p class="text-sm text-slate-500">
           {{
           pageRedirection === 'login'
-          ? 'Connectez-vous pour continuer'
-          : 'Rejoignez la communauté loominetfy.'
+          ? ('AUTH.LOGIN_DESC' | translate)
+          : ('AUTH.SIGNUP_DESC' | translate)
           }}
         </p>
       </div>
@@ -93,14 +104,14 @@
               ? 'bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] text-white shadow-md'
               : 'text-slate-500'
           " type="button" (click)="setMode('login')">
-          Connexion
+          {{ 'AUTH.TAB_LOGIN' | translate }}
         </button>
         <button class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all" [ngClass]="
             pageRedirection === 'signup'
               ? 'bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] text-white shadow-md'
               : 'text-slate-500'
           " type="button" (click)="setMode('signup')">
-          Inscription
+          {{ 'AUTH.TAB_SIGNUP' | translate }}
         </button>
       </div>
 
@@ -113,7 +124,7 @@
       <form *ngIf="pageRedirection === 'login'" [formGroup]="loginForm" (ngSubmit)="onLogin()"
         class="flex flex-col gap-5">
         <div>
-          <label class="block text-xs font-medium text-slate-800 mb-1">Adresse email</label>
+          <label class="block text-xs font-medium text-slate-800 mb-1">{{ 'AUTH.EMAIL' | translate }}</label>
           <input type="email" formControlName="email" placeholder="votre@email.com"
             class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
           <span *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
@@ -124,19 +135,19 @@
 
 
         <div>
-          <label class="block text-xs font-medium text-slate-800 mb-1">Mot de passe</label>
+          <label class="block text-xs font-medium text-slate-800 mb-1">{{ 'AUTH.PASSWORD' | translate }}</label>
           <input type="password" formControlName="password" placeholder="********"
             class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10" />
         </div>
 
         <div class="text-right -mt-1 mb-1">
-          <a routerLink="/reset-password" class="text-xs text-[#5b7cff] hover:text-[#8b5cf6] hover:underline">Mot de
-            passe oublié ?</a>
+          <a routerLink="/reset-password" class="text-xs text-[#5b7cff] hover:text-[#8b5cf6] hover:underline">{{
+            'AUTH.FORGOT_PASSWORD' | translate }}</a>
         </div>
 
         <button type="submit"
           class="relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#5b7cff] to-[#8b5cf6] px-4 py-3 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:-translate-y-[1px] transition">
-          Se connecter
+          {{ 'AUTH.BTN_LOGIN' | translate }}
         </button>
       </form>
 

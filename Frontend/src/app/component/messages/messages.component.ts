@@ -52,10 +52,12 @@ interface FriendOption {
   selected: boolean;
 }
 
+import { TranslateModule } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-messages',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, AudioPlayerComponent, PickerComponent, ClickOutsideDirective, CallOverlayComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, AudioPlayerComponent, PickerComponent, ClickOutsideDirective, CallOverlayComponent, TranslateModule],
   templateUrl: './messages.component.html'
 })
 export class MessagesComponent implements OnInit, OnDestroy, AfterViewChecked {

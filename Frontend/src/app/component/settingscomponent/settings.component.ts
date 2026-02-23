@@ -51,10 +51,12 @@ interface UserProfile {
   hashtags?: string[];
 }
 
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, HeaderComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, HeaderComponent, TranslateModule],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent implements OnInit {
@@ -154,13 +156,17 @@ export class SettingsComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private themeService: ThemeService,
-    private fb: FormBuilder
-  ) {}
+    private fb: FormBuilder,
+    private translateService: TranslateService
+  ) { }
 
   ngOnInit(): void {
     this.buildUserForm();
     this.loadProfile();
     this.loadAppearanceFromTheme();
+
+    const savedLang = localStorage.getItem('lang') || 'fr';
+    this.accountForm.language = savedLang as 'fr' | 'en' | 'es';
   }
 
   /* =========================================================
@@ -184,76 +190,76 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-/**
- * Méthode pour ajouter un hashtag individuellement
- * @param input 
- * @returns 
- */
-addHashtag(input: HTMLInputElement): void {
-  const value = input.value.trim().replace(/\s/g, '');
-  if (!value) return;
+  /**
+   * Méthode pour ajouter un hashtag individuellement
+   * @param input 
+   * @returns 
+   */
+  addHashtag(input: HTMLInputElement): void {
+    const value = input.value.trim().replace(/\s/g, '');
+    if (!value) return;
 
-  const formatted = value.startsWith('#') ? value : '#' + value;
-  const currentTags = this.userForm.get('hashtags')?.value || [];
+    const formatted = value.startsWith('#') ? value : '#' + value;
+    const currentTags = this.userForm.get('hashtags')?.value || [];
 
-  if (!currentTags.includes(formatted)) {
-    this.userForm.patchValue({ hashtags: [...currentTags, formatted] });
+    if (!currentTags.includes(formatted)) {
+      this.userForm.patchValue({ hashtags: [...currentTags, formatted] });
+    }
+
+    input.value = '';
   }
-  
-  input.value = '';
-}
 
-/**
- * Méthode pour supprimer un hashtag
- * @param tag 
- */
-removeHashtag(tag: string): void {
-  const currentTags = this.userForm.get('hashtags')?.value || [];
-  this.userForm.patchValue({ 
-    hashtags: currentTags.filter((t: string) => t !== tag) 
-  });
-}
+  /**
+   * Méthode pour supprimer un hashtag
+   * @param tag 
+   */
+  removeHashtag(tag: string): void {
+    const currentTags = this.userForm.get('hashtags')?.value || [];
+    this.userForm.patchValue({
+      hashtags: currentTags.filter((t: string) => t !== tag)
+    });
+  }
 
-/**
- * 
- */
-relationStatusOptions = [
-  { value: 'CELIBATAIRE', label: 'Célibataire' },
-  { value: 'EN_COUPLE', label: 'En couple' },
-  { value: 'MARIE', label: 'Marié(e)' },
-  { value: 'FIANCE', label: 'Fiancé(e)' },
-  { value: 'COMPLIQUE', label: "C'est compliqué" },
-  { value: 'DIVORCE', label: 'Divorcé(e)' },
-  { value: 'VEUF', label: 'Veuf(ve)' },
-];
+  /**
+   * 
+   */
+  relationStatusOptions = [
+    { value: 'CELIBATAIRE', label: 'SETTINGS.PROFILE.RELATION_SINGLE' },
+    { value: 'EN_COUPLE', label: 'SETTINGS.PROFILE.RELATION_IN_RELATIONSHIP' },
+    { value: 'MARIE', label: 'SETTINGS.PROFILE.RELATION_MARRIED' },
+    { value: 'FIANCE', label: 'SETTINGS.PROFILE.RELATION_ENGAGED' },
+    { value: 'COMPLIQUE', label: 'SETTINGS.PROFILE.RELATION_COMPLICATED' },
+    { value: 'DIVORCE', label: 'SETTINGS.PROFILE.RELATION_DIVORCED' },
+    { value: 'VEUF', label: 'SETTINGS.PROFILE.RELATION_WIDOWED' },
+  ];
 
-/**
- * Méthode pour charger les information de l'utilisateur connecté
- */
+  /**
+   * Méthode pour charger les information de l'utilisateur connecté
+   */
   loadProfile(): void {
-    this.http.get<{ user: UserProfile }>(`${environment.apiUrl}/users/getUserconnected`,{ withCredentials: true }).subscribe({
-        next: (res) => {
-          const u = res.user;
-          this.userForm.patchValue({
-            nom: u.nom,
-            prenom: u.prenom,
-            telephone: u.telephone ?? '',
-            dateNaissance: u.dateNaissance ? u.dateNaissance.substring(0, 10) : '',
-            ville: u.ville ?? '',
-            pays: u.pays,
-            photo: u.photo ?? '',
-            bio: u.bio ?? '',
-            siteweb: u.siteweb ?? '',
-            profession: u.profession ?? '',
-            hashtags: res.user.hashtags || [],
-            relationStatus: u.relationStatus ?? null, 
-          });
-        },
-        error: () => {
-          this.themeService.applyAuthTheme();
-          this.router.navigate(['/auth']);
-        },
-      });
+    this.http.get<{ user: UserProfile }>(`${environment.apiUrl}/users/getUserconnected`, { withCredentials: true }).subscribe({
+      next: (res) => {
+        const u = res.user;
+        this.userForm.patchValue({
+          nom: u.nom,
+          prenom: u.prenom,
+          telephone: u.telephone ?? '',
+          dateNaissance: u.dateNaissance ? u.dateNaissance.substring(0, 10) : '',
+          ville: u.ville ?? '',
+          pays: u.pays,
+          photo: u.photo ?? '',
+          bio: u.bio ?? '',
+          siteweb: u.siteweb ?? '',
+          profession: u.profession ?? '',
+          hashtags: res.user.hashtags || [],
+          relationStatus: u.relationStatus ?? null,
+        });
+      },
+      error: () => {
+        this.themeService.applyAuthTheme();
+        this.router.navigate(['/auth']);
+      },
+    });
   }
 
   /**
@@ -292,24 +298,24 @@ relationStatusOptions = [
       });
   }
 
-onAvatarSelected(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (!file) return;
+  onAvatarSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
 
-  // Optionnel : check taille
-  if (file.size > 5 * 1024 * 1024) {
-    console.error('Fichier trop lourd (> 5 Mo)');
-    return;
+    // Optionnel : check taille
+    if (file.size > 5 * 1024 * 1024) {
+      console.error('Fichier trop lourd (> 5 Mo)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      this.userForm.patchValue({ photo: base64 });
+    };
+    reader.readAsDataURL(file);
   }
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    const base64 = reader.result as string;
-    this.userForm.patchValue({ photo: base64 });
-  };
-  reader.readAsDataURL(file);
-}
 
   /* =========================================================
    *                 MÉTHODES GÉNÉRALES / NAV
@@ -499,6 +505,11 @@ onAvatarSelected(event: Event) {
   /* =========================================================
    *                           COMPTE
    * ========================================================= */
+
+  changeLanguage(lang: string): void {
+    this.translateService.use(lang);
+    localStorage.setItem('lang', lang);
+  }
 
   private loadAccount(): void {
     // à implémenter quand l'API sera prête

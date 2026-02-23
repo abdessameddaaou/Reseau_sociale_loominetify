@@ -6,11 +6,12 @@ import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common
 import { environment } from '../../../environments/environment.dev';
 import Swal from 'sweetalert2';
 import { ThemeService } from '../../service/theme.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-auth-user',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, HttpClientModule, TranslateModule],
   templateUrl: './auth-user.component.html'
 })
 export class AuthUserComponent implements OnInit {
@@ -31,14 +32,25 @@ export class AuthUserComponent implements OnInit {
 
   /**
    * Constructeur
-   * @param fb 
-   * @param router 
-   * @param http 
-   * @param themeService 
    */
-  constructor(private fb: FormBuilder, private router: Router, private http: HttpClient, private themeService: ThemeService) {
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private http: HttpClient,
+    private themeService: ThemeService,
+    public translate: TranslateService
+  ) {
     this.loginForm = this.buildLoginForm();
     this.signupForm = this.buildSignupForm();
+  }
+
+  get currentLang(): string {
+    return this.translate.currentLang || this.translate.getDefaultLang() || 'fr';
+  }
+
+  switchLanguage(lang: string) {
+    this.translate.use(lang);
+    localStorage.setItem('language', lang);
   }
 
   /**
@@ -193,9 +205,9 @@ export class AuthUserComponent implements OnInit {
     }
   }
 
-/**
- * Step 2 => Inscription
- */
+  /**
+   * Step 2 => Inscription
+   */
   goFromStep2(): void {
     this.clearGlobalErrors();
     this.clearSignupFieldErrors(['password']);

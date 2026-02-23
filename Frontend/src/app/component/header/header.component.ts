@@ -8,6 +8,9 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
 import { of } from 'rxjs';
 import { SocketService } from '../../service/socket.service';
 
+// --- i18n Imports ---
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
 type HeaderTab = 'home' | 'notifications' | 'messages' | 'settings' | 'deconnexion';
 type NotificationType = 'invite' | 'like' | 'comment' | 'share';
 type NotificationsFilter = 'all' | 'invites' | 'activity';
@@ -26,7 +29,7 @@ interface HeaderNotification {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './header.component.html'
 })
 export class HeaderComponent implements OnInit {
@@ -53,7 +56,22 @@ export class HeaderComponent implements OnInit {
   defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png'
   private currentUserId: string | null = null;
 
-  constructor(private http: HttpClient, private router: Router, private socketService: SocketService) { }
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private socketService: SocketService,
+    public translate: TranslateService
+  ) { }
+
+  get currentLang(): string {
+    return this.translate.currentLang || this.translate.getDefaultLang() || 'fr';
+  }
+
+  switchLanguage(lang: string) {
+    this.translate.use(lang);
+    localStorage.setItem('language', lang);
+    this.showMobileMenu = false;
+  }
 
   ngOnInit(): void {
     // Récupérer l'ID de l'utilisateur connecté
