@@ -440,3 +440,70 @@ module.exports.unfollowUser = async (req, res) => {
         });
     }
 }
+
+/**
+ * Récupérer les amis en ligne
+ */
+module.exports.getOnlineFriends = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const io = req.app.get('io');
+
+        let onlineUsers = new Set();
+        if (io && io.sockets.adapter.rooms) {
+            // Dans server.js les rooms s'appellent `user_${userId}`
+            // On peut récupérer tous les utilisateurs en ligne connectés à la socket (ou récupérer onlineUsers global si exposé)
+            // Comme le set onlineUsers n'est pas exporté de server.js, on parcourt les rooms
+            for (const [roomName, clientSockets] of io.sockets.adapter.rooms.entries()) {
+                if (roomName.startsWith('user_')) {
+                    const uId = parseInt(roomName.split('_')[1], 10);
+                    if (!isNaN(uId)) {
+                        onlineUsers.add(uId);
+                    }
+                }
+            }
+        }
+
+        // Récupérer les amis (relations acceptées)
+        const relations = await UserRelation.findAll({
+            where: {
+                status: "acceptée",
+                [Op.or]: [
+                    { requesterId: userId },
+                    { addresseeId: userId }
+                ]
+            }
+        });
+
+        const friendIds = relations.map(rel =>
+            rel.requesterId === userId ? rel.addresseeId : rel.requesterId
+        );
+
+        // Filtrer les amis en ligne
+        const onlineFriendIds = friendIds.filter(id => onlineUsers.has(id));
+
+        if (onlineFriendIds.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        // Récupérer le profil des amis en ligne
+        const friendsDetails = await Users.findAll({
+            where: {
+                id: { [Op.in]: onlineFriendIds }
+            },
+            attributes: ['id', 'nom', 'prenom', 'photo', 'username']
+        });
+
+        // Formater selon l'interface OnlineFriend attendue par le front
+        const responseList = friendsDetails.map(user => ({
+            id: user.id,
+            name: `${user.prenom} ${user.nom}`,
+            avatar: user.photo || 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png',
+            status: 'online'
+        }));
+
+        return res.status(200).json(responseList);
+    } catch (error) {
+        return res.status(500).json({ message: "Erreur serveur", error: error.message });
+    }
+}

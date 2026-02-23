@@ -53,6 +53,8 @@ module.exports.loginUser = async (req, res) => {
     res.cookie("jwt", token, {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
+      secure: process.env.APP_ENV === "production",
+      sameSite: process.env.APP_ENV === "production" ? "none" : "lax"
     });
 
     return res.status(200).json({
@@ -72,7 +74,11 @@ module.exports.loginUser = async (req, res) => {
  */
 module.exports.logoutUser = (req, res) => {
   try {
-    res.clearCookie("jwt");
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: process.env.APP_ENV === "production",
+      sameSite: process.env.APP_ENV === "production" ? "none" : "lax"
+    });
     return res.status(200).json({ message: "Déconnexion réussie" });
   } catch (error) {
     return res.status(500).json({ error: "Erreur lors de la déconnexion." });

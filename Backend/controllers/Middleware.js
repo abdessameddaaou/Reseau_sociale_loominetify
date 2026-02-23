@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+require('dotenv').config();
 
-
+const SECRET_KEY = process.env.JWT_SECRET || "CHANGE_MOI_VITE_DANS_DOTENV";
 /**
  * Vérification du token pour la sécurité du backend
  * @param {*} req 
@@ -15,7 +16,7 @@ module.exports.checkUser = (req, res, next) => {
     return res.status(401).json({ message: "Non autorisé : aucun token trouvé." });
   }
 
-  jwt.verify(token, "RANDOM_TOKEN_SECRET", async (err, decodedToken) => {
+  jwt.verify(token, SECRET_KEY, async (err, decodedToken) => {
     if (err) {
       res.clearCookie("jwt");
       return res.status(401).json({ message: "Token invalide." });
@@ -26,13 +27,14 @@ module.exports.checkUser = (req, res, next) => {
       if (timeLeft < 30 * 60) {
         const newToken = jwt.sign(
           { id: decodedToken.id },
-          "RANDOM_TOKEN_SECRET",
+          SECRET_KEY,
           { expiresIn: "2h" }
         );
 
         res.cookie("jwt", newToken, {
           httpOnly: true,
-          sameSite: 'Lax'
+          secure: process.env.APP_ENV === "production",
+          sameSite: process.env.APP_ENV === "production" ? "none" : "lax"
         });
       }
       req.userId = decodedToken.id;
