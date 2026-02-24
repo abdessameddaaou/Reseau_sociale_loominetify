@@ -382,8 +382,14 @@
                     <p class="text-xs font-semibold text-slate-900">
                       {{ currentUser?.nom }} {{ currentUser?.prenom }}
                     </p>
-                    <p class="text-[11px] text-slate-400">
-                      {{ currentUser?.nom }} · {{ post.timeAgo }}
+                    <p class="text-[11px] text-slate-400 flex items-center gap-1">
+                      <span>{{ currentUser?.nom }}</span>
+                      <span>·</span>
+                      <span>{{ post.timeAgo }}</span>
+                      <span>·</span>
+                      <i *ngIf="post.visibility === 'public' || !post.visibility"
+                        class="fa-solid fa-earth-americas text-[10px]" title="Public"></i>
+                      <i *ngIf="post.visibility === 'private'" class="fa-solid fa-lock text-[10px]" title="Privé"></i>
                     </p>
                   </div>
 
@@ -446,8 +452,14 @@
           <p class="text-sm font-semibold text-slate-900">
             {{ currentUser?.nom }} {{ currentUser?.prenom }}
           </p>
-          <p class="text-[11px] text-slate-400">
-            {{ currentUser?.nom }} · {{ selectedPost.timeAgo }}
+          <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+            <span>{{ currentUser?.nom }}</span>
+            <span>·</span>
+            <span>{{ selectedPost.timeAgo }}</span>
+            <span>·</span>
+            <i *ngIf="selectedPost.visibility === 'public' || !selectedPost.visibility"
+              class="fa-solid fa-earth-americas text-[10px]" title="Public"></i>
+            <i *ngIf="selectedPost.visibility === 'private'" class="fa-solid fa-lock text-[10px]" title="Privé"></i>
           </p>
         </div>
 

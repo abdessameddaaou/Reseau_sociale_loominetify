@@ -9,7 +9,8 @@ module.exports.createPublication = async (req, res) => {
       description: req.body.text,
       image: req.file ? req.file.filename : null,
       video: null,
-      userId: req.userId
+      userId: req.userId,
+      visibility: req.body.visibility || 'public'
     });
 
     /**
@@ -58,7 +59,13 @@ module.exports.getAllPublications = async (req, res) => {
     const allIds = [userId, ...followingIds];
 
     const publications = await Publication.findAll({
-      where: { userId: { [Op.in]: allIds } },
+      where: {
+        userId: { [Op.in]: allIds },
+        [Op.or]: [
+          { visibility: 'public' },
+          { userId: userId } // Je peux voir mes propres posts privés
+        ]
+      },
       order: [['createdAt', 'DESC']],
       include: [
         {

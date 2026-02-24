@@ -1,69 +1,121 @@
-<form class="app-card rounded-2xl p-4" [formGroup]="postForm" (ngSubmit)="onSubmit()" id="post-form" name="post-form"
-  data-testid="post-form">
+<form class="app-card rounded-2xl p-5 mb-6 shadow-sm border border-slate-100 bg-white" [formGroup]="postForm"
+  (ngSubmit)="onSubmit()" id="post-form" name="post-form" data-testid="post-form">
   <div class="flex items-start gap-3">
-    <img [src]="currentUser?.photo || defaultAvatar" alt="avatar" class="w-10 h-10 rounded-full object-cover"
-      id="post-avatar" data-testid="post-avatar" />
+    <img [src]="currentUser?.photo || defaultAvatar" alt="avatar"
+      class="w-11 h-11 rounded-full object-cover shadow-sm bg-slate-50" id="post-avatar" data-testid="post-avatar" />
     <div class="flex-1">
-      <textarea rows="5" [placeholder]="'POST_CREATOR.PLACEHOLDER' | translate" formControlName="text" id="post-text"
+      <textarea rows="3" [placeholder]="'POST_CREATOR.PLACEHOLDER' | translate" formControlName="text" id="post-text"
         name="post-text" data-testid="post-text-input"
-        class="w-full resize-none border border-slate-200 rounded-2xl px-4 py-2 text-sm outline-none bg-transparent focus:border-[#5b7cff] focus:ring-4 focus:ring-[#5b7cff]/10"></textarea>
+        class="w-full resize-none bg-slate-50 border-0 rounded-2xl px-5 py-3 text-sm text-slate-700 placeholder-slate-400 outline-none focus:ring-2 focus:ring-[#5b7cff]/20 transition-all"></textarea>
 
-      <div class="mt-1 text-xs text-red-600 min-h-[1rem]" id="post-text-error" data-testid="post-text-error">
+      <div class="mt-1 text-xs text-red-500 min-h-[1rem] pl-2 font-medium" id="post-text-error"
+        data-testid="post-text-error">
         {{ formErrors['text'] }}
       </div>
     </div>
   </div>
 
   <!-- Preview mini (100x100) -->
-  <div *ngIf="imagePreview" class="ml-12 mb-3 flex items-center gap-3">
-
-    <div class="relative w-[100px] h-[100px] rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+  <div *ngIf="imagePreview"
+    class="ml-14 mb-4 flex items-center gap-4 bg-slate-50/80 p-2 rounded-2xl w-fit border border-slate-100">
+    <div class="relative w-[80px] h-[80px] rounded-xl overflow-hidden shadow-sm">
       <img [src]="imagePreview" alt="preview" class="w-full h-full object-cover" loading="lazy" />
+      <button type="button" (click)="removeImage()"
+        class="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full w-6 h-6 flex items-center justify-center transition"
+        title="Retirer l'image">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
     </div>
-
-    <span class="text-xs text-slate-500">{{ 'POST_CREATOR.IMAGE_ADDED' | translate }}</span>
+    <span class="text-xs font-medium text-slate-500 pr-3">{{ 'POST_CREATOR.IMAGE_ADDED' | translate }}</span>
   </div>
 
+  <!-- Actions Footer -->
+  <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+    <div class="flex items-center gap-2 ml-14 text-slate-500">
 
-
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-3 ml-12 text-xs text-slate-500">
-      <label class="flex items-center gap-1 px-3 py-1 rounded-full hover:bg-slate-100 cursor-pointer"
-        id="post-image-upload-label" data-testid="post-image-upload-label" for="post-image-input">
-        <span class="material-icons text-base">
-          <i class="fa-regular fa-images fa-lg"></i>
-        </span>
-
+      <!-- Image Upload -->
+      <label
+        class="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-slate-100 cursor-pointer transition text-sm font-medium"
+        id="post-image-upload-label" data-testid="post-image-upload-label" for="post-image-input"
+        title="Ajouter une photo">
+        <i class="fa-regular fa-images text-[#45bd62] text-lg"></i>
+        <span class="hidden sm:inline">Photo</span>
         <input type="file" class="hidden" id="post-image-input" name="post-image-input" data-testid="post-image-input"
-          (change)="onFileChange($event)" />
-
+          (change)="onFileChange($event)" accept="image/*" />
       </label>
 
+      <!-- Emoji Picker -->
       <div class="relative">
         <button id="post-emoji-btn" type="button" (click)="toggleEmoji($event)"
-          class="flex items-center gap-1 py-1 rounded-full hover:bg-slate-100">
-          <i class="fa-regular fa-face-grin-beam fa-lg"></i>
+          class="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-slate-100 transition text-sm font-medium"
+          title="Insérer un émoji">
+          <i class="fa-regular fa-face-grin-beam text-[#f7b928] text-lg"></i>
+          <span class="hidden sm:inline">Émoji</span>
         </button>
 
-        <div *ngIf="showEmoji" id="emoji-popover" class="absolute top-full left-0 mt-2 z-[9999]
+        <div *ngIf="showEmoji" id="emoji-popover" class="absolute bottom-full left-0 mb-2 z-[9999]
           inline-block w-fit
           rounded-2xl border border-slate-200 shadow-xl
-          overflow-hidden bg-transparent">
+          overflow-hidden bg-white">
           <emoji-mart class="block" (emojiSelect)="handleEmojiSelect($event)" [perLine]="8" [emojiSize]="18"
             [showPreview]="false"></emoji-mart>
         </div>
-
       </div>
 
-      <span class="text-[11px] text-red-600 min-h-[1rem]" id="post-image-error" data-testid="post-image-error">
+      <span class="text-[11px] text-red-500 min-h-[1rem] ml-2" id="post-image-error" data-testid="post-image-error">
         {{ formErrors['image'] }}
       </span>
     </div>
 
-    <button type="submit" id="post-submit-btn" data-testid="post-submit-btn"
-      class="px-5 py-2 rounded-full btn-primary-gradient text-white text-sm font-semibold shadow-sm hover:shadow-md hover:-translate-y-[1px] transition">
-      {{ 'POST_CREATOR.PUBLISH_BTN' | translate }}
-    </button>
+    <!-- Submit Section -->
+    <div class="flex items-center gap-3">
+      <!-- Privacy Toggle -->
+      <div class="relative">
+        <button type="button" (click)="showPrivacyMenu = !showPrivacyMenu"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition text-xs font-semibold text-slate-600">
+          <i
+            [class]="postForm.get('visibility')?.value === 'public' ? 'fa-solid fa-earth-americas' : 'fa-solid fa-lock'"></i>
+          {{ postForm.get('visibility')?.value === 'public' ? 'Public' : 'Privé' }}
+          <i class="fa-solid fa-chevron-down text-[10px] ml-1"></i>
+        </button>
+
+        <!-- Privacy Dropdown -->
+        <div *ngIf="showPrivacyMenu"
+          class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-50">
+          <button type="button" (click)="setVisibility('public')"
+            class="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-slate-50 transition"
+            [class.bg-slate-50]="postForm.get('visibility')?.value === 'public'">
+            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"
+              [class.text-accent]="postForm.get('visibility')?.value === 'public'">
+              <i class="fa-solid fa-earth-americas"></i>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-slate-800">Public</p>
+              <p class="text-[10px] text-slate-500">Tout le monde peut voir</p>
+            </div>
+          </button>
+          <button type="button" (click)="setVisibility('private')"
+            class="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-slate-50 transition"
+            [class.bg-slate-50]="postForm.get('visibility')?.value === 'private'">
+            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"
+              [class.text-accent]="postForm.get('visibility')?.value === 'private'">
+              <i class="fa-solid fa-lock"></i>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-slate-800">Privé</p>
+              <p class="text-[10px] text-slate-500">Uniquement vous</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Publish Button -->
+      <button type="submit" id="post-submit-btn" data-testid="post-submit-btn"
+        [disabled]="postForm.invalid && !imagePreview"
+        class="px-6 py-2 rounded-full btn-primary-gradient text-white text-sm font-bold shadow-sm hover:shadow-md hover:-translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition">
+        {{ 'POST_CREATOR.PUBLISH_BTN' | translate }}
+      </button>
+    </div>
 
   </div>
 </form>

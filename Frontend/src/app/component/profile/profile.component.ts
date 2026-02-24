@@ -57,6 +57,7 @@ interface ApiPublication {
 
   comments?: ApiComment[];
   Comments?: ApiComment[];
+  visibility?: 'public' | 'private';
 }
 
 interface ProfilePostPreview {
@@ -69,6 +70,7 @@ interface ProfilePostPreview {
   timeAgo: string;
   comments: ApiComment[];
   showAllComments: boolean;
+  visibility?: 'public' | 'private';
 }
 
 interface ProfileActivity {
@@ -445,6 +447,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
             createdAt: res.createdAt,
             comments: safeComments,
             showAllComments: false,
+            visibility: res.visibility,
           };
         });
 

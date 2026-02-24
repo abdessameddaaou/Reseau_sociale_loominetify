@@ -10,7 +10,8 @@ const Publication = db.define('Publications', {
     nombrePartages: { type: DataTypes.INTEGER, defaultValue: 0 },
     sharedPublicationId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
     commentairePartage: { type: DataTypes.TEXT, allowNull: true },
-    userId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false }
+    userId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+    visibility: { type: DataTypes.ENUM('public', 'private'), defaultValue: 'public' }
 });
 
 module.exports = Publication;

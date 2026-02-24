@@ -59,6 +59,7 @@ interface Post {
   interactions: PostInteraction[] | null;
   sharedPublication: Post | null;
   commentairePartage?: string | null;
+  visibility?: 'public' | 'private';
 }
 
 /**
@@ -176,6 +177,7 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
     this.postForm = this.fb.group({
       text: ['', [Validators.maxLength(1000)]],
       image: [null],
+      visibility: ['public']
     });
   }
 
@@ -605,9 +607,13 @@ export class FilActualiteComponent implements OnInit, OnDestroy {
     if (text) formData.append('text', text);
     if (image) formData.append('image', image);
 
+    // Ajout de la visibilité
+    const visibility = this.postForm.get('visibility')?.value || 'public';
+    formData.append('visibility', visibility);
+
     this.http.post<Post>(`${environment.apiUrl}/publications/addPost`, formData, { withCredentials: true }).subscribe({
       next: (createdPost) => {
-        this.postForm.reset({ text: '', image: null });
+        this.postForm.reset({ text: '', image: null, visibility: 'public' });
         this.imagePreview = null;
         this.addNewPostToList(createdPost);
       },

@@ -33,6 +33,7 @@ interface ProfilePostPreview {
   timeAgo: string;
   likes: number;
   comments: number;
+  visibility?: 'public' | 'private';
 }
 
 interface ProfileActivity {

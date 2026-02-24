@@ -49,9 +49,15 @@
                       {{ 'FEED.SHARED_POST' | translate }}
                     </span>
                   </p>
-                  <p class="text-xs text-slate-400" [attr.data-testid]="'feed-post-meta-' + post.id">
-                    {{ post.user?.nom || ('FEED.USER_FALLBACK' | translate) }} {{ post.user?.prenom }} · {{
-                    timeAgo(post.createdAt) }}
+                  <p class="text-xs text-slate-400 flex items-center gap-1 mt-0.5"
+                    [attr.data-testid]="'feed-post-meta-' + post.id">
+                    <span>{{ post.user?.nom || ('FEED.USER_FALLBACK' | translate) }} {{ post.user?.prenom }}</span>
+                    <span>·</span>
+                    <span>{{ timeAgo(post.createdAt) }}</span>
+                    <span>·</span>
+                    <i *ngIf="post.visibility === 'public' || !post.visibility"
+                      class="fa-solid fa-earth-americas text-[10px]" title="Public"></i>
+                    <i *ngIf="post.visibility === 'private'" class="fa-solid fa-lock text-[10px]" title="Privé"></i>
                   </p>
                 </div>
               </div>
