@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CallService, CallState, CallInfo, RemoteStream } from '../../service/call.service';
 import { VoiceTranslationService, TranslationEntry, SupportedLang } from '../../service/voice-translation.service';
+import { SrcObjectDirective } from '../../directives/src-object.directive';
 
 @Component({
   selector: 'app-call-overlay',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SrcObjectDirective],
   template: `
     <!-- Overlay backdrop -->
     <div class="call-overlay" *ngIf="callState !== 'idle'" [class.call-overlay--video]="callInfo?.callType === 'video' && callState === 'active'">
@@ -59,12 +60,12 @@ import { VoiceTranslationService, TranslationEntry, SupportedLang } from '../../
         <!-- Video Grid -->
         <div class="call-video-grid" *ngIf="callInfo?.callType === 'video'">
           <!-- Remote videos -->
-          <div class="call-video-cell" *ngFor="let rs of remoteStreams">
-            <video #remoteVideo [srcObject]="rs.stream" autoplay playsinline class="call-video-element"></video>
+          <div class="call-video-cell" *ngFor="let rs of remoteStreams; trackBy: trackByUserId">
+            <video [appSrcObject]="rs.stream" autoplay playsinline class="call-video-element"></video>
           </div>
           <!-- Local video (small PIP) -->
           <div class="call-video-local" *ngIf="localStream">
-            <video #localVideo [srcObject]="localStream" autoplay playsinline muted class="call-video-element call-video-element--local"></video>
+            <video [appSrcObject]="localStream" autoplay playsinline muted class="call-video-element call-video-element--local"></video>
           </div>
         </div>
 
@@ -81,7 +82,7 @@ import { VoiceTranslationService, TranslationEntry, SupportedLang } from '../../
           <h2 class="call-audio-name">{{ getDisplayName() }}</h2>
 
           <!-- Hidden audio elements to actually play the remote stream sound -->
-          <audio *ngFor="let rs of remoteStreams" [srcObject]="rs.stream" autoplay></audio>
+          <audio *ngFor="let rs of remoteStreams; trackBy: trackByUserId" [appSrcObject]="rs.stream" autoplay></audio>
         </div>
 
         <!-- Duration -->
@@ -94,11 +95,11 @@ import { VoiceTranslationService, TranslationEntry, SupportedLang } from '../../
           <div class="call-translation-header">
             <button class="call-translation-lang-btn" (click)="onToggleTranslationLang()" type="button"
               title="Changer ma langue">
-              <span>{{ myLanguage === 'fr' ? 'FR' : 'ID' }}</span>
+              <span>{{ getLangName(myLanguage) }}</span>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:12px;height:12px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
               </svg>
-              <span>{{ myLanguage === 'fr' ? 'ID' : 'FR' }}</span>
+              <span>{{ getLangName(myLanguage === 'fr' ? 'id' : 'fr') }}</span>
             </button>
             <span class="call-translation-speaking" *ngIf="isSpeaking">
               <span class="call-translation-dot"></span>
@@ -112,11 +113,11 @@ import { VoiceTranslationService, TranslationEntry, SupportedLang } from '../../
               *ngFor="let entry of transcriptions"
               [class.call-translation-entry--mine]="entry.isMine">
               <div class="call-translation-original">
-                <span class="call-translation-lang-tag">{{ entry.sourceLang.toUpperCase() }}</span>
+                <span class="call-translation-lang-tag">{{ getLangName(entry.sourceLang) }}</span>
                 {{ entry.originalText }}
               </div>
               <div class="call-translation-translated" *ngIf="entry.translatedText !== '...'">
-                <span class="call-translation-lang-tag call-translation-lang-tag--target">{{ entry.targetLang.toUpperCase() }}</span>
+                <span class="call-translation-lang-tag call-translation-lang-tag--target">{{ getLangName(entry.targetLang) }}</span>
                 {{ entry.translatedText }}
               </div>
               <div class="call-translation-loading" *ngIf="entry.translatedText === '...'">
@@ -719,6 +720,14 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
   // ═══════════════════════════════════════
   //  Traduction vocale
   // ═══════════════════════════════════════
+
+  trackByUserId(_: number, rs: RemoteStream): number {
+    return rs.userId;
+  }
+
+  getLangName(lang: SupportedLang): string {
+    return lang === 'fr' ? 'Français' : 'Indonésien';
+  }
 
   onToggleTranslation() {
     if (this.isTranslationActive) {
