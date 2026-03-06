@@ -355,18 +355,18 @@ io.on('connection', (socket) => {
 
             const allMembers = Array.from(new Set([...(call.allParticipants || []), call.callerId]));
 
-            // Envoyer la traduction à tous les autres participants
+            // Envoyer à TOUS (y compris l'émetteur) :
+            // - L'émetteur voit la confirmation de sa traduction (remplace '...')
+            // - Les autres voient le texte traduit
             allMembers.forEach(uid => {
-                if (String(uid) !== String(socket.userId)) {
-                    io.to(`user_${uid}`).emit('translatedText', {
-                        conversationId,
-                        originalText: text,
-                        translatedText: translated,
-                        sourceLang,
-                        targetLang,
-                        fromUserId: socket.userId
-                    });
-                }
+                io.to(`user_${uid}`).emit('translatedText', {
+                    conversationId,
+                    originalText: text,
+                    translatedText: translated,
+                    sourceLang,
+                    targetLang,
+                    fromUserId: socket.userId
+                });
             });
 
             console.log(`[Translation] ${sourceLang}→${targetLang} | "${text}" → "${translated}"`);
