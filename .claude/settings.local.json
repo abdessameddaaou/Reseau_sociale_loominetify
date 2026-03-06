@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(APP_ENV=development node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx ng:*)",
+      "Bash(node:*)"
+    ]
+  }
+}

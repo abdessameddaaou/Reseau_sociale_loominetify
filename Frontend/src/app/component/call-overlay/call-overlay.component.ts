@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { CallService, CallState, CallInfo, RemoteStream } from '../../service/call.service';
 import { VoiceTranslationService, TranslationEntry, SupportedLang } from '../../service/voice-translation.service';
@@ -8,7 +9,7 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
 @Component({
   selector: 'app-call-overlay',
   standalone: true,
-  imports: [CommonModule, SrcObjectDirective],
+  imports: [CommonModule, FormsModule, SrcObjectDirective],
   template: `
     <!-- Overlay backdrop -->
     <div class="call-overlay" *ngIf="callState !== 'idle'" [class.call-overlay--video]="callInfo?.callType === 'video' && callState === 'active'">
@@ -88,10 +89,10 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
         <!-- Duration -->
         <div class="call-timer">{{ formatDuration(callDuration) }}</div>
 
-        <!-- ═══ Panneau de traduction vocale ═══ -->
+        <!-- ═══ Panneau de traduction ═══ -->
         <div class="call-translation-panel" *ngIf="isTranslationActive">
 
-          <!-- En-tête : langue + indicateur -->
+          <!-- En-tête : langue -->
           <div class="call-translation-header">
             <button class="call-translation-lang-btn" (click)="onToggleTranslationLang()" type="button"
               title="Changer ma langue">
@@ -101,14 +102,10 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
               </svg>
               <span>{{ getLangName(myLanguage === 'fr' ? 'id' : 'fr') }}</span>
             </button>
-            <span class="call-translation-speaking" *ngIf="isSpeaking">
-              <span class="call-translation-dot"></span>
-              Parle...
-            </span>
           </div>
 
           <!-- Liste des transcriptions -->
-          <div class="call-translation-entries" *ngIf="transcriptions.length > 0">
+          <div class="call-translation-entries" #translationScroll *ngIf="transcriptions.length > 0">
             <div class="call-translation-entry"
               *ngFor="let entry of transcriptions"
               [class.call-translation-entry--mine]="entry.isMine">
@@ -127,7 +124,40 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
           </div>
 
           <div class="call-translation-empty" *ngIf="transcriptions.length === 0">
-            Parlez pour commencer la traduction
+            Tapez un message pour le traduire
+          </div>
+
+          <!-- Champ de saisie + micro -->
+          <div class="call-translation-input-bar">
+            <button class="call-translation-mic-btn" (click)="onToggleListen()" type="button"
+              [class.call-translation-mic-btn--active]="isListening"
+              [title]="isListening ? 'Stop' : 'Micro'">
+              <svg *ngIf="!isListening" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+              </svg>
+              <svg *ngIf="isListening" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+            </button>
+            <input type="text"
+              class="call-translation-input"
+              [(ngModel)]="translationInput"
+              (keydown.enter)="onSendTranslation()"
+              [placeholder]="isListening ? '🎤 Écoute en cours...' : 'Écrire en ' + getLangName(myLanguage) + '...'"
+              autocomplete="off" />
+            <button class="call-translation-send-btn" (click)="onSendTranslation()" type="button"
+              [disabled]="!translationInput?.trim()">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:18px;height:18px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+              </svg>
+            </button>
+            <button class="call-translation-tts-btn" (click)="onToggleTts()" type="button"
+              [class.call-translation-tts-btn--active]="ttsEnabled"
+              [title]="ttsEnabled ? 'Désactiver la lecture vocale' : 'Activer la lecture vocale'">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -592,6 +622,113 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
       40%            { transform: scale(1.2); opacity: 1; }
     }
 
+    /* ── Input traduction ── */
+    .call-translation-input-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      align-items: center;
+    }
+
+    .call-translation-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .call-translation-input::placeholder {
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .call-translation-input:focus {
+      border-color: rgba(99, 102, 241, 0.6);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .call-translation-send-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      transition: opacity 0.2s, transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .call-translation-send-btn:hover:not(:disabled) {
+      transform: scale(1.08);
+    }
+
+    .call-translation-send-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    .call-translation-mic-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.7);
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .call-translation-mic-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .call-translation-mic-btn--active {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      animation: micPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    }
+
+    .call-translation-tts-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.4);
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .call-translation-tts-btn--active {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+    }
+
+    .call-translation-tts-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
     .call-translation-empty {
       font-size: 12px;
       color: rgba(255, 255, 255, 0.35);
@@ -611,10 +748,13 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
 
   // Traduction
   isTranslationActive = false;
-  isSpeaking = false;
+  isListening = false;
   transcriptions: TranslationEntry[] = [];
   myLanguage: SupportedLang = 'fr';
+  translationInput = '';
+  ttsEnabled = true;
 
+  @ViewChild('translationScroll') translationScroll?: ElementRef;
   private subs: Subscription[] = [];
 
   // Ringtone Web Audio API properties
@@ -650,9 +790,10 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
       this.callService.isVideoOff$.subscribe(v => this.isVideoOff = v),
       // Traduction
       this.voiceTranslation.isActive$.subscribe(a => this.isTranslationActive = a),
-      this.voiceTranslation.isSpeaking$.subscribe(s => this.isSpeaking = s),
+      this.voiceTranslation.isListening$.subscribe(s => this.isListening = s),
       this.voiceTranslation.transcriptions$.subscribe(t => this.transcriptions = t),
       this.voiceTranslation.myLanguage$.subscribe(l => this.myLanguage = l),
+      this.voiceTranslation.ttsEnabled$.subscribe(t => this.ttsEnabled = t),
     );
   }
 
@@ -744,6 +885,30 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
     this.voiceTranslation.toggleLanguage();
   }
 
+  onSendTranslation() {
+    const text = this.translationInput?.trim();
+    if (!text) return;
+    this.voiceTranslation.sendText(text);
+    this.translationInput = '';
+    this.scrollToBottom();
+  }
+
+  onToggleListen() {
+    this.voiceTranslation.startListening();
+  }
+
+  onToggleTts() {
+    this.voiceTranslation.toggleTts();
+  }
+
+  private scrollToBottom() {
+    setTimeout(() => {
+      if (this.translationScroll) {
+        this.translationScroll.nativeElement.scrollTop = this.translationScroll.nativeElement.scrollHeight;
+      }
+    }, 50);
+  }
+
   private stopTranslation() {
     if (this.isTranslationActive) {
       this.voiceTranslation.stop();
@@ -753,10 +918,12 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
   // ═══════════════════════════════════════
   //  Ringtone Synthesizer (Web Audio API)
   // ═══════════════════════════════════════
-  private playRingtone() {
+  private async playRingtone() {
     if (this.ringCtx) return; // Already playing
     try {
       this.ringCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Resume for Chrome autoplay policy — works immediately if user already interacted with page
+      await this.ringCtx.resume();
 
       // Dual tone for European/UK/Standard ringing (400Hz + 450Hz or 440+480)
       const osc1 = this.ringCtx.createOscillator();

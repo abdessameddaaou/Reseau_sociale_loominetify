@@ -142,7 +142,8 @@ io.on('connection', (socket) => {
 
     // Initiate a call – forward offer to all other participants
     socket.on('callUser', (data) => {
-        const { conversationId, offer, callType, callerInfo, participants } = data;
+        const { offer, callType, callerInfo, participants } = data;
+        const conversationId = Number(data.conversationId);
         console.log(`[Call] ${socket.userId} calling conversation ${conversationId} (${callType})`);
         console.log(`[Call Debug] Participants provided by frontend:`, participants);
 
@@ -338,7 +339,9 @@ io.on('connection', (socket) => {
     // ─────────────────────────────────────────
 
     socket.on('voiceTranscript', async (data) => {
-        const { conversationId, text, sourceLang, targetLang } = data;
+        const { text, sourceLang, targetLang } = data;
+        const conversationId = Number(data.conversationId);
+        console.log(`[Translation] voiceTranscript reçu de user ${socket.userId}: convId=${conversationId}, text="${text}", ${sourceLang}→${targetLang}`);
         if (!text || !text.trim()) return;
 
         const SUPPORTED_LANGS = ['fr', 'id'];
@@ -348,7 +351,11 @@ io.on('connection', (socket) => {
         }
 
         const call = activeCalls.get(conversationId);
-        if (!call) return; // Pas d'appel actif pour cette conversation
+        if (!call) {
+            console.warn(`[Translation] Aucun appel actif pour conversationId=${conversationId} (type: ${typeof data.conversationId}). Appels actifs:`, [...activeCalls.keys()]);
+            socket.emit('translationError', { message: 'Aucun appel actif trouvé pour cette conversation' });
+            return;
+        }
 
         try {
             const translated = await translate(text.trim(), sourceLang, targetLang);

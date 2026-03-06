@@ -18,21 +18,24 @@ export interface TranslationEntry {
 @Injectable({ providedIn: 'root' })
 export class VoiceTranslationService implements OnDestroy {
 
-    isActive$       = new BehaviorSubject<boolean>(false);
-    isSpeaking$     = new BehaviorSubject<boolean>(false);
+    isActive$ = new BehaviorSubject<boolean>(false);
+    isListening$ = new BehaviorSubject<boolean>(false);
     transcriptions$ = new BehaviorSubject<TranslationEntry[]>([]);
-    myLanguage$     = new BehaviorSubject<SupportedLang>('fr');
+    myLanguage$ = new BehaviorSubject<SupportedLang>('fr');
 
-    private recognition: any = null;
     private conversationId: number | null = null;
     private userId: number | null = null;
     private subs: Subscription[] = [];
+    private recognition: any = null;
 
-    private readonly MAX_ENTRIES = 10;
+    private readonly MAX_ENTRIES = 30;
     private readonly LANG_CODES: Record<SupportedLang, string> = {
         fr: 'fr-FR',
         id: 'id-ID'
     };
+
+    /** TTS activée ? */
+    ttsEnabled$ = new BehaviorSubject<boolean>(true);
 
     constructor(private socketService: SocketService) {
         this.listenToIncomingTranslations();
@@ -42,51 +45,71 @@ export class VoiceTranslationService implements OnDestroy {
     //  API publique
     // ═══════════════════════════════════════
 
-    /** Démarre la reconnaissance et l'écoute des traductions reçues. */
     start(conversationId: number, userId: number, myLang: SupportedLang = 'fr') {
         if (this.isActive$.value) return;
-
         this.conversationId = conversationId;
         this.userId = userId;
         this.myLanguage$.next(myLang);
         this.isActive$.next(true);
         this.transcriptions$.next([]);
-
-        this.startRecognition();
     }
 
-    /** Arrête tout. */
     stop() {
         this.isActive$.next(false);
-        this.isSpeaking$.next(false);
+        this.isListening$.next(false);
         this.stopRecognition();
     }
 
-    /** Bascule la langue de l'utilisateur (FR ↔ ID) et redémarre la reconnaissance. */
     toggleLanguage() {
         const next: SupportedLang = this.myLanguage$.value === 'fr' ? 'id' : 'fr';
         this.myLanguage$.next(next);
-        if (this.isActive$.value) {
+        // Si on écoute, on redémarre avec la nouvelle langue
+        if (this.isListening$.value) {
             this.stopRecognition();
-            setTimeout(() => this.startRecognition(), 300);
+            setTimeout(() => this.startListening(), 300);
         }
     }
 
+    toggleTts() {
+        this.ttsEnabled$.next(!this.ttsEnabled$.value);
+    }
+
+    /** Envoie un texte tapé par l'utilisateur pour traduction. */
+    sendText(text: string) {
+        if (!text || !text.trim() || this.conversationId === null) return;
+        this.emitTranslation(text.trim());
+    }
+
     // ═══════════════════════════════════════
-    //  Reconnaissance vocale (Web Speech API)
+    //  Reconnaissance vocale (push-to-talk)
     // ═══════════════════════════════════════
 
-    private startRecognition() {
+    /** Démarre l'écoute vocale. Appeler une fois pour démarrer, re-appeler pour arrêter. */
+    startListening() {
+        if (this.isListening$.value) {
+            this.stopRecognition();
+            this.isListening$.next(false);
+            return;
+        }
+
         const SpeechRecognition =
             (window as any).SpeechRecognition ||
             (window as any).webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-            console.warn('[VoiceTranslation] Web Speech API non supportée par ce navigateur');
+            this.addEntry({
+                originalText: '⚠ Navigateur incompatible',
+                translatedText: 'Utilisez Chrome ou Edge, ou tapez le texte',
+                sourceLang: this.myLanguage$.value,
+                targetLang: this.myLanguage$.value === 'fr' ? 'id' : 'fr',
+                fromUserId: this.userId!,
+                timestamp: new Date(),
+                isMine: true,
+                isError: true
+            });
             return;
         }
 
-        // Variable locale pour éviter les closures périmées en cas de restart
         const recognition = new SpeechRecognition();
         this.recognition = recognition;
 
@@ -96,59 +119,45 @@ export class VoiceTranslationService implements OnDestroy {
         recognition.maxAlternatives = 1;
 
         recognition.onstart = () => {
-            console.log('[VoiceTranslation] Démarré :', recognition.lang);
+            console.log('[VoiceTranslation] 🎤 Écoute démarrée :', recognition.lang);
+            this.isListening$.next(true);
         };
-
-        recognition.onspeechstart = () => this.isSpeaking$.next(true);
-        recognition.onspeechend   = () => this.isSpeaking$.next(false);
 
         recognition.onresult = (event: any) => {
             const last = event.results[event.results.length - 1];
             if (!last.isFinal) return;
-
             const text = last[0].transcript.trim();
             if (!text || this.conversationId === null) return;
-
-            const myLang   = this.myLanguage$.value;
-            const targetLang: SupportedLang = myLang === 'fr' ? 'id' : 'fr';
-
-            this.addEntry({
-                originalText:   text,
-                translatedText: '...',
-                sourceLang:     myLang,
-                targetLang,
-                fromUserId:     this.userId!,
-                timestamp:      new Date(),
-                isMine:         true
-            });
-
-            this.socketService.emitVoiceTranscript({
-                conversationId: this.conversationId!,
-                text,
-                sourceLang: myLang,
-                targetLang
-            });
+            console.log(`[VoiceTranslation] 🎤 Reconnu: "${text}"`);
+            this.emitTranslation(text);
         };
 
         recognition.onerror = (event: any) => {
-            // 'no-speech' et 'aborted' sont non critiques :
-            // - no-speech : silence détecté, normal
-            // - aborted   : on a appelé stop() nous-mêmes, normal
             if (event.error === 'no-speech' || event.error === 'aborted') return;
-            console.error('[VoiceTranslation] Erreur:', event.error);
-            this.isSpeaking$.next(false);
+            console.error('[VoiceTranslation] Erreur reconnaissance:', event.error);
+            if (event.error === 'not-allowed') {
+                this.addEntry({
+                    originalText: '⚠ Microphone bloqué',
+                    translatedText: 'Autorisez le micro dans les paramètres du navigateur',
+                    sourceLang: this.myLanguage$.value,
+                    targetLang: this.myLanguage$.value === 'fr' ? 'id' : 'fr',
+                    fromUserId: this.userId!,
+                    timestamp: new Date(),
+                    isMine: true,
+                    isError: true
+                });
+                this.isListening$.next(false);
+            }
         };
 
         recognition.onend = () => {
-            this.isSpeaking$.next(false);
-            // Ne redémarrer que si cette instance est toujours l'instance active
-            // (évite le restart après un stopRecognition() délibéré)
-            if (this.isActive$.value && this.recognition === recognition) {
+            // Redémarrer automatiquement si toujours en mode écoute
+            if (this.isListening$.value && this.recognition === recognition) {
                 setTimeout(() => {
-                    if (this.isActive$.value && this.recognition === recognition) {
-                        this.startRecognition();
+                    if (this.isListening$.value && this.recognition === recognition) {
+                        try { recognition.start(); } catch (_) { }
                     }
-                }, 300);
+                }, 500);
             }
         };
 
@@ -156,15 +165,63 @@ export class VoiceTranslationService implements OnDestroy {
             recognition.start();
         } catch (err) {
             console.error('[VoiceTranslation] Impossible de démarrer:', err);
+            this.isListening$.next(false);
         }
     }
 
     private stopRecognition() {
         const r = this.recognition;
-        this.recognition = null; // Nullifier AVANT stop() pour bloquer le restart dans onend
+        this.recognition = null;
         if (r) {
-            try { r.stop(); } catch (_) {}
+            try { r.stop(); } catch (_) { }
         }
+    }
+
+    // ═══════════════════════════════════════
+    //  Envoi commun (texte ou voix)
+    // ═══════════════════════════════════════
+
+    private emitTranslation(text: string) {
+        const myLang = this.myLanguage$.value;
+        const targetLang: SupportedLang = myLang === 'fr' ? 'id' : 'fr';
+
+        console.log(`[VoiceTranslation] Envoi: convId=${this.conversationId}, "${text}", ${myLang}→${targetLang}`);
+
+        this.addEntry({
+            originalText: text,
+            translatedText: '...',
+            sourceLang: myLang,
+            targetLang,
+            fromUserId: this.userId!,
+            timestamp: new Date(),
+            isMine: true
+        });
+
+        this.socketService.emitVoiceTranscript({
+            conversationId: this.conversationId!,
+            text,
+            sourceLang: myLang,
+            targetLang
+        });
+    }
+
+    // ═══════════════════════════════════════
+    //  Text-to-Speech (lecture de la traduction)
+    // ═══════════════════════════════════════
+
+    private speak(text: string, lang: SupportedLang) {
+        if (!this.ttsEnabled$.value) return;
+        if (!('speechSynthesis' in window)) return;
+
+        // Annuler toute lecture en cours
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = this.LANG_CODES[lang];
+        utterance.rate = 0.95;
+        utterance.volume = 0.8;
+
+        window.speechSynthesis.speak(utterance);
     }
 
     // ═══════════════════════════════════════
@@ -174,11 +231,10 @@ export class VoiceTranslationService implements OnDestroy {
     private listenToIncomingTranslations() {
         this.subs.push(
             this.socketService.onTranslatedText().subscribe((data) => {
+                console.log('[VoiceTranslation] Reçu translatedText:', data);
                 const isMine = String(data.fromUserId) === String(this.userId);
 
                 if (isMine) {
-                    // C'est notre propre parole qui revient traduite :
-                    // mettre à jour le '...' en attente plutôt qu'ajouter un doublon
                     const entries = [...this.transcriptions$.value];
                     const pending = [...entries].reverse()
                         .find((e: TranslationEntry) => e.isMine && e.translatedText === '...');
@@ -189,26 +245,41 @@ export class VoiceTranslationService implements OnDestroy {
                     }
                 }
 
-                // Parole d'un autre participant → nouvelle entrée
+                // Message d'un autre participant → nouvelle entrée + TTS
                 this.addEntry({
-                    originalText:   data.originalText,
+                    originalText: data.originalText,
                     translatedText: data.translatedText,
-                    sourceLang:     data.sourceLang,
-                    targetLang:     data.targetLang,
-                    fromUserId:     data.fromUserId,
-                    timestamp:      new Date(),
+                    sourceLang: data.sourceLang,
+                    targetLang: data.targetLang,
+                    fromUserId: data.fromUserId,
+                    timestamp: new Date(),
                     isMine
                 });
+
+                // Lire la traduction à voix haute si ce n'est pas mon message
+                if (!isMine) {
+                    this.speak(data.translatedText, data.targetLang);
+                }
             }),
             this.socketService.onTranslationError().subscribe((data) => {
                 console.error('[VoiceTranslation] Erreur serveur:', data.message);
-                // Mettre à jour le dernier "..." en message d'erreur
                 const entries = [...this.transcriptions$.value];
                 const last = [...entries].reverse().find((e: TranslationEntry) => e.isMine && e.translatedText === '...');
                 if (last) {
-                    last.translatedText = '⚠ Traduction indisponible';
+                    last.translatedText = '⚠ ' + (data.message || 'Traduction indisponible');
                     last.isError = true;
                     this.transcriptions$.next(entries);
+                } else {
+                    this.addEntry({
+                        originalText: '⚠ Erreur',
+                        translatedText: data.message || 'Traduction indisponible',
+                        sourceLang: this.myLanguage$.value,
+                        targetLang: this.myLanguage$.value === 'fr' ? 'id' : 'fr',
+                        fromUserId: this.userId!,
+                        timestamp: new Date(),
+                        isMine: true,
+                        isError: true
+                    });
                 }
             })
         );
