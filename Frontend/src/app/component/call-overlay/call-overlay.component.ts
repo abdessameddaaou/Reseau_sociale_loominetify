@@ -838,8 +838,10 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
       const info = this.callInfo;
       if (!info) return;
       this.voiceTranslation.start(info.conversationId, user.id, 'fr');
-      // Démarrer l'écoute continue via Web Speech API (fiable, natif)
-      this.voiceTranslation.startListening();
+      // Réutiliser le stream WebRTC existant (évite le conflit micro)
+      if (this.localStream) {
+        this.voiceTranslation.startAutoTranslation(this.localStream);
+      }
       // Couper le son original — remplacé par la lecture TTS de la traduction
       this.setRemoteAudioMuted(true);
     }
@@ -871,6 +873,7 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
 
   private stopTranslation() {
     if (this.isTranslationActive) {
+      this.voiceTranslation.stopAutoTranslation();
       this.voiceTranslation.stop();
       this.setRemoteAudioMuted(false);
     }
