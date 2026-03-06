@@ -168,12 +168,28 @@ export class VoiceTranslationService implements OnDestroy {
     }
 
     // ═══════════════════════════════════════
-    //  Réception des traductions (autres participants)
+    //  Réception des traductions
     // ═══════════════════════════════════════
 
     private listenToIncomingTranslations() {
         this.subs.push(
             this.socketService.onTranslatedText().subscribe((data) => {
+                const isMine = String(data.fromUserId) === String(this.userId);
+
+                if (isMine) {
+                    // C'est notre propre parole qui revient traduite :
+                    // mettre à jour le '...' en attente plutôt qu'ajouter un doublon
+                    const entries = [...this.transcriptions$.value];
+                    const pending = [...entries].reverse()
+                        .find((e: TranslationEntry) => e.isMine && e.translatedText === '...');
+                    if (pending) {
+                        pending.translatedText = data.translatedText;
+                        this.transcriptions$.next(entries);
+                        return;
+                    }
+                }
+
+                // Parole d'un autre participant → nouvelle entrée
                 this.addEntry({
                     originalText:   data.originalText,
                     translatedText: data.translatedText,
@@ -181,7 +197,7 @@ export class VoiceTranslationService implements OnDestroy {
                     targetLang:     data.targetLang,
                     fromUserId:     data.fromUserId,
                     timestamp:      new Date(),
-                    isMine:         false
+                    isMine
                 });
             }),
             this.socketService.onTranslationError().subscribe((data) => {
