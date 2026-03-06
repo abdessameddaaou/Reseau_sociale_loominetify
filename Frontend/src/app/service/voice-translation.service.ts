@@ -144,8 +144,8 @@ export class VoiceTranslationService implements OnDestroy {
                 console.log('[VoiceTranslation] 🎤 Capture audio arrêtée');
             };
 
-            // Enregistrer des segments de 3.5 secondes
-            recorder.start(3500);
+            // Enregistrer des segments de 2 secondes pour plus de fluidité
+            recorder.start(2000);
 
         } catch (err) {
             console.error('[VoiceTranslation] Erreur MediaRecorder:', err);

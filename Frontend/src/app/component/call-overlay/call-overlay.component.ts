@@ -127,23 +127,13 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
             Tapez un message pour le traduire
           </div>
 
-          <!-- Champ de saisie + micro -->
+          <!-- Champ de saisie -->
           <div class="call-translation-input-bar">
-            <button class="call-translation-mic-btn" (click)="onToggleAutoTranslation()" type="button"
-              [class.call-translation-mic-btn--active]="isAutoTranslating"
-              [title]="isAutoTranslating ? 'Arrêter la traduction audio' : 'Activer la traduction audio auto'">
-              <svg *ngIf="!isAutoTranslating" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-              </svg>
-              <svg *ngIf="isAutoTranslating" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
-                <rect x="6" y="6" width="12" height="12" rx="2" />
-              </svg>
-            </button>
             <input type="text"
               class="call-translation-input"
               [(ngModel)]="translationInput"
               (keydown.enter)="onSendTranslation()"
-              [placeholder]="isAutoTranslating ? '🎤 Traduction audio en cours...' : 'Écrire en ' + getLangName(myLanguage) + '...'"
+              [placeholder]="'🎤 Traduction audio en cours... ou taper (' + getLangName(myLanguage) + ')'"
               autocomplete="off" />
             <button class="call-translation-send-btn" (click)="onSendTranslation()" type="button"
               [disabled]="!translationInput?.trim()">
@@ -675,35 +665,6 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
       cursor: default;
     }
 
-    .call-translation-mic-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.7);
-      transition: all 0.2s;
-      flex-shrink: 0;
-    }
-
-    .call-translation-mic-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    .call-translation-mic-btn--active {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: #fff;
-      animation: micPulse 1.5s ease-in-out infinite;
-    }
-
-    @keyframes micPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-      50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-    }
 
     .call-translation-tts-btn {
       width: 32px;
@@ -748,7 +709,6 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
 
   // Traduction
   isTranslationActive = false;
-  isAutoTranslating = false;
   transcriptions: TranslationEntry[] = [];
   myLanguage: SupportedLang = 'fr';
   translationInput = '';
@@ -790,7 +750,6 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
       this.callService.isVideoOff$.subscribe(v => this.isVideoOff = v),
       // Traduction
       this.voiceTranslation.isActive$.subscribe(a => this.isTranslationActive = a),
-      this.voiceTranslation.autoTranslationActive$.subscribe(s => this.isAutoTranslating = s),
       this.voiceTranslation.transcriptions$.subscribe(t => this.transcriptions = t),
       this.voiceTranslation.myLanguage$.subscribe(l => this.myLanguage = l),
       this.voiceTranslation.ttsEnabled$.subscribe(t => this.ttsEnabled = t),
@@ -878,6 +837,12 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
       const info = this.callInfo;
       if (!info) return;
       this.voiceTranslation.start(info.conversationId, user.id, 'fr');
+      // Démarrer auto-STT
+      if (this.localStream) {
+        this.voiceTranslation.startAutoTranslation(this.localStream);
+      }
+      // Couper le son distant original
+      this.setRemoteAudioMuted(true);
     }
   }
 
@@ -891,18 +856,6 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
     this.voiceTranslation.sendText(text);
     this.translationInput = '';
     this.scrollToBottom();
-  }
-
-  onToggleAutoTranslation() {
-    if (this.isAutoTranslating) {
-      this.voiceTranslation.stopAutoTranslation();
-    } else {
-      if (this.localStream) {
-        this.voiceTranslation.startAutoTranslation(this.localStream);
-      } else {
-        console.warn('[CallOverlay] Pas de stream local pour démarrer la traduction audio');
-      }
-    }
   }
 
   onToggleTts() {
@@ -919,8 +872,20 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
 
   private stopTranslation() {
     if (this.isTranslationActive) {
+      this.voiceTranslation.stopAutoTranslation();
       this.voiceTranslation.stop();
+      this.setRemoteAudioMuted(false);
     }
+  }
+
+  private setRemoteAudioMuted(muted: boolean) {
+    this.remoteStreams.forEach(rs => {
+      if (rs.stream) {
+        rs.stream.getAudioTracks().forEach(track => {
+          track.enabled = !muted;
+        });
+      }
+    });
   }
 
   // ═══════════════════════════════════════
