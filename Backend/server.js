@@ -427,7 +427,8 @@ io.on('connection', (socket) => {
             });
         } catch (err) {
             console.error('[AudioTranslation] Erreur:', err.message);
-            // Don't emit error to client for audio chunks — too noisy
+            // Envoyer l'erreur au client pour diagnostic
+            socket.emit('translationError', { message: '[STT] ' + err.message });
         }
     });
 
