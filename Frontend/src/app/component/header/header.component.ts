@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Input, Output, ElementRef, HostListener, ViewChild, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ElementRef, HostListener, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -32,7 +33,7 @@ interface HeaderNotification {
   imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './header.component.html'
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
 
   @Input() activeTab: HeaderTab = 'home';
   @Output() tabChange = new EventEmitter<HeaderTab>();
@@ -55,6 +56,7 @@ export class HeaderComponent implements OnInit {
   showSearchDropdown = false;
   defaultAvatar = 'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/767173db-56b6-454b-87d2-3ad554d47ff7.png'
   private currentUserId: string | null = null;
+  private subs: Subscription[] = [];
 
   constructor(
     private http: HttpClient,
@@ -92,26 +94,29 @@ export class HeaderComponent implements OnInit {
     this.setupSearch();
 
     // Écouter les nouvelles notifications en temps réel
-    this.socketService.onNewNotification().subscribe((data) => {
-      // Ne montrer que les notifications destinées à MOI
-      if (this.currentUserId && String(data.recipientId) !== this.currentUserId) {
-        return; // Cette notification n'est pas pour moi
-      }
+    this.subs.push(
+      this.socketService.onNewNotification().subscribe((data) => {
+        // Ne montrer que les notifications destinées à MOI
+        if (this.currentUserId && String(data.recipientId) !== this.currentUserId) {
+          return;
+        }
+        const n = data.notification;
+        const mapped: HeaderNotification = {
+          id: n.id,
+          type: n.type,
+          userName: n.sender ? `${n.sender.prenom} ${n.sender.nom}` : '',
+          userAvatar: n.sender?.photo || this.defaultAvatar,
+          message: n.message,
+          time: this.timeAgo(n.createdAt),
+          read: n.read || false
+        };
+        this.notifications.unshift(mapped);
+      })
+    );
+  }
 
-      // Mapper la notification socket au format HeaderNotification
-      const n = data.notification;
-      const mapped: HeaderNotification = {
-        id: n.id,
-        type: n.type,
-        userName: n.sender ? `${n.sender.prenom} ${n.sender.nom}` : '',
-        userAvatar: n.sender?.photo || this.defaultAvatar,
-        message: n.message,
-        time: this.timeAgo(n.createdAt),
-        read: n.read || false
-      };
-      this.notifications.unshift(mapped);
-      console.log('Nouvelle notification reçue :', data);
-    });
+  ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
   }
 
 
@@ -119,21 +124,20 @@ export class HeaderComponent implements OnInit {
    * Méthode de recherche
    */
   setupSearch() {
-    this.searchControl.valueChanges.pipe(debounceTime(300), distinctUntilChanged(), switchMap((term: string | null) => {
-      if (!term || term.length < 2) {
-        this.showSearchDropdown = false;
-        return of([]);
-      }
-      this.showSearchDropdown = true;
-      return this.http.get<any>(`${environment.apiUrl}/users/search?term=${term}`, { withCredentials: true }).pipe(
-        catchError(error => {
-          return of({ user: [] });
-        })
-      );
-    })
-    ).subscribe((response: any) => {
-      this.searchResults = response.user || [];
-    });
+    this.subs.push(
+      this.searchControl.valueChanges.pipe(debounceTime(300), distinctUntilChanged(), switchMap((term: string | null) => {
+        if (!term || term.length < 2) {
+          this.showSearchDropdown = false;
+          return of([]);
+        }
+        this.showSearchDropdown = true;
+        return this.http.get<any>(`${environment.apiUrl}/users/search?term=${term}`, { withCredentials: true }).pipe(
+          catchError(() => of({ user: [] }))
+        );
+      })).subscribe((response: any) => {
+        this.searchResults = response.user || [];
+      })
+    );
   }
 
   onSearchResultClick(user: any) {
