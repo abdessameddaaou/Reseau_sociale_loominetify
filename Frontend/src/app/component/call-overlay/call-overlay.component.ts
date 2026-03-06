@@ -62,7 +62,7 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
         <div class="call-video-grid" *ngIf="callInfo?.callType === 'video'">
           <!-- Remote videos -->
           <div class="call-video-cell" *ngFor="let rs of remoteStreams; trackBy: trackByUserId">
-            <video [appSrcObject]="rs.stream" autoplay playsinline class="call-video-element"></video>
+            <video [appSrcObject]="rs.stream" autoplay playsinline class="call-video-element" [muted]="isRemoteMuted"></video>
           </div>
           <!-- Local video (small PIP) -->
           <div class="call-video-local" *ngIf="localStream">
@@ -83,7 +83,7 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
           <h2 class="call-audio-name">{{ getDisplayName() }}</h2>
 
           <!-- Hidden audio elements to actually play the remote stream sound -->
-          <audio *ngFor="let rs of remoteStreams; trackBy: trackByUserId" [appSrcObject]="rs.stream" autoplay></audio>
+          <audio *ngFor="let rs of remoteStreams; trackBy: trackByUserId" [appSrcObject]="rs.stream" autoplay [muted]="isRemoteMuted"></audio>
         </div>
 
         <!-- Duration -->
@@ -709,6 +709,7 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
 
   // Traduction
   isTranslationActive = false;
+  isRemoteMuted = false;
   transcriptions: TranslationEntry[] = [];
   myLanguage: SupportedLang = 'fr';
   translationInput = '';
@@ -879,13 +880,7 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
   }
 
   private setRemoteAudioMuted(muted: boolean) {
-    this.remoteStreams.forEach(rs => {
-      if (rs.stream) {
-        rs.stream.getAudioTracks().forEach(track => {
-          track.enabled = !muted;
-        });
-      }
-    });
+    this.isRemoteMuted = muted;
   }
 
   // ═══════════════════════════════════════
