@@ -838,11 +838,9 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
       const info = this.callInfo;
       if (!info) return;
       this.voiceTranslation.start(info.conversationId, user.id, 'fr');
-      // Démarrer auto-STT
-      if (this.localStream) {
-        this.voiceTranslation.startAutoTranslation(this.localStream);
-      }
-      // Couper le son distant original
+      // Démarrer l'écoute continue via Web Speech API (fiable, natif)
+      this.voiceTranslation.startListening();
+      // Couper le son original — remplacé par la lecture TTS de la traduction
       this.setRemoteAudioMuted(true);
     }
   }
@@ -873,7 +871,6 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
 
   private stopTranslation() {
     if (this.isTranslationActive) {
-      this.voiceTranslation.stopAutoTranslation();
       this.voiceTranslation.stop();
       this.setRemoteAudioMuted(false);
     }

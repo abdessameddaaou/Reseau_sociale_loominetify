@@ -309,15 +309,26 @@ export class VoiceTranslationService implements OnDestroy {
         if (!this.ttsEnabled$.value) return;
         if (!('speechSynthesis' in window)) return;
 
-        // Annuler toute lecture en cours
         window.speechSynthesis.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = this.LANG_CODES[lang];
-        utterance.rate = 0.95;
-        utterance.volume = 0.8;
+        const doSpeak = () => {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = this.LANG_CODES[lang];
+            utterance.rate = 0.95;
+            utterance.volume = 1.0;
+            window.speechSynthesis.speak(utterance);
+        };
 
-        window.speechSynthesis.speak(utterance);
+        // Chrome charge les voix de façon asynchrone — attendre si nécessaire
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            doSpeak();
+        } else {
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.onvoiceschanged = null;
+                doSpeak();
+            };
+        }
     }
 
     // ═══════════════════════════════════════
@@ -337,11 +348,13 @@ export class VoiceTranslationService implements OnDestroy {
                     if (pending) {
                         pending.translatedText = data.translatedText;
                         this.transcriptions$.next(entries);
+                        // Lire aussi ma propre traduction pour confirmation
+                        this.speak(data.translatedText, data.targetLang);
                         return;
                     }
                 }
 
-                // Message d'un autre participant → nouvelle entrée + TTS
+                // Nouvelle entrée (audioChunk ou message d'un autre participant)
                 this.addEntry({
                     originalText: data.originalText,
                     translatedText: data.translatedText,
@@ -352,10 +365,8 @@ export class VoiceTranslationService implements OnDestroy {
                     isMine
                 });
 
-                // Lire la traduction à voix haute si ce n'est pas mon message
-                if (!isMine) {
-                    this.speak(data.translatedText, data.targetLang);
-                }
+                // Lire la traduction à voix haute pour tous les messages
+                this.speak(data.translatedText, data.targetLang);
             }),
             this.socketService.onTranslationError().subscribe((data) => {
                 console.error('[VoiceTranslation] Erreur serveur:', data.message);
