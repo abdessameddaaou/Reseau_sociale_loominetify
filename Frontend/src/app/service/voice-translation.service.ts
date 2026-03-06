@@ -30,6 +30,8 @@ export class VoiceTranslationService implements OnDestroy {
     private recognition: any = null;
     private mediaRecorder: MediaRecorder | null = null;
     private autoTranslationStream: MediaStream | null = null;
+    private recordingChunks: Blob[] = [];
+    private recordingTimer: any = null;
 
     /** Traduction audio automatique en cours ? */
     autoTranslationActive$ = new BehaviorSubject<boolean>(false);
@@ -107,6 +109,15 @@ export class VoiceTranslationService implements OnDestroy {
         }
 
         this.autoTranslationStream = new MediaStream(audioTracks);
+        this.autoTranslationActive$.next(true);
+        console.log('[VoiceTranslation] 🎤 Capture audio démarrée');
+        this.startRecordingSession();
+    }
+
+    private startRecordingSession() {
+        if (!this.autoTranslationActive$.value || !this.autoTranslationStream) return;
+
+        this.recordingChunks = [];
 
         try {
             const recorder = new MediaRecorder(this.autoTranslationStream, {
@@ -114,41 +125,52 @@ export class VoiceTranslationService implements OnDestroy {
             });
             this.mediaRecorder = recorder;
 
-            recorder.ondataavailable = async (event) => {
-                if (event.data.size === 0 || !this.autoTranslationActive$.value) return;
-                if (this.conversationId === null) return;
+            recorder.ondataavailable = (event) => {
+                if (event.data.size > 0) this.recordingChunks.push(event.data);
+            };
 
-                try {
-                    // Convertir le blob en base64
-                    const base64 = await this.blobToBase64(event.data);
-                    const myLang = this.myLanguage$.value;
-                    const targetLang: SupportedLang = myLang === 'fr' ? 'id' : 'fr';
+            recorder.onstop = async () => {
+                if (!this.autoTranslationActive$.value || this.conversationId === null) return;
 
-                    console.log(`[VoiceTranslation] 🎤 Envoi chunk audio (${(event.data.size / 1024).toFixed(1)}KB)`);
+                // Assembler un fichier WebM complet (avec header)
+                const fullBlob = new Blob(this.recordingChunks, { type: 'audio/webm' });
+                this.recordingChunks = [];
 
-                    this.socketService.emitAudioChunk({
-                        conversationId: this.conversationId!,
-                        audio: base64,
-                        sourceLang: myLang,
-                        targetLang,
-                        targetUserIds: this.targetUserIds
-                    });
-                } catch (err) {
-                    console.error('[VoiceTranslation] Erreur conversion audio:', err);
+                console.log(`[VoiceTranslation] 🎤 Session terminée (${(fullBlob.size / 1024).toFixed(1)}KB)`);
+
+                // Envoyer seulement si assez de données (pas du silence)
+                if (fullBlob.size > 3000) {
+                    try {
+                        const base64 = await this.blobToBase64(fullBlob);
+                        const myLang = this.myLanguage$.value;
+                        const targetLang: SupportedLang = myLang === 'fr' ? 'id' : 'fr';
+
+                        this.socketService.emitAudioChunk({
+                            conversationId: this.conversationId!,
+                            audio: base64,
+                            sourceLang: myLang,
+                            targetLang,
+                            targetUserIds: this.targetUserIds
+                        });
+                    } catch (err) {
+                        console.error('[VoiceTranslation] Erreur conversion audio:', err);
+                    }
+                }
+
+                // Relancer immédiatement la prochaine session
+                if (this.autoTranslationActive$.value) {
+                    this.startRecordingSession();
                 }
             };
 
-            recorder.onstart = () => {
-                console.log('[VoiceTranslation] 🎤 Capture audio démarrée');
-                this.autoTranslationActive$.next(true);
-            };
+            recorder.start();
 
-            recorder.onstop = () => {
-                console.log('[VoiceTranslation] 🎤 Capture audio arrêtée');
-            };
-
-            // Enregistrer des segments de 2 secondes pour plus de fluidité
-            recorder.start(2000);
+            // Arrêter après 3 secondes pour produire un fichier WebM complet
+            this.recordingTimer = setTimeout(() => {
+                if (recorder.state === 'recording') {
+                    recorder.stop();
+                }
+            }, 3000);
 
         } catch (err) {
             console.error('[VoiceTranslation] Erreur MediaRecorder:', err);
@@ -157,11 +179,16 @@ export class VoiceTranslationService implements OnDestroy {
     }
 
     stopAutoTranslation() {
+        if (this.recordingTimer) {
+            clearTimeout(this.recordingTimer);
+            this.recordingTimer = null;
+        }
         if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
             try { this.mediaRecorder.stop(); } catch (_) { }
         }
         this.mediaRecorder = null;
         this.autoTranslationStream = null;
+        this.recordingChunks = [];
         this.autoTranslationActive$.next(false);
     }
 
