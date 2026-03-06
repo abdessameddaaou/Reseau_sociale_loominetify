@@ -27,6 +27,16 @@ export class SocketService {
     /** Get raw socket for direct access */
     getSocket(): Socket { return this.socket; }
 
+    // ─── Helper : crée un Observable avec teardown automatique ───
+    // Évite l'accumulation de listeners lors des unsubscribe Angular
+    private fromEvent<T>(event: string): Observable<T> {
+        return new Observable<T>(observer => {
+            const handler = (data: T) => observer.next(data);
+            this.socket.on(event, handler);
+            return () => this.socket.off(event, handler);
+        });
+    }
+
     // ─── User Room ───
     joinUserRoom(userId: number) {
         this.socket.emit('joinUserRoom', userId);
@@ -34,34 +44,24 @@ export class SocketService {
 
     // ─── Notifications ───
     onNewNotification(): Observable<any> {
-        return new Observable(observer => {
-            this.socket.on('newNotification', (data) => observer.next(data));
-        });
+        return this.fromEvent('newNotification');
     }
 
     onNewFollow(): Observable<any> {
-        return new Observable(observer => {
-            this.socket.on('newFollow', (data) => observer.next(data));
-        });
+        return this.fromEvent('newFollow');
     }
 
     onUnfollow(): Observable<any> {
-        return new Observable(observer => {
-            this.socket.on('unfollow', (data) => observer.next(data));
-        });
+        return this.fromEvent('unfollow');
     }
 
     // ─── Messages ───
     onNewMessage(): Observable<any> {
-        return new Observable(observer => {
-            this.socket.on('newMessage', (data) => observer.next(data));
-        });
+        return this.fromEvent('newMessage');
     }
 
     onNewConversation(): Observable<any> {
-        return new Observable(observer => {
-            this.socket.on('newConversation', (data) => observer.next(data));
-        });
+        return this.fromEvent('newConversation');
     }
 
     // ─── Online Users ───
@@ -70,9 +70,7 @@ export class SocketService {
     }
 
     onOnlineUsersList(): Observable<number[]> {
-        return new Observable(observer => {
-            this.socket.on('onlineUsersList', (userIds: number[]) => observer.next(userIds));
-        });
+        return this.fromEvent<number[]>('onlineUsersList');
     }
 
     // ─── Call Signaling ───
@@ -97,33 +95,39 @@ export class SocketService {
     }
 
     onIncomingCall(): Observable<any> {
-        return new Observable(observer => {
-            this.socket.on('incomingCall', (data) => observer.next(data));
-        });
+        return this.fromEvent('incomingCall');
     }
 
     onCallAccepted(): Observable<any> {
-        return new Observable(observer => {
-            this.socket.on('callAccepted', (data) => observer.next(data));
-        });
+        return this.fromEvent('callAccepted');
     }
 
     onIceCandidate(): Observable<any> {
-        return new Observable(observer => {
-            this.socket.on('iceCandidate', (data) => observer.next(data));
-        });
+        return this.fromEvent('iceCandidate');
     }
 
     onCallEnded(): Observable<any> {
-        return new Observable(observer => {
-            this.socket.on('callEnded', (data) => observer.next(data));
-        });
+        return this.fromEvent('callEnded');
     }
 
     onCallDeclined(): Observable<any> {
-        return new Observable(observer => {
-            this.socket.on('callDeclined', (data) => observer.next(data));
-        });
+        return this.fromEvent('callDeclined');
+    }
+
+    // ─── Traduction vocale ───
+
+    /** Envoie un transcript vocal au backend pour traduction. */
+    emitVoiceTranscript(data: { conversationId: number; text: string; sourceLang: string; targetLang: string }) {
+        this.socket.emit('voiceTranscript', data);
+    }
+
+    /** Reçoit les traductions envoyées par les autres participants. */
+    onTranslatedText(): Observable<any> {
+        return this.fromEvent('translatedText');
+    }
+
+    /** Reçoit les erreurs de traduction du backend. */
+    onTranslationError(): Observable<any> {
+        return this.fromEvent('translationError');
     }
 }
-

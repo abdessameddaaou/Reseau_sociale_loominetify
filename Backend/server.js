@@ -5,6 +5,7 @@ const config = require('./config');
 const db = require('./db/db');
 const Message = require('./models/message');
 const { Users } = require('./models');
+const { translate } = require('./services/translation');
 
 /**
  * Normalisation du port
@@ -102,7 +103,6 @@ io.on('connection', (socket) => {
                             content: `${cType}${durationStr}`
                         });
 
-                        const Users = require('./models').Users; // Already imported at top, but just to be safe
                         const sender = await Users.findByPk(call.callerId, { attributes: ['nom', 'prenom', 'photo'] });
                         const messageObj = {
                             id: msg.id,
@@ -266,16 +266,13 @@ io.on('connection', (socket) => {
                     senderPhoto: sender ? sender.photo : null,
                     createdAt: msg.createdAt,
                 };
-                const allMembers = Array.from(new Set([...(call.allParticipants || []), call.callerId]));
-                if (allMembers.length > 0) {
-                    allMembers.forEach(uid => {
-                        io.to(`user_${uid}`).emit('newMessage', {
-                            conversationId,
-                            recipientId: uid,
-                            message: { ...messageObj, from: uid === msg.senderId ? 'me' : 'them' }
-                        });
+                allMembers.forEach(uid => {
+                    io.to(`user_${uid}`).emit('newMessage', {
+                        conversationId,
+                        recipientId: uid,
+                        message: { ...messageObj, from: uid === msg.senderId ? 'me' : 'them' }
                     });
-                }
+                });
             } catch (err) {
                 console.error('Failed to log call end:', err);
             }
@@ -333,6 +330,49 @@ io.on('connection', (socket) => {
                 console.error('Failed to log call decline:', err);
             }
             activeCalls.delete(conversationId);
+        }
+    });
+
+    // ─────────────────────────────────────────
+    //  Traduction vocale en temps réel
+    // ─────────────────────────────────────────
+
+    socket.on('voiceTranscript', async (data) => {
+        const { conversationId, text, sourceLang, targetLang } = data;
+        if (!text || !text.trim()) return;
+
+        const SUPPORTED_LANGS = ['fr', 'id'];
+        if (!SUPPORTED_LANGS.includes(sourceLang) || !SUPPORTED_LANGS.includes(targetLang)) {
+            socket.emit('translationError', { message: `Langues non supportées : ${sourceLang} → ${targetLang}` });
+            return;
+        }
+
+        const call = activeCalls.get(conversationId);
+        if (!call) return; // Pas d'appel actif pour cette conversation
+
+        try {
+            const translated = await translate(text.trim(), sourceLang, targetLang);
+
+            const allMembers = Array.from(new Set([...(call.allParticipants || []), call.callerId]));
+
+            // Envoyer la traduction à tous les autres participants
+            allMembers.forEach(uid => {
+                if (String(uid) !== String(socket.userId)) {
+                    io.to(`user_${uid}`).emit('translatedText', {
+                        conversationId,
+                        originalText: text,
+                        translatedText: translated,
+                        sourceLang,
+                        targetLang,
+                        fromUserId: socket.userId
+                    });
+                }
+            });
+
+            console.log(`[Translation] ${sourceLang}→${targetLang} | "${text}" → "${translated}"`);
+        } catch (err) {
+            console.error('[Translation Socket] Erreur:', err.message);
+            socket.emit('translationError', { message: 'Erreur de traduction' });
         }
     });
 

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked }
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CallService, CallState, CallInfo, RemoteStream } from '../../service/call.service';
+import { VoiceTranslationService, TranslationEntry, SupportedLang } from '../../service/voice-translation.service';
 
 @Component({
   selector: 'app-call-overlay',
@@ -86,6 +87,49 @@ import { CallService, CallState, CallInfo, RemoteStream } from '../../service/ca
         <!-- Duration -->
         <div class="call-timer">{{ formatDuration(callDuration) }}</div>
 
+        <!-- ═══ Panneau de traduction vocale ═══ -->
+        <div class="call-translation-panel" *ngIf="isTranslationActive">
+
+          <!-- En-tête : langue + indicateur -->
+          <div class="call-translation-header">
+            <button class="call-translation-lang-btn" (click)="onToggleTranslationLang()" type="button"
+              title="Changer ma langue">
+              <span>{{ myLanguage === 'fr' ? 'FR' : 'ID' }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:12px;height:12px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+              </svg>
+              <span>{{ myLanguage === 'fr' ? 'ID' : 'FR' }}</span>
+            </button>
+            <span class="call-translation-speaking" *ngIf="isSpeaking">
+              <span class="call-translation-dot"></span>
+              Parle...
+            </span>
+          </div>
+
+          <!-- Liste des transcriptions -->
+          <div class="call-translation-entries" *ngIf="transcriptions.length > 0">
+            <div class="call-translation-entry"
+              *ngFor="let entry of transcriptions"
+              [class.call-translation-entry--mine]="entry.isMine">
+              <div class="call-translation-original">
+                <span class="call-translation-lang-tag">{{ entry.sourceLang.toUpperCase() }}</span>
+                {{ entry.originalText }}
+              </div>
+              <div class="call-translation-translated" *ngIf="entry.translatedText !== '...'">
+                <span class="call-translation-lang-tag call-translation-lang-tag--target">{{ entry.targetLang.toUpperCase() }}</span>
+                {{ entry.translatedText }}
+              </div>
+              <div class="call-translation-loading" *ngIf="entry.translatedText === '...'">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="call-translation-empty" *ngIf="transcriptions.length === 0">
+            Parlez pour commencer la traduction
+          </div>
+        </div>
+
         <!-- Controls Bar -->
         <div class="call-controls">
           <button (click)="onToggleMute()" class="call-control-btn" [class.call-control-btn--active]="isMuted" type="button" title="Micro">
@@ -103,6 +147,15 @@ import { CallService, CallState, CallInfo, RemoteStream } from '../../service/ca
             </svg>
             <svg *ngIf="isVideoOff" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
               <path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.676 12.553a.75.75 0 01-.282.53l-4.72 4.72V13.06l3.249-3.249a.75.75 0 011.28.53v.265l.473 1.947zM2.25 7.5A2.25 2.25 0 014.5 5.25h9.75a2.25 2.25 0 012.25 2.25v2.56l-6-6H4.5A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25h.19l-2.19-2.19V7.5z" />
+            </svg>
+          </button>
+
+          <!-- Bouton traduction -->
+          <button (click)="onToggleTranslation()" class="call-control-btn"
+            [class.call-control-btn--translation-active]="isTranslationActive"
+            type="button" title="Traduction FR ↔ ID">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />
             </svg>
           </button>
 
@@ -396,6 +449,154 @@ import { CallService, CallState, CallInfo, RemoteStream } from '../../service/ca
     .call-control-btn--end:hover {
       background: linear-gradient(135deg, #dc2626, #b91c1c);
     }
+
+    .call-control-btn--translation-active {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5);
+    }
+
+    /* ── Panneau de traduction ── */
+    .call-translation-panel {
+      position: absolute;
+      bottom: 110px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(420px, 90vw);
+      background: rgba(10, 10, 30, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 16px;
+      padding: 12px;
+      z-index: 25;
+      animation: callFadeIn 0.25s ease;
+    }
+
+    .call-translation-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .call-translation-lang-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 20px;
+      padding: 4px 12px;
+      color: #a5b4fc;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .call-translation-lang-btn:hover {
+      background: rgba(99, 102, 241, 0.35);
+    }
+
+    .call-translation-speaking {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    .call-translation-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: callStatusBlink 0.8s ease infinite;
+    }
+
+    .call-translation-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .call-translation-entry {
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      border-left: 3px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .call-translation-entry--mine {
+      border-left-color: #6366f1;
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .call-translation-original {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.75);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .call-translation-translated {
+      font-size: 14px;
+      color: #fff;
+      font-weight: 600;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .call-translation-lang-tag {
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: rgba(255, 255, 255, 0.6);
+      flex-shrink: 0;
+      letter-spacing: 0.05em;
+    }
+
+    .call-translation-lang-tag--target {
+      background: rgba(99, 102, 241, 0.25);
+      color: #a5b4fc;
+    }
+
+    .call-translation-loading {
+      display: flex;
+      gap: 4px;
+      padding: 4px 0;
+    }
+
+    .call-translation-loading span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      animation: translationDots 1.2s ease-in-out infinite;
+    }
+
+    .call-translation-loading span:nth-child(2) { animation-delay: 0.2s; }
+    .call-translation-loading span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes translationDots {
+      0%, 80%, 100% { transform: scale(0.8); opacity: 0.4; }
+      40%            { transform: scale(1.2); opacity: 1; }
+    }
+
+    .call-translation-empty {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.35);
+      text-align: center;
+      padding: 8px 0;
+    }
   `]
 })
 export class CallOverlayComponent implements OnInit, OnDestroy {
@@ -407,6 +608,12 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
   isMuted = false;
   isVideoOff = false;
 
+  // Traduction
+  isTranslationActive = false;
+  isSpeaking = false;
+  transcriptions: TranslationEntry[] = [];
+  myLanguage: SupportedLang = 'fr';
+
   private subs: Subscription[] = [];
 
   // Ringtone Web Audio API properties
@@ -415,7 +622,10 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
   private ringGain?: GainNode;
   private ringInterval?: any;
 
-  constructor(private callService: CallService) { }
+  constructor(
+    private callService: CallService,
+    private voiceTranslation: VoiceTranslationService
+  ) { }
 
   ngOnInit() {
     this.subs.push(
@@ -426,6 +636,10 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
         } else {
           this.stopRingtone();
         }
+        // Arrêter la traduction quand l'appel se termine
+        if (s === 'idle' || s === 'ended') {
+          this.stopTranslation();
+        }
       }),
       this.callService.callInfo$.subscribe(i => this.callInfo = i),
       this.callService.localStream$.subscribe(s => this.localStream = s),
@@ -433,6 +647,11 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
       this.callService.callDuration$.subscribe(d => this.callDuration = d),
       this.callService.isMuted$.subscribe(m => this.isMuted = m),
       this.callService.isVideoOff$.subscribe(v => this.isVideoOff = v),
+      // Traduction
+      this.voiceTranslation.isActive$.subscribe(a => this.isTranslationActive = a),
+      this.voiceTranslation.isSpeaking$.subscribe(s => this.isSpeaking = s),
+      this.voiceTranslation.transcriptions$.subscribe(t => this.transcriptions = t),
+      this.voiceTranslation.myLanguage$.subscribe(l => this.myLanguage = l),
     );
   }
 
@@ -495,6 +714,31 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
 
   onToggleVideo() {
     this.callService.toggleVideo();
+  }
+
+  // ═══════════════════════════════════════
+  //  Traduction vocale
+  // ═══════════════════════════════════════
+
+  onToggleTranslation() {
+    if (this.isTranslationActive) {
+      this.stopTranslation();
+    } else {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const info = this.callInfo;
+      if (!info) return;
+      this.voiceTranslation.start(info.conversationId, user.id, 'fr');
+    }
+  }
+
+  onToggleTranslationLang() {
+    this.voiceTranslation.toggleLanguage();
+  }
+
+  private stopTranslation() {
+    if (this.isTranslationActive) {
+      this.voiceTranslation.stop();
+    }
   }
 
   // ═══════════════════════════════════════
@@ -568,6 +812,7 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.stopRingtone();
+    this.stopTranslation();
     this.subs.forEach(s => s.unsubscribe());
   }
 }
