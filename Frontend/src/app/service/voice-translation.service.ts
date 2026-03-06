@@ -86,20 +86,23 @@ export class VoiceTranslationService implements OnDestroy {
             return;
         }
 
-        this.recognition = new SpeechRecognition();
-        this.recognition.lang = this.LANG_CODES[this.myLanguage$.value];
-        this.recognition.continuous = true;
-        this.recognition.interimResults = false;
-        this.recognition.maxAlternatives = 1;
+        // Variable locale pour éviter les closures périmées en cas de restart
+        const recognition = new SpeechRecognition();
+        this.recognition = recognition;
 
-        this.recognition.onstart = () => {
-            console.log('[VoiceTranslation] Démarré :', this.recognition.lang);
+        recognition.lang = this.LANG_CODES[this.myLanguage$.value];
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+            console.log('[VoiceTranslation] Démarré :', recognition.lang);
         };
 
-        this.recognition.onspeechstart = () => this.isSpeaking$.next(true);
-        this.recognition.onspeechend   = () => this.isSpeaking$.next(false);
+        recognition.onspeechstart = () => this.isSpeaking$.next(true);
+        recognition.onspeechend   = () => this.isSpeaking$.next(false);
 
-        this.recognition.onresult = (event: any) => {
+        recognition.onresult = (event: any) => {
             const last = event.results[event.results.length - 1];
             if (!last.isFinal) return;
 
@@ -109,7 +112,6 @@ export class VoiceTranslationService implements OnDestroy {
             const myLang   = this.myLanguage$.value;
             const targetLang: SupportedLang = myLang === 'fr' ? 'id' : 'fr';
 
-            // Affichage immédiat côté émetteur (traduction en attente)
             this.addEntry({
                 originalText:   text,
                 translatedText: '...',
@@ -120,7 +122,6 @@ export class VoiceTranslationService implements OnDestroy {
                 isMine:         true
             });
 
-            // Envoi au backend via Socket.io → Google Translate → diffusion
             this.socketService.emitVoiceTranscript({
                 conversationId: this.conversationId!,
                 text,
@@ -129,33 +130,40 @@ export class VoiceTranslationService implements OnDestroy {
             });
         };
 
-        this.recognition.onerror = (event: any) => {
-            if (event.error === 'no-speech') return; // Non critique
+        recognition.onerror = (event: any) => {
+            // 'no-speech' et 'aborted' sont non critiques :
+            // - no-speech : silence détecté, normal
+            // - aborted   : on a appelé stop() nous-mêmes, normal
+            if (event.error === 'no-speech' || event.error === 'aborted') return;
             console.error('[VoiceTranslation] Erreur:', event.error);
             this.isSpeaking$.next(false);
         };
 
-        this.recognition.onend = () => {
+        recognition.onend = () => {
             this.isSpeaking$.next(false);
-            // Redémarrage automatique tant que le service est actif
-            if (this.isActive$.value) {
+            // Ne redémarrer que si cette instance est toujours l'instance active
+            // (évite le restart après un stopRecognition() délibéré)
+            if (this.isActive$.value && this.recognition === recognition) {
                 setTimeout(() => {
-                    if (this.isActive$.value) this.startRecognition();
+                    if (this.isActive$.value && this.recognition === recognition) {
+                        this.startRecognition();
+                    }
                 }, 300);
             }
         };
 
         try {
-            this.recognition.start();
+            recognition.start();
         } catch (err) {
             console.error('[VoiceTranslation] Impossible de démarrer:', err);
         }
     }
 
     private stopRecognition() {
-        if (this.recognition) {
-            try { this.recognition.stop(); } catch (_) {}
-            this.recognition = null;
+        const r = this.recognition;
+        this.recognition = null; // Nullifier AVANT stop() pour bloquer le restart dans onend
+        if (r) {
+            try { r.stop(); } catch (_) {}
         }
     }
 
