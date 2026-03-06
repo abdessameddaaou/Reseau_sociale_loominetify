@@ -842,10 +842,8 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
         ? info.participants.filter((id: number) => id !== user.id)
         : [info.callerId].filter((id: number) => id !== user.id);
       this.voiceTranslation.start(info.conversationId, user.id, 'fr', otherIds);
-      // Réutiliser le stream WebRTC existant (évite le conflit micro)
-      if (this.localStream) {
-        this.voiceTranslation.startAutoTranslation(this.localStream);
-      }
+      // Web Speech API : reconnaissance temps réel, latence ~0.5s
+      this.voiceTranslation.startListening();
       // Couper le son original — remplacé par la lecture TTS de la traduction
       this.setRemoteAudioMuted(true);
     }
@@ -877,7 +875,6 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
 
   private stopTranslation() {
     if (this.isTranslationActive) {
-      this.voiceTranslation.stopAutoTranslation();
       this.voiceTranslation.stop();
       this.setRemoteAudioMuted(false);
     }

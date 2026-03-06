@@ -283,7 +283,7 @@ export class VoiceTranslationService implements OnDestroy {
                     if (this.isListening$.value && this.recognition === recognition) {
                         try { recognition.start(); } catch (_) { }
                     }
-                }, 500);
+                }, 300);
             }
         };
 
