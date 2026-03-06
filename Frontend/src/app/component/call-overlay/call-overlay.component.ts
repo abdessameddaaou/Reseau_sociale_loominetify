@@ -129,13 +129,13 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
 
           <!-- Champ de saisie + micro -->
           <div class="call-translation-input-bar">
-            <button class="call-translation-mic-btn" (click)="onToggleListen()" type="button"
-              [class.call-translation-mic-btn--active]="isListening"
-              [title]="isListening ? 'Stop' : 'Micro'">
-              <svg *ngIf="!isListening" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;">
+            <button class="call-translation-mic-btn" (click)="onToggleAutoTranslation()" type="button"
+              [class.call-translation-mic-btn--active]="isAutoTranslating"
+              [title]="isAutoTranslating ? 'Arrêter la traduction audio' : 'Activer la traduction audio auto'">
+              <svg *ngIf="!isAutoTranslating" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
               </svg>
-              <svg *ngIf="isListening" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
+              <svg *ngIf="isAutoTranslating" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
                 <rect x="6" y="6" width="12" height="12" rx="2" />
               </svg>
             </button>
@@ -143,7 +143,7 @@ import { SrcObjectDirective } from '../../directives/src-object.directive';
               class="call-translation-input"
               [(ngModel)]="translationInput"
               (keydown.enter)="onSendTranslation()"
-              [placeholder]="isListening ? '🎤 Écoute en cours...' : 'Écrire en ' + getLangName(myLanguage) + '...'"
+              [placeholder]="isAutoTranslating ? '🎤 Traduction audio en cours...' : 'Écrire en ' + getLangName(myLanguage) + '...'"
               autocomplete="off" />
             <button class="call-translation-send-btn" (click)="onSendTranslation()" type="button"
               [disabled]="!translationInput?.trim()">
@@ -748,7 +748,7 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
 
   // Traduction
   isTranslationActive = false;
-  isListening = false;
+  isAutoTranslating = false;
   transcriptions: TranslationEntry[] = [];
   myLanguage: SupportedLang = 'fr';
   translationInput = '';
@@ -790,7 +790,7 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
       this.callService.isVideoOff$.subscribe(v => this.isVideoOff = v),
       // Traduction
       this.voiceTranslation.isActive$.subscribe(a => this.isTranslationActive = a),
-      this.voiceTranslation.isListening$.subscribe(s => this.isListening = s),
+      this.voiceTranslation.autoTranslationActive$.subscribe(s => this.isAutoTranslating = s),
       this.voiceTranslation.transcriptions$.subscribe(t => this.transcriptions = t),
       this.voiceTranslation.myLanguage$.subscribe(l => this.myLanguage = l),
       this.voiceTranslation.ttsEnabled$.subscribe(t => this.ttsEnabled = t),
@@ -893,8 +893,16 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
     this.scrollToBottom();
   }
 
-  onToggleListen() {
-    this.voiceTranslation.startListening();
+  onToggleAutoTranslation() {
+    if (this.isAutoTranslating) {
+      this.voiceTranslation.stopAutoTranslation();
+    } else {
+      if (this.localStream) {
+        this.voiceTranslation.startAutoTranslation(this.localStream);
+      } else {
+        console.warn('[CallOverlay] Pas de stream local pour démarrer la traduction audio');
+      }
+    }
   }
 
   onToggleTts() {

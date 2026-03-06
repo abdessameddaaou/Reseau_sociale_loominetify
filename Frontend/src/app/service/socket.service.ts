@@ -130,4 +130,9 @@ export class SocketService {
     onTranslationError(): Observable<any> {
         return this.fromEvent('translationError');
     }
+
+    /** Envoie un chunk audio (base64) au backend pour STT + traduction. */
+    emitAudioChunk(data: { conversationId: number; audio: string; sourceLang: string; targetLang: string }) {
+        this.socket.emit('audioChunk', data);
+    }
 }

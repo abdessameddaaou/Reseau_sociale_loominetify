@@ -6,6 +6,7 @@ const db = require('./db/db');
 const Message = require('./models/message');
 const { Users } = require('./models');
 const { translate } = require('./services/translation');
+const { transcribe } = require('./services/speech-to-text');
 
 /**
  * Normalisation du port
@@ -380,6 +381,53 @@ io.on('connection', (socket) => {
         } catch (err) {
             console.error('[Translation Socket] Erreur:', err.message);
             socket.emit('translationError', { message: 'Erreur de traduction' });
+        }
+    });
+
+    // ─────────────────────────────────────────
+    //  Traduction audio temps réel (STT → Translate → broadcast)
+    // ─────────────────────────────────────────
+
+    socket.on('audioChunk', async (data) => {
+        const { audio, sourceLang, targetLang } = data;
+        const conversationId = Number(data.conversationId);
+
+        if (!audio || !sourceLang || !targetLang) return;
+
+        const call = activeCalls.get(conversationId);
+        if (!call) return;
+
+        const LANG_CODES = { fr: 'fr-FR', id: 'id-ID' };
+        const langCode = LANG_CODES[sourceLang];
+        if (!langCode) return;
+
+        try {
+            // 1. Speech-to-Text
+            const text = await transcribe(audio, langCode);
+            if (!text) return; // Pas de parole détectée
+
+            console.log(`[AudioTranslation] STT (${sourceLang}): "${text}"`);
+
+            // 2. Translate
+            const translated = await translate(text, sourceLang, targetLang);
+
+            console.log(`[AudioTranslation] ${sourceLang}→${targetLang}: "${text}" → "${translated}"`);
+
+            // 3. Broadcast to all participants
+            const allMembers = Array.from(new Set([...(call.allParticipants || []), call.callerId]));
+            allMembers.forEach(uid => {
+                io.to(`user_${uid}`).emit('translatedText', {
+                    conversationId,
+                    originalText: text,
+                    translatedText: translated,
+                    sourceLang,
+                    targetLang,
+                    fromUserId: socket.userId
+                });
+            });
+        } catch (err) {
+            console.error('[AudioTranslation] Erreur:', err.message);
+            // Don't emit error to client for audio chunks — too noisy
         }
     });
 

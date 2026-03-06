@@ -27,6 +27,11 @@ export class VoiceTranslationService implements OnDestroy {
     private userId: number | null = null;
     private subs: Subscription[] = [];
     private recognition: any = null;
+    private mediaRecorder: MediaRecorder | null = null;
+    private autoTranslationStream: MediaStream | null = null;
+
+    /** Traduction audio automatique en cours ? */
+    autoTranslationActive$ = new BehaviorSubject<boolean>(false);
 
     private readonly MAX_ENTRIES = 30;
     private readonly LANG_CODES: Record<SupportedLang, string> = {
@@ -58,16 +63,12 @@ export class VoiceTranslationService implements OnDestroy {
         this.isActive$.next(false);
         this.isListening$.next(false);
         this.stopRecognition();
+        this.stopAutoTranslation();
     }
 
     toggleLanguage() {
         const next: SupportedLang = this.myLanguage$.value === 'fr' ? 'id' : 'fr';
         this.myLanguage$.next(next);
-        // Si on écoute, on redémarre avec la nouvelle langue
-        if (this.isListening$.value) {
-            this.stopRecognition();
-            setTimeout(() => this.startListening(), 300);
-        }
     }
 
     toggleTts() {
@@ -78,6 +79,101 @@ export class VoiceTranslationService implements OnDestroy {
     sendText(text: string) {
         if (!text || !text.trim() || this.conversationId === null) return;
         this.emitTranslation(text.trim());
+    }
+
+    // ═══════════════════════════════════════
+    //  Traduction audio automatique (MediaRecorder → STT → Translate)
+    // ═══════════════════════════════════════
+
+    /** Démarre la capture audio automatique sur le stream local. */
+    startAutoTranslation(localStream: MediaStream) {
+        if (this.autoTranslationActive$.value) {
+            this.stopAutoTranslation();
+            return;
+        }
+
+        if (!localStream) {
+            console.warn('[VoiceTranslation] Pas de stream local disponible');
+            return;
+        }
+
+        // Extraire uniquement les pistes audio
+        const audioTracks = localStream.getAudioTracks();
+        if (audioTracks.length === 0) {
+            console.warn('[VoiceTranslation] Pas de piste audio dans le stream');
+            return;
+        }
+
+        this.autoTranslationStream = new MediaStream(audioTracks);
+
+        try {
+            const recorder = new MediaRecorder(this.autoTranslationStream, {
+                mimeType: 'audio/webm;codecs=opus'
+            });
+            this.mediaRecorder = recorder;
+
+            recorder.ondataavailable = async (event) => {
+                if (event.data.size === 0 || !this.autoTranslationActive$.value) return;
+                if (this.conversationId === null) return;
+
+                try {
+                    // Convertir le blob en base64
+                    const base64 = await this.blobToBase64(event.data);
+                    const myLang = this.myLanguage$.value;
+                    const targetLang: SupportedLang = myLang === 'fr' ? 'id' : 'fr';
+
+                    console.log(`[VoiceTranslation] 🎤 Envoi chunk audio (${(event.data.size / 1024).toFixed(1)}KB)`);
+
+                    this.socketService.emitAudioChunk({
+                        conversationId: this.conversationId!,
+                        audio: base64,
+                        sourceLang: myLang,
+                        targetLang
+                    });
+                } catch (err) {
+                    console.error('[VoiceTranslation] Erreur conversion audio:', err);
+                }
+            };
+
+            recorder.onstart = () => {
+                console.log('[VoiceTranslation] 🎤 Capture audio démarrée');
+                this.autoTranslationActive$.next(true);
+            };
+
+            recorder.onstop = () => {
+                console.log('[VoiceTranslation] 🎤 Capture audio arrêtée');
+            };
+
+            // Enregistrer des segments de 3.5 secondes
+            recorder.start(3500);
+
+        } catch (err) {
+            console.error('[VoiceTranslation] Erreur MediaRecorder:', err);
+            this.autoTranslationActive$.next(false);
+        }
+    }
+
+    stopAutoTranslation() {
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            try { this.mediaRecorder.stop(); } catch (_) { }
+        }
+        this.mediaRecorder = null;
+        this.autoTranslationStream = null;
+        this.autoTranslationActive$.next(false);
+    }
+
+    private blobToBase64(blob: Blob): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result as string;
+                // Retirer le préfixe "data:audio/webm;codecs=opus;base64,"
+                const base64 = dataUrl.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
     }
 
     // ═══════════════════════════════════════
