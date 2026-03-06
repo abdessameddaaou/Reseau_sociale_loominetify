@@ -32,6 +32,8 @@ export class VoiceTranslationService implements OnDestroy {
     private autoTranslationStream: MediaStream | null = null;
     private recordingChunks: Blob[] = [];
     private recordingTimer: any = null;
+    private audioCtx: AudioContext | null = null;
+    private vadTimer: any = null;
 
     /** Traduction audio automatique en cours ? */
     autoTranslationActive$ = new BehaviorSubject<boolean>(false);
@@ -117,34 +119,38 @@ export class VoiceTranslationService implements OnDestroy {
     private startRecordingSession() {
         if (!this.autoTranslationActive$.value || !this.autoTranslationStream) return;
 
-        this.recordingChunks = [];
-
         try {
+            // AudioContext pour la détection d'activité vocale (VAD)
+            this.audioCtx = new AudioContext();
+            const source = this.audioCtx.createMediaStreamSource(this.autoTranslationStream);
+            const analyser = this.audioCtx.createAnalyser();
+            analyser.fftSize = 512;
+            source.connect(analyser);
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
             const recorder = new MediaRecorder(this.autoTranslationStream, {
                 mimeType: 'audio/webm;codecs=opus'
             });
             this.mediaRecorder = recorder;
+            this.recordingChunks = [];
 
-            recorder.ondataavailable = (event) => {
-                if (event.data.size > 0) this.recordingChunks.push(event.data);
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) this.recordingChunks.push(e.data);
             };
 
             recorder.onstop = async () => {
                 if (!this.autoTranslationActive$.value || this.conversationId === null) return;
 
-                // Assembler un fichier WebM complet (avec header)
                 const fullBlob = new Blob(this.recordingChunks, { type: 'audio/webm' });
                 this.recordingChunks = [];
 
-                console.log(`[VoiceTranslation] 🎤 Session terminée (${(fullBlob.size / 1024).toFixed(1)}KB)`);
+                console.log(`[VoiceTranslation] 🎤 Parole envoyée (${(fullBlob.size / 1024).toFixed(1)}KB)`);
 
-                // Envoyer seulement si assez de données (pas du silence)
-                if (fullBlob.size > 3000) {
+                if (fullBlob.size > 2000) {
                     try {
                         const base64 = await this.blobToBase64(fullBlob);
                         const myLang = this.myLanguage$.value;
                         const targetLang: SupportedLang = myLang === 'fr' ? 'id' : 'fr';
-
                         this.socketService.emitAudioChunk({
                             conversationId: this.conversationId!,
                             audio: base64,
@@ -156,40 +162,58 @@ export class VoiceTranslationService implements OnDestroy {
                         console.error('[VoiceTranslation] Erreur conversion audio:', err);
                     }
                 }
-
-                // Relancer immédiatement la prochaine session
-                if (this.autoTranslationActive$.value) {
-                    this.startRecordingSession();
-                }
             };
 
-            recorder.start();
+            let isSpeaking = false;
+            let silenceTimer: any = null;
 
-            // Arrêter après 3 secondes pour produire un fichier WebM complet
-            this.recordingTimer = setTimeout(() => {
-                if (recorder.state === 'recording') {
-                    recorder.stop();
+            const checkVAD = () => {
+                if (!this.autoTranslationActive$.value) return;
+
+                analyser.getByteFrequencyData(dataArray);
+                const level = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+                if (level > 12) {
+                    // Voix détectée
+                    if (!isSpeaking && recorder.state === 'inactive') {
+                        isSpeaking = true;
+                        this.recordingChunks = [];
+                        try { recorder.start(); } catch (_) {}
+                    }
+                    if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+                } else if (isSpeaking && !silenceTimer) {
+                    // Silence détecté → envoyer après 700ms
+                    silenceTimer = setTimeout(() => {
+                        isSpeaking = false;
+                        silenceTimer = null;
+                        if (recorder.state === 'recording') {
+                            try { recorder.stop(); } catch (_) {}
+                        }
+                    }, 700);
                 }
-            }, 3000);
+
+                this.vadTimer = setTimeout(checkVAD, 50);
+            };
+
+            checkVAD();
 
         } catch (err) {
-            console.error('[VoiceTranslation] Erreur MediaRecorder:', err);
+            console.error('[VoiceTranslation] Erreur VAD/MediaRecorder:', err);
             this.autoTranslationActive$.next(false);
         }
     }
 
     stopAutoTranslation() {
-        if (this.recordingTimer) {
-            clearTimeout(this.recordingTimer);
-            this.recordingTimer = null;
-        }
+        this.autoTranslationActive$.next(false);
+        if (this.vadTimer) { clearTimeout(this.vadTimer); this.vadTimer = null; }
+        if (this.recordingTimer) { clearTimeout(this.recordingTimer); this.recordingTimer = null; }
         if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
             try { this.mediaRecorder.stop(); } catch (_) { }
         }
         this.mediaRecorder = null;
+        if (this.audioCtx) { this.audioCtx.close().catch(() => {}); this.audioCtx = null; }
         this.autoTranslationStream = null;
         this.recordingChunks = [];
-        this.autoTranslationActive$.next(false);
     }
 
     private blobToBase64(blob: Blob): Promise<string> {
