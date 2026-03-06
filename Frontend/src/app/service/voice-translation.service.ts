@@ -180,7 +180,7 @@ export class VoiceTranslationService implements OnDestroy {
                 console.error('[VoiceTranslation] Erreur serveur:', data.message);
                 // Mettre à jour le dernier "..." en message d'erreur
                 const entries = [...this.transcriptions$.value];
-                const last = entries.findLast(e => e.isMine && e.translatedText === '...');
+                const last = [...entries].reverse().find((e: TranslationEntry) => e.isMine && e.translatedText === '...');
                 if (last) {
                     last.translatedText = '⚠ Traduction indisponible';
                     last.isError = true;
