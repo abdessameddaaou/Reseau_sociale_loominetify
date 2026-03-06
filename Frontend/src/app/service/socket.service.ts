@@ -117,7 +117,7 @@ export class SocketService {
     // ─── Traduction vocale ───
 
     /** Envoie un transcript vocal au backend pour traduction. */
-    emitVoiceTranscript(data: { conversationId: number; text: string; sourceLang: string; targetLang: string }) {
+    emitVoiceTranscript(data: { conversationId: number; text: string; sourceLang: string; targetLang: string; targetUserIds?: number[] }) {
         this.socket.emit('voiceTranscript', data);
     }
 
@@ -132,7 +132,7 @@ export class SocketService {
     }
 
     /** Envoie un chunk audio (base64) au backend pour STT + traduction. */
-    emitAudioChunk(data: { conversationId: number; audio: string; sourceLang: string; targetLang: string }) {
+    emitAudioChunk(data: { conversationId: number; audio: string; sourceLang: string; targetLang: string; targetUserIds?: number[] }) {
         this.socket.emit('audioChunk', data);
     }
 }

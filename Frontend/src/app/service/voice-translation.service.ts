@@ -25,6 +25,7 @@ export class VoiceTranslationService implements OnDestroy {
 
     private conversationId: number | null = null;
     private userId: number | null = null;
+    private targetUserIds: number[] = [];
     private subs: Subscription[] = [];
     private recognition: any = null;
     private mediaRecorder: MediaRecorder | null = null;
@@ -50,10 +51,11 @@ export class VoiceTranslationService implements OnDestroy {
     //  API publique
     // ═══════════════════════════════════════
 
-    start(conversationId: number, userId: number, myLang: SupportedLang = 'fr') {
+    start(conversationId: number, userId: number, myLang: SupportedLang = 'fr', targetUserIds: number[] = []) {
         if (this.isActive$.value) return;
         this.conversationId = conversationId;
         this.userId = userId;
+        this.targetUserIds = targetUserIds;
         this.myLanguage$.next(myLang);
         this.isActive$.next(true);
         this.transcriptions$.next([]);
@@ -128,7 +130,8 @@ export class VoiceTranslationService implements OnDestroy {
                         conversationId: this.conversationId!,
                         audio: base64,
                         sourceLang: myLang,
-                        targetLang
+                        targetLang,
+                        targetUserIds: this.targetUserIds
                     });
                 } catch (err) {
                     console.error('[VoiceTranslation] Erreur conversion audio:', err);
@@ -297,7 +300,8 @@ export class VoiceTranslationService implements OnDestroy {
             conversationId: this.conversationId!,
             text,
             sourceLang: myLang,
-            targetLang
+            targetLang,
+            targetUserIds: this.targetUserIds
         });
     }
 

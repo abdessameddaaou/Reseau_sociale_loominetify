@@ -342,6 +342,7 @@ io.on('connection', (socket) => {
     socket.on('voiceTranscript', async (data) => {
         const { text, sourceLang, targetLang } = data;
         const conversationId = Number(data.conversationId);
+        const targetUserIds = Array.isArray(data.targetUserIds) ? data.targetUserIds : [];
         console.log(`[Translation] voiceTranscript reçu de user ${socket.userId}: convId=${conversationId}, text="${text}", ${sourceLang}→${targetLang}`);
         if (!text || !text.trim()) return;
 
@@ -351,21 +352,21 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // Construire la liste des destinataires (activeCalls en priorité, targetUserIds en fallback)
         const call = activeCalls.get(conversationId);
-        if (!call) {
-            console.warn(`[Translation] Aucun appel actif pour conversationId=${conversationId} (type: ${typeof data.conversationId}). Appels actifs:`, [...activeCalls.keys()]);
-            socket.emit('translationError', { message: 'Aucun appel actif trouvé pour cette conversation' });
+        const allMembers = call
+            ? Array.from(new Set([...(call.allParticipants || []), call.callerId]))
+            : Array.from(new Set([socket.userId, ...targetUserIds]));
+
+        if (allMembers.length === 0) {
+            console.warn(`[Translation] Aucun destinataire pour convId=${conversationId}`);
+            socket.emit('translationError', { message: 'Aucun destinataire trouvé pour cette conversation' });
             return;
         }
 
         try {
             const translated = await translate(text.trim(), sourceLang, targetLang);
 
-            const allMembers = Array.from(new Set([...(call.allParticipants || []), call.callerId]));
-
-            // Envoyer à TOUS (y compris l'émetteur) :
-            // - L'émetteur voit la confirmation de sa traduction (remplace '...')
-            // - Les autres voient le texte traduit
             allMembers.forEach(uid => {
                 io.to(`user_${uid}`).emit('translatedText', {
                     conversationId,
@@ -391,15 +392,24 @@ io.on('connection', (socket) => {
     socket.on('audioChunk', async (data) => {
         const { audio, sourceLang, targetLang } = data;
         const conversationId = Number(data.conversationId);
+        const targetUserIds = Array.isArray(data.targetUserIds) ? data.targetUserIds : [];
 
         if (!audio || !sourceLang || !targetLang) return;
-
-        const call = activeCalls.get(conversationId);
-        if (!call) return;
 
         const LANG_CODES = { fr: 'fr-FR', id: 'id-ID' };
         const langCode = LANG_CODES[sourceLang];
         if (!langCode) return;
+
+        // Construire la liste des destinataires (activeCalls en priorité, targetUserIds en fallback)
+        const call = activeCalls.get(conversationId);
+        const allMembers = call
+            ? Array.from(new Set([...(call.allParticipants || []), call.callerId]))
+            : Array.from(new Set([socket.userId, ...targetUserIds]));
+
+        if (allMembers.length === 0) {
+            console.warn(`[AudioTranslation] Aucun destinataire pour convId=${conversationId}`);
+            return;
+        }
 
         try {
             // 1. Speech-to-Text
@@ -413,8 +423,7 @@ io.on('connection', (socket) => {
 
             console.log(`[AudioTranslation] ${sourceLang}→${targetLang}: "${text}" → "${translated}"`);
 
-            // 3. Broadcast to all participants
-            const allMembers = Array.from(new Set([...(call.allParticipants || []), call.callerId]));
+            // 3. Broadcast
             allMembers.forEach(uid => {
                 io.to(`user_${uid}`).emit('translatedText', {
                     conversationId,
@@ -427,7 +436,6 @@ io.on('connection', (socket) => {
             });
         } catch (err) {
             console.error('[AudioTranslation] Erreur:', err.message);
-            // Envoyer l'erreur au client pour diagnostic
             socket.emit('translationError', { message: '[STT] ' + err.message });
         }
     });

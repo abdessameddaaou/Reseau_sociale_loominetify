@@ -837,7 +837,11 @@ export class CallOverlayComponent implements OnInit, OnDestroy {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const info = this.callInfo;
       if (!info) return;
-      this.voiceTranslation.start(info.conversationId, user.id, 'fr');
+      // Calcul des autres participants : caller a la liste complète, callee utilise callerId
+      const otherIds: number[] = info.participants && info.participants.length > 0
+        ? info.participants.filter((id: number) => id !== user.id)
+        : [info.callerId].filter((id: number) => id !== user.id);
+      this.voiceTranslation.start(info.conversationId, user.id, 'fr', otherIds);
       // Réutiliser le stream WebRTC existant (évite le conflit micro)
       if (this.localStream) {
         this.voiceTranslation.startAutoTranslation(this.localStream);
