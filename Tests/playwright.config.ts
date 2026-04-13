@@ -8,7 +8,6 @@ dotenv.config({
 });
 
 
-dotenv.config({ path: '/custom/path/to/.env' })
 
 /**
  * Read environment variables from file.

@@ -9,9 +9,9 @@ export class AuthentificationPage {
 
     constructor(page: Page){
         this.page = page
-        this.emailInput = page.locator('xpath=//form/div[1]/input')
-        this.passwordInput = page.locator('xpath=//form/div[2]/input')
-        this.loginButton = page.locator('xpath=//form/button')
+        this.emailInput = page.locator('input[type="email"], input[name="email"]')
+        this.passwordInput = page.locator('input[type="password"]')
+        this.loginButton = page.locator('form button[type="submit"], form button')
     }
 
     async navigateToLoginPage() {
@@ -26,7 +26,7 @@ export class AuthentificationPage {
 
     
     async shouldBeOnHomePage() {
-        await this.page.shouldhaveURL('/home')
+        await expect(this.page).toHaveURL('/fil-actualite')
     }
 
 
