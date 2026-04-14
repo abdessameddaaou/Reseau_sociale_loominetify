@@ -5,5 +5,5 @@ export interface TestWorld {
     browser: Browser;
     context: BrowserContext;
     page: Page;
-    authPage?: AuthentificationPage;
+    authPage: AuthentificationPage;
 }
