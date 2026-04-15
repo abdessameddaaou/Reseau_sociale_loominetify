@@ -5,9 +5,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 
-import { AuthentificationPage } from "../pom/Authentification-pom";
+import { AuthentificationPage } from "../pom/Authentification-POM/Login-pom";
+import { AuthenttificationAPI } from "../api/auth.api";
+import { LogoutPage } from "../pom/Authentification-POM/Logout-pom";
 
-let browser: Browser
+    let browser: Browser
+
+
 BeforeAll(async function(){
 
     // ═══════════════════════════════════════════════════════════
@@ -16,7 +20,7 @@ BeforeAll(async function(){
     browser = await chromium.launch({
         headless: false,
         // headless: false,                    // Afficher le navigateur (utile pour le debug)
-        slowMo: 500,                        // Ralentir chaque action de 500ms (debug visuel)
+        // slowMo: 500,                        // Ralentir chaque action de 500ms (debug visuel)
         // devtools: true,                     // Ouvrir les DevTools automatiquement
         // channel: 'chrome',                  // Utiliser Chrome installé au lieu de Chromium
         timeout: 30000,                     // Timeout de lancement du navigateur (30s)
@@ -72,6 +76,9 @@ Before(async function (this: TestWorld) {
     // ═══════════════════════════════════════════════════════════
     this.page = await this.context.newPage();
     this.authPage = await new AuthentificationPage(this.page)
+    this.apiAuth = await new AuthenttificationAPI(this.page)
+    this.logoutPage = await new LogoutPage(this.page)
+
     this.page.setDefaultTimeout(30000);              // Timeout pour les actions (click, fill...) - 30s
     this.page.setDefaultNavigationTimeout(60000);    // Timeout pour les navigations (goto) - 60s
 });

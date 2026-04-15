@@ -17,7 +17,7 @@ export class AuthentificationPage {
     }
 
     async navigateToLoginPage() {
-        await this.page.goto('/')
+        await this.page.goto('/auth')
     }
 
     async login(email: string, password: string) {
@@ -36,24 +36,11 @@ export class AuthentificationPage {
 
     }
 
-    async stockerTokenConnexion(email: string, password: string){
-        const apiContext = await request.newContext({
-            baseURL: process.env.urlAPI
- 
-        })
-
-        const response = await apiContext.post("auth/login",{
-            data: {
-                email, password
-            }
-        })
-
-        const { accessToken } = await response.json();
-
-        console.log(accessToken);
-        await apiContext.dispose();
-    
-
+    async navigateToSpecificPage(url: string) {
+        await this.page.goto('/'+url)
     }
 
+    async checkLocationURL(expectedURL: string) {
+        await expect(this.page).toHaveURL(expectedURL)
+    }
 }

@@ -13,11 +13,11 @@ module.exports = {
 //     publishQuiet: true
 //   },
 
-//   auth: {
-//     tags: '@auth',
-//     publishQuiet: true
-//   }
+  logout: {
+    tags: '@logout',
+    publishQuiet: true
+  }
 
 
-                // => lancer la commande  =>  npx cucumber-js --profile smoke
+                // => lancer la commande  =>  npx cucumber-js -p logout
 };
