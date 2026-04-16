@@ -7,7 +7,7 @@ export class LogoutPage {
 
     constructor(page: Page) {
         this.page = page
-        this.logoutButton = page.locator('#nav-logout-button')
+        this.logoutButton = page.locator('xpath=//*[@id="nav-logout-button"]')
     }
 
     async clickLogoutButton() {

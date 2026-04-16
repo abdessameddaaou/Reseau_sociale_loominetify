@@ -1,17 +1,25 @@
 import { request, APIRequestContext, Page } from "@playwright/test";
 
+/**
+ * Class Authentification via l'API
+ */
 export class AuthenttificationAPI{
 
     private apiContext!: APIRequestContext;
-    private tokenValide: string = ""
     private page: Page
     constructor(page: Page) {
         this.page = page
     }
 
+    /**
+     * Connexion et récupération du token via l'API
+     * @param email 
+     * @param password 
+     * @returns 
+     */
     async recupererTokenConnexion(email: string, password: string){
         this.apiContext = await request.newContext({
-            baseURL: process.env.urlAPI
+            baseURL: process.env.urlAPI,
         })
         const response = await this.apiContext.post("auth/login",{
             data: {
@@ -19,14 +27,22 @@ export class AuthenttificationAPI{
             }
         })
         let accessToken = await response.json();
-        this.tokenValide = accessToken.token
         await this.apiContext.dispose();
+        return await accessToken.token
     }
 
+    /**T
+     * Stocker le token dans LocalStorage
+     * @param email 
+     * @param password 
+     */
     async stockerTokenDansLocalStorage(token: string){
-        await this.page.evaluate((t) => {
-            localStorage.setItem('token', t);
-        }, token);
+
+
+    await this.page.addInitScript((t) => {
+        localStorage.setItem('token', t);
+    }, token);
+
     }
 
 }

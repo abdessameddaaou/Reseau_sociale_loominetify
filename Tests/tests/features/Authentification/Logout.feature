@@ -1,7 +1,7 @@
 Feature: Déconnexion d'un utilisateur
 
     En tant qu'un utilisateur connectén j'aimerais avoir la possibilité de me déconnecté
-    @logout @authentification
+    @logout
     Scenario: déconnexion d'un utilisateur depuis la page d'accueil
         Given Je suis connecté sur la page d'accueil
         When Je clique sur le bouton de déconnexion dans le navbar

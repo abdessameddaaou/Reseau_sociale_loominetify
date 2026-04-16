@@ -53,8 +53,8 @@ Before(async function (this: TestWorld) {
         // permissions: ['geolocation', 'notifications'], // Permissions accordées
         // geolocation: { latitude: 48.856, longitude: 2.352 },  // Position GPS (Paris)
         // userAgent: 'custom-user-agent',             // User-Agent personnalisé
-        // storageState: './auth-state.json',          // Charger cookies/localStorage (sessions persistantes)
-        // ignoreHTTPSErrors: true,                    // Ignorer les erreurs SSL
+        storageState: './auth-state.json',          // Charger cookies/localStorage (sessions persistantes)
+        ignoreHTTPSErrors: true,                    // Ignorer les erreurs SSL
         // httpCredentials: {                          // Authentification HTTP basique
         //     username: 'user',
         //     password: 'pass',
@@ -78,6 +78,9 @@ Before(async function (this: TestWorld) {
     this.authPage = await new AuthentificationPage(this.page)
     this.apiAuth = await new AuthenttificationAPI(this.page)
     this.logoutPage = await new LogoutPage(this.page)
+    const email = process.env.email ?? "email"
+    const password = process.env.password ?? "password"
+    this.tokenValide = await this.apiAuth.recupererTokenConnexion(email, password)
 
     this.page.setDefaultTimeout(30000);              // Timeout pour les actions (click, fill...) - 30s
     this.page.setDefaultNavigationTimeout(60000);    // Timeout pour les navigations (goto) - 60s
@@ -92,6 +95,5 @@ After(async function (this: TestWorld) {
 });
 
 AfterAll(async function () {
-
     await browser.close();
 })

@@ -8,16 +8,9 @@ module.exports = {
     ],
     publishQuiet: true
   },
-//   smoke: {
-//     tags: '@smoke',
-//     publishQuiet: true
-//   },
 
   logout: {
     tags: '@logout',
     publishQuiet: true
   }
-
-
-                // => lancer la commande  =>  npx cucumber-js -p logout
 };
