@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test:bdd": "cucumber-js",
-    "test:logout": "cucumber-js --profile logout"
+    "test:bdd": "cucumber-js"
   },
   "keywords": [],
   "author": "",

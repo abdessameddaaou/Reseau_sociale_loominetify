@@ -3,6 +3,7 @@ import { TestWorld } from "../../fixtures/World";
 
 Given("Je suis sur la page de connexion", async function (this: TestWorld) {
     await this.authPage.navigateToLoginPage()
+    await this.apiAuth.viderCookiesFromLocalStorage()
 });
 
 When("Je me connecte avec un utilisateur valide", async function (this: TestWorld) {

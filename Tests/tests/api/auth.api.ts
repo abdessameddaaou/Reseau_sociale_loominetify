@@ -6,6 +6,8 @@ import { request, APIRequestContext, Page } from "@playwright/test";
 export class AuthenttificationAPI{
 
     private apiContext!: APIRequestContext;
+
+    
     private page: Page
     constructor(page: Page) {
         this.page = page
@@ -19,6 +21,7 @@ export class AuthenttificationAPI{
      */
     async recupererTokenConnexion(email: string, password: string){
         this.apiContext = await request.newContext({
+            ignoreHTTPSErrors: true,
             baseURL: process.env.urlAPI,
         })
         const response = await this.apiContext.post("auth/login",{
@@ -42,6 +45,13 @@ export class AuthenttificationAPI{
     await this.page.addInitScript((t) => {
         localStorage.setItem('token', t);
     }, token);
+
+    }
+
+
+    async viderCookiesFromLocalStorage(){
+
+        await this.page.evaluate(()=> localStorage.clear())
 
     }
 
