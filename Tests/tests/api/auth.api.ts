@@ -3,11 +3,11 @@ import { request, APIRequestContext, Page } from "@playwright/test";
 /**
  * Class Authentification via l'API
  */
-export class AuthenttificationAPI{
+export class AuthenttificationAPI {
 
     private apiContext!: APIRequestContext;
 
-    
+
     private page: Page
     constructor(page: Page) {
         this.page = page
@@ -19,12 +19,12 @@ export class AuthenttificationAPI{
      * @param password 
      * @returns 
      */
-    async recupererTokenConnexion(email: string, password: string){
+    async recupererTokenConnexion(email: string, password: string) {
         this.apiContext = await request.newContext({
             ignoreHTTPSErrors: true,
             baseURL: process.env.urlAPI,
         })
-        const response = await this.apiContext.post("auth/login",{
+        const response = await this.apiContext.post("auth/login", {
             data: {
                 email, password
             }
@@ -39,20 +39,13 @@ export class AuthenttificationAPI{
      * @param email 
      * @param password 
      */
-    async stockerTokenDansLocalStorage(token: string){
-
-
-    await this.page.addInitScript((t) => {
-        localStorage.setItem('token', t);
-    }, token);
-
+    async stockerTokenDansLocalStorage(token: string) {
+        await this.page.addInitScript((t) => {
+            localStorage.setItem('token', t);
+        }, token);
     }
 
-
-    async viderCookiesFromLocalStorage(){
-
-        await this.page.evaluate(()=> localStorage.clear())
-
+    async viderCookiesFromLocalStorage() {
+        await this.page.evaluate(() => localStorage.clear())
     }
-
 }

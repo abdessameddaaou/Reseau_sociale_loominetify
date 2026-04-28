@@ -38,6 +38,7 @@ export class AuthentificationPage {
 
     async navigateToSpecificPage(url: string) {
         await this.page.goto('/'+url)
+        await expect(this.page).toHaveURL('/'+url)
     }
 
     async checkLocationURL(expectedURL: string) {
