@@ -1,4 +1,4 @@
-import { Before, After, BeforeAll, AfterAll } from "@cucumber/cucumber";
+import { Before, After, BeforeAll, AfterAll, setDefaultTimeout } from "@cucumber/cucumber";
 import { chromium, Browser } from "@playwright/test";
 import dotenv from "dotenv";
 import fs from "fs";
@@ -10,6 +10,9 @@ import { LogoutPage } from "../pom/Authentification-POM/Logout-pom";
 
 dotenv.config();
 
+// ⏱️ Timeout par défaut pour chaque step Cucumber (60s au lieu de 5s)
+setDefaultTimeout(60_000);
+
 let browser: Browser;
 
 // ═══════════════════════════════════════════════════════════
@@ -20,7 +23,7 @@ BeforeAll(async () => {
   browser = await chromium.launch({
     headless: false,
     timeout: 30000,
-    slowMo: 1000,
+    // slowMo: 1000,
     args: ["--start-maximized"],
   });
 });

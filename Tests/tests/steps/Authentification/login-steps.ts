@@ -2,8 +2,9 @@ import { Given, When, Then } from "@cucumber/cucumber";
 import { TestWorld } from "../../fixtures/World";
 
 Given("Je suis sur la page de connexion", async function (this: TestWorld) {
+    // Naviguer d'abord, puis nettoyer les cookies du contexte
     await this.authPage.navigateToLoginPage()
-    await this.apiAuth.viderCookiesFromLocalStorage()
+    await this.context.clearCookies()
 });
 
 When("Je me connecte avec un utilisateur valide", async function (this: TestWorld) {
@@ -33,7 +34,8 @@ Then("Je devrais voir un message d'erreur indiquant que les identifiants sont in
 
 
 When("J'essaye d'accéder à une page sécurisé depuis l'url sans token", async function(this: TestWorld){
-    await this.authPage.navigateToSpecificPage('fil-actualite')
+    // goToPage car on s'attend à une redirection vers /auth
+    await this.authPage.goToPage('fil-actualite')
 })
 
 Then("Je devrais rester dans la page de connexion", async function(this: TestWorld){
@@ -42,5 +44,6 @@ Then("Je devrais rester dans la page de connexion", async function(this: TestWor
 
 When("J'essaye d'accéder à une page sécurisé depuis l'url avec un token invalide", async function(this: TestWorld){
     await this.apiAuth.stockerTokenDansLocalStorage('token_invalide')
-    await this.authPage.navigateToSpecificPage('fil-actualite')
+    // goToPage car on s'attend à une redirection vers /auth
+    await this.authPage.goToPage('fil-actualite')
 })

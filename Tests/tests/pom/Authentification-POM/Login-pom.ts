@@ -41,6 +41,14 @@ export class AuthentificationPage {
         await expect(this.page).toHaveURL('/'+url)
     }
 
+    /**
+     * Navigue vers une page sans vérifier l'URL finale
+     * (utile quand une redirection est attendue)
+     */
+    async goToPage(url: string) {
+        await this.page.goto('/' + url, { waitUntil: 'networkidle' })
+    }
+
     async checkLocationURL(expectedURL: string) {
         await expect(this.page).toHaveURL(expectedURL)
     }
