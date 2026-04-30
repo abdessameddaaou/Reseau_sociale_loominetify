@@ -2,7 +2,7 @@ import { Given, Then, When } from "@cucumber/cucumber";
 import { TestWorld } from "../../fixtures/World";
 
 
-Given("Je suis connecté sur la page d'accueil", async function (this: TestWorld) {
+Given("L'utilisateur est connecté sur la page d'accueil", async function (this: TestWorld) {
     const email = process.env.email ?? "email"
     const password = process.env.password ?? "password"
     this.tokenValide = await this.apiAuth.recupererTokenConnexion(email, password)
@@ -22,10 +22,10 @@ Given("Je suis connecté sur la page d'accueil", async function (this: TestWorld
     await this.authPage.navigateToSpecificPage("fil-actualite")
 })
 
-When("Je clique sur le bouton de déconnexion dans le navbar", async function (this: TestWorld) {
+When("L'utilisateur clique sur le bouton de déconnexion dans le navbar", async function (this: TestWorld) {
     await this.logoutPage.clickLogoutButton()
 })
 
-Then("Je devrais être redirigé vers la page de connexion", async function (this: TestWorld) {
+Then("L'utilisateur devrait être redirigé vers la page de connexion", async function (this: TestWorld) {
     await this.authPage.navigateToSpecificPage('auth')
 })
