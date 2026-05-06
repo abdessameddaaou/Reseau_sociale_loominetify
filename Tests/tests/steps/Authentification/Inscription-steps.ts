@@ -1,11 +1,11 @@
 import { Given, When, Then } from "@cucumber/cucumber";
 import { TestWorld } from "../../fixtures/World";
 
-When("Je clique sur le bouton Inscription", async function(this: TestWorld){
+When("L'utilisateur clique sur le bouton Inscription", async function(this: TestWorld){
     await this.inscriptionPage.navigateToInscriptionPage()
 })
 
-When("Je saisis des informations d'inscription valides", async function(this: TestWorld){
+When("L'utilisateur saisit des informations d'inscription valides", async function(this: TestWorld){
     const nom = process.env.nom ?? "nom"
     const prenom = process.env.prenom ?? "prenom"
     const email = `adessamed.${Date.now()}@gmail.com`
@@ -19,7 +19,7 @@ When("Je saisis des informations d'inscription valides", async function(this: Te
     await this.inscriptionPage.remplirFormulaireInscription(nom, prenom, email, password, dateNaissance, paysResidence, villeResidence, questionSecrete, reponseQuestionSecrete)
 })
 
-When("Je valide le formulaire", async function(this: TestWorld){
+When("L'utilisateur valide le formulaire", async function(this: TestWorld){
 
     await this.inscriptionPage.validerInscription()
 })
