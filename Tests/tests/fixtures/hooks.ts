@@ -1,7 +1,6 @@
 import { Before, After, BeforeAll, AfterAll, setDefaultTimeout } from "@cucumber/cucumber";
 import { chromium, Browser } from "@playwright/test";
 import dotenv from "dotenv";
-import fs from "fs";
 
 import { TestWorld } from "./World";
 import { AuthentificationPage } from "../pom/Authentification-POM/Login-pom";
@@ -11,13 +10,10 @@ import { InscriptionPage } from "../pom/Authentification-POM/Inscription-pom";
 
 dotenv.config();
 
-// ⏱️ Timeout par défaut pour chaque step Cucumber (60s au lieu de 5s)
-setDefaultTimeout(60_000);
-
 let browser: Browser;
 
 // ═══════════════════════════════════════════════════════════
-// 🚀 Lancement du navigateur (1 fois pour toute la campagne)
+//  Lancement du navigateur (1 fois pour toute la campagne)
 // ═══════════════════════════════════════════════════════════
 
 BeforeAll(async () => {
@@ -26,11 +22,12 @@ BeforeAll(async () => {
     timeout: 30000,
     // slowMo: 1000,
     args: ["--start-maximized"],
+
   });
 });
 
 // ═══════════════════════════════════════════════════════════
-// 🧪 Avant chaque scénario
+//  Avant chaque scénario
 // ═══════════════════════════════════════════════════════════
 
 Before(async function (this: TestWorld) {
@@ -40,7 +37,7 @@ Before(async function (this: TestWorld) {
   };
 
   this.browser = browser;
-  this.context = await browser.newContext(contextOption);
+  this.context = await this.browser.newContext(contextOption);
   this.page = await this.context.newPage();
 
   this.page.setDefaultTimeout(30_000);
