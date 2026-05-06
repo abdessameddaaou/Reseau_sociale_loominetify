@@ -7,6 +7,7 @@ import { TestWorld } from "./World";
 import { AuthentificationPage } from "../pom/Authentification-POM/Login-pom";
 import { AuthenttificationAPI } from "../api/auth.api";
 import { LogoutPage } from "../pom/Authentification-POM/Logout-pom";
+import { InscriptionPage } from "../pom/Authentification-POM/Inscription-pom";
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ Before(async function (this: TestWorld) {
   this.authPage = new AuthentificationPage(this.page);
   this.apiAuth = new AuthenttificationAPI(this.page);
   this.logoutPage = new LogoutPage(this.page);
+  this.inscriptionPage = new InscriptionPage(this.page)
 
 });
 

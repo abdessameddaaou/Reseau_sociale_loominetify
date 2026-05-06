@@ -29,3 +29,14 @@ When("Je clique sur le bouton de déconnexion dans le navbar", async function (t
 Then("Je devrais être redirigé vers la page de connexion", async function (this: TestWorld) {
     await this.authPage.navigateToSpecificPage('auth')
 })
+
+
+//=========================================================================
+
+When("Je supprime le token depuis localstorage", async function(this: TestWorld){
+    await this.context.clearCookies()
+})
+
+When("J'actualise la page", async function(this: TestWorld){
+    await this.page.reload()
+})

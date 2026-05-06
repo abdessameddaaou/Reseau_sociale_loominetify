@@ -11,8 +11,6 @@ export class LogoutPage {
     }
 
     async clickLogoutButton() {
-        console.log("Cliquer sur le bouton")
         await this.logoutButton.click()
-        console.log("bouton cliqué")
     }
 }

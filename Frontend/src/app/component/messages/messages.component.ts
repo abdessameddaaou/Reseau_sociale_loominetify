@@ -11,8 +11,7 @@ import { Subscription } from 'rxjs';
 import { AudioPlayerComponent } from '../audio-player/audio-player.component';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { ClickOutsideDirective } from '../../directives/click-outside';
-import { CallService } from '../../service/call.service';
-import { CallOverlayComponent } from '../call-overlay/call-overlay.component';
+
 import Swal from 'sweetalert2';
 
 type ConversationType = 'direct' | 'group';
@@ -39,7 +38,7 @@ interface ChatMessage {
   senderName: string;
   senderPhoto: string | null;
   content: string;
-  type: 'text' | 'image' | 'audio' | 'file' | 'call';
+  type: 'text' | 'image' | 'audio' | 'file';
   fileUrl: string | null;
   time: string;
   createdAt: string;
@@ -57,7 +56,7 @@ import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-messages',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, AudioPlayerComponent, PickerComponent, ClickOutsideDirective, CallOverlayComponent, TranslateModule],
+  imports: [CommonModule, FormsModule, HeaderComponent, AudioPlayerComponent, PickerComponent, ClickOutsideDirective, TranslateModule],
   templateUrl: './messages.component.html'
 })
 export class MessagesComponent implements OnInit, OnDestroy, AfterViewChecked {
@@ -69,8 +68,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewChecked {
     private route: ActivatedRoute,
     private http: HttpClient,
     private themeService: ThemeService,
-    private socketService: SocketService,
-    private callService: CallService
+    private socketService: SocketService
   ) { }
 
   env: any = environment;
@@ -901,54 +899,4 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.router.navigate(['/profil', userId]);
   }
 
-  // ─────────────────────────────────────────
-  //  Calls
-  // ─────────────────────────────────────────
-
-  startAudioCall() {
-    this.initiateCall('audio');
-  }
-
-  startVideoCall() {
-    this.initiateCall('video');
-  }
-
-  private async initiateCall(callType: 'audio' | 'video') {
-    if (!this.selectedConversation || !this.currentUserId) return;
-
-    const conv = this.selectedConversation;
-    const participantIds = conv.participants?.map((p: any) => p.id || p.userId) || [];
-
-    if (participantIds.length === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Appel impossible',
-        text: 'Aucun participant trouvé dans cette conversation.',
-        confirmButtonColor: 'var(--accent-main, #6366f1)',
-      });
-      return;
-    }
-
-    try {
-      await this.callService.startCall(
-        conv.id,
-        participantIds,
-        callType,
-        {
-          id: this.currentUserId,
-          name: this.currentUserName || 'Moi',
-          photo: this.currentUserPhoto || null
-        },
-        conv.name,
-        conv.avatar
-      );
-    } catch (err: any) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erreur',
-        text: err.message || "Impossible de lancer l'appel. Vérifiez vos permissions média.",
-        confirmButtonColor: 'var(--accent-main, #6366f1)',
-      });
-    }
-  }
 }
