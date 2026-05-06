@@ -33,10 +33,10 @@ Then("L'utilisateur devrait être redirigé vers la page de connexion", async fu
 
 //=========================================================================
 
-When("Je supprime le token depuis localstorage", async function(this: TestWorld){
+When("L'utilisateur supprime le token depuis localstorage", async function(this: TestWorld){
     await this.context.clearCookies()
 })
 
-When("J'actualise la page", async function(this: TestWorld){
+When("L'utilisateur actualise la page", async function(this: TestWorld){
     await this.page.reload()
 })
