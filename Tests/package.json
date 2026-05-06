@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test:bdd": "cucumber-js"
+    "test:bdd": "cucumber-js",
+    "test:login": "cucumber-js --tags @login",
+    "test:signin": "cucumber-js --tags @signin"
   },
   "keywords": [],
   "author": "",
